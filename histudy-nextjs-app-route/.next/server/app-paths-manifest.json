@@ -1,6 +1,0 @@
-{
-  "/(courses)/course-filter-one-toggle/page": "app/(courses)/course-filter-one-toggle/page.js",
-  "/(pages)/login/page": "app/(pages)/login/page.js",
-  "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
-}
