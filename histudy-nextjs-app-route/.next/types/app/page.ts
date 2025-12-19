@@ -1,4 +1,4 @@
-// File: C:\Users\HP\Downloads\themeforest-k8AMiCz0-histudy-online-courses-education-nextjs-template\histudy-nextjs-app-route\app\page.js
+// File: G:\hiStudy\hi study\histudy-nextjs-app-route\app\page.js
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
