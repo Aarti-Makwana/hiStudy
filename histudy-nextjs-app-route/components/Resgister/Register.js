@@ -19,18 +19,23 @@ const Register = () => {
             validationSchema={registerSchema}
             onSubmit={async (values, { setSubmitting, setErrors }) => {
               try {
-                const payload = {
-                  name: values.name,
-                  phone: values.phone,
-                  email: values.email,
-                  password: values.password,
-                  profession:
-                    values.profession === "Working Professional" ? values.company : values.profession || "",
-                  university:
-                    values.profession === "1st Year" || values.profession === "Final Year" ? values.university : "",
-                };
+                const formData = new FormData();
+                formData.append('name', values.name || '');
+                formData.append('phone', values.phone || '');
+                formData.append('email', values.email || '');
+                formData.append('password', values.password || '');
 
-                await UserAuthServices.userRegister(payload);
+                const professionValue = values.profession === 'Working Professional' ? (values.company || '') : (values.profession || '');
+                formData.append('profession', professionValue);
+
+                if (values.profession === '1st Year' || values.profession === 'Final Year') {
+                  formData.append('university', values.university || '');
+                }
+
+                // If you later add file inputs (avatar etc.) append them here, e.g.:
+                // formData.append('avatar', values.avatarFile);
+
+                await UserAuthServices.userRegister(formData);
                 router.push('/login');
               } catch (err) {
                 setErrors({ submit: err.message || 'Registration failed' });

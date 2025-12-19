@@ -16,7 +16,7 @@ const UserAuth = {
   },
 
   accountRegister: {
-    url: "/api/user/",
+    url: "/api/user/register",
     method: "POST",
   },
   /**
