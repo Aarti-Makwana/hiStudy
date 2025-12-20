@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import { forgotSchema } from "../../validations/auth/validation";
 import Toaster, { showToast } from "../../components/Toaster/Toaster";
 import OtpVerification from "../../components/OtpVerification/OtpVerification";
 import { UserAuthServices } from "../../services/User";
@@ -31,8 +32,9 @@ const ForgotPasswordPage = () => {
                         )}
 
                         <Formik
-                            initialValues={{ email: "", last4: "" }}
-                            onSubmit={async (values, { setSubmitting, setErrors }) => {
+                                        initialValues={{ email: "", last4: "" }}
+                                        validationSchema={forgotSchema}
+                                        onSubmit={async (values, { setSubmitting, setErrors }) => {
                                 try {
                                     const formData = new FormData();
                                     formData.append('email', values.email || '');
@@ -63,11 +65,13 @@ const ForgotPasswordPage = () => {
                                             <div className="form-group">
                                                 <Field name="email" type="email" placeholder="Email address *" />
                                                 <span className="focus-border"></span>
+                                                <div className="text-danger"><ErrorMessage name="email" /></div>
                                             </div>
 
                                             <div className="form-group">
                                                 <Field name="last4" type="text" placeholder="Last 4 digits of mobile number *" maxLength={4} />
                                                 <span className="focus-border"></span>
+                                                <div className="text-danger"><ErrorMessage name="last4" /></div>
                                             </div>
 
                                             {errors.submit && <div className="text-danger mb-3">{errors.submit}</div>}
