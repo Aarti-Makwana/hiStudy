@@ -10,6 +10,7 @@ const APIrequest = async ({
   baseURL,
   queryParams,
   bodyData,
+  headers: extraHeaders,
 }) => {
   const apiToken = getLocalStorageToken();
 
@@ -38,6 +39,14 @@ const APIrequest = async ({
       axiosConfig.headers = {
         ...axiosConfig.headers,
         "Authorization": `Bearer ${apiToken}`,
+      };
+    }
+
+    // Merge any extra headers passed by the caller (e.g., X-Id, X-Action)
+    if (extraHeaders && typeof extraHeaders === 'object') {
+      axiosConfig.headers = {
+        ...axiosConfig.headers,
+        ...extraHeaders,
       };
     }
 
@@ -88,6 +97,8 @@ const APIrequest = async ({
     });
 
     const res = await axios(axiosConfig);
+    console.log('yaha res ',res);
+    
     return res.data;
   } catch (error) {
     // Handle different error scenarios.

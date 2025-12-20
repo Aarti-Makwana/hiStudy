@@ -166,4 +166,25 @@ export const UserAuthServices = {
       throw error;
     }
   },
+  /**
+   * Verify OTP for signup/login flows.
+   * @param {FormData} formData - FormData containing `email` and `otp`.
+   * @param {Object} headers - Headers object to include X-Id and X-Action.
+   * @returns {Promise<Object>} - API response
+   */
+  otpVerify: async (formData, headers = {}) => {
+    try {
+      const payload = {
+        ...Auth.verifyOtp,
+        bodyData: formData,
+        headers: headers,
+      };
+      const res = await APIrequest(payload);
+      
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

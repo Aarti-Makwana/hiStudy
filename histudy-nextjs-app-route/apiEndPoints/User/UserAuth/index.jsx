@@ -11,7 +11,7 @@ const UserAuth = {
    */
 
   accountLogin: {
-    url: "/auth/login",
+    url: "/api/user/login",
     method: "POST",
   },
 
@@ -109,6 +109,12 @@ const UserAuth = {
   getUserData: {
     url: "/User/profile",
     method: "GET",
+  },
+
+  // OTP verification endpoint used for signup/login flows
+  verifyOtp: {
+    url: "/api/otp-verification",
+    method: "POST",
   },
 };
 
