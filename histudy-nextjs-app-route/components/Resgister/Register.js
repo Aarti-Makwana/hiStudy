@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { registerSchema } from "../../validations/auth/validation";
 import { UserAuthServices } from "../../services/User";
 import Toaster, { showToast } from "../Toaster/Toaster";
 import OtpVerification from "../OtpVerification/OtpVerification";
 const Register = () => {
-  const router = useRouter();
   const [showOtp, setShowOtp] = useState(false);
   const [otpProps, setOtpProps] = useState(null);
 
@@ -17,7 +15,23 @@ const Register = () => {
     <>
       <div className="col-lg-6">
         <div className="rbt-contact-form contact-form-style-1 max-width-auto">
-          <h3 className="title">Register</h3>
+          {!showOtp ? (
+            <h3 className="title">Register</h3>
+          ) : (
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <Link
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowOtp(false);
+                }}
+                className="otp-back-link"
+              >
+                <i className="feather-arrow-left me-2"></i>
+                Back to Register
+              </Link>
+            </div>
+          )}
           <Formik
             initialValues={{ name: "", phone: "", email: "", password: "", confirmPassword: "", profession: "", company: "", university: "" }}
             validationSchema={registerSchema}
@@ -59,6 +73,7 @@ const Register = () => {
           >
             {({ isSubmitting, errors, values, setFieldValue }) => (
               <Form className="max-width-auto">
+                <Toaster />
                 {!showOtp && (
                   <>
                     <div className="form-group">
@@ -81,7 +96,7 @@ const Register = () => {
 
                     <div className="form-group">
                       <label className="d-block">Profession</label>
-                      <Field as="select" name="profession" className="w-100 p-2" onChange={(e)=> setFieldValue('profession', e.target.value)} value={values.profession}>
+                      <Field as="select" name="profession" className="w-100 p-2" onChange={(e) => setFieldValue('profession', e.target.value)} value={values.profession}>
                         <option value="">Select profession</option>
                         <option value="Working Professional">Working Professional</option>
                         <option value="1st Year">1st Year</option>

@@ -20,7 +20,7 @@ const LoginPage = () => {
           <HeaderStyleTen headerSticky="rbt-sticky" headerType="" />
           <MobileMenu />
           <Cart />
-          <BreadCrumb title="Login & Register" text="Login & Register" />
+          <BreadCrumb title="Login" text="Login" />
 
           <div className="rbt-elements-area bg-color-white rbt-section-gap">
             <div className="container">
