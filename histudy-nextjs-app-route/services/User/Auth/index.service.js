@@ -100,10 +100,30 @@ export const UserAuthServices = {
    * @param {Object} bodyData - Password reset information.
    * @returns {Promise<Object>} - A promise that resolves to the response from the reset password API.
    */
-  resetPasswordService: async (bodyData) => {
+  resetPasswordService: async (bodyData, queryParams = {}) => {
     try {
       const payload = {
         ...Auth.resetPassword,
+        bodyData,
+        queryParams,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  /**
+   * Resend OTP for given email and type (register|login|forgot)
+   * @param {Object} bodyData - { email, type }
+   */
+  resendOtp: async (bodyData) => {
+    try {
+      const payload = {
+        url: "/api/user/resend-otp",
+        method: "POST",
         bodyData,
       };
       const res = await APIrequest(payload);

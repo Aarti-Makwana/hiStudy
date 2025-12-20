@@ -65,7 +65,7 @@ const Login = () => {
                       </div>
                       <div className="col-lg-6">
                         <div className="rbt-lost-password text-end">
-                          <Link className="rbt-btn-link" href="#">
+                          <Link className="rbt-btn-link" href="/forgot-password">
                             Lost your password?
                           </Link>
                         </div>
