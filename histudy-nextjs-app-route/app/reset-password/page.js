@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import Toaster, { showToast } from "../../components/Toaster/Toaster";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserAuthServices } from "../../services/User";
+import { resetPasswordSchema } from "../../validations/auth/validation";
 
 const ResetPasswordPage = () => {
   const router = useRouter();
@@ -20,6 +21,7 @@ const ResetPasswordPage = () => {
             <h3 className="title">Reset Password</h3>
             <Formik
               initialValues={{ new_password: "", new_password_confirmation: "" }}
+              validationSchema={resetPasswordSchema}
               onSubmit={async (values, { setSubmitting, setErrors }) => {
                 try {
                   const body = {
