@@ -39,7 +39,7 @@ const UserAuth = {
    * @property {string} method - The HTTP method for User password recovery (PATCH).
    */
   accountForgot: {
-    url: "/User/forgot-password",
+    url: "/api/user/forgot-password",
     method: "POST",
   },
 
@@ -51,8 +51,8 @@ const UserAuth = {
    * @property {string} method - The HTTP method for resetting User password (PATCH).
    */
   resetPassword: {
-    url: "/User/reset-password",
-    method: "PATCH",
+    url: "/api/user/reset-password",
+    method: "POST",
   },
 
   /**
@@ -114,6 +114,11 @@ const UserAuth = {
   // OTP verification endpoint used for signup/login flows
   verifyOtp: {
     url: "/api/otp-verification",
+    method: "POST",
+  },
+  // Resend OTP endpoint used by otp flows
+  resendOtp: {
+    url: "/api/user/resend-otp",
     method: "POST",
   },
 };
