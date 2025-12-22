@@ -32,9 +32,9 @@ const ForgotPasswordPage = () => {
                         )}
 
                         <Formik
-                                        initialValues={{ email: "", last4: "" }}
-                                        validationSchema={forgotSchema}
-                                        onSubmit={async (values, { setSubmitting, setErrors }) => {
+                            initialValues={{ email: "", last4: "" }}
+                            validationSchema={forgotSchema}
+                            onSubmit={async (values, { setSubmitting, setErrors }) => {
                                 try {
                                     const formData = new FormData();
                                     formData.append('email', values.email || '');
