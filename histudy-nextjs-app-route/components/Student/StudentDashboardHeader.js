@@ -1,7 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getToken } from "../../utils/storage";
 
 const StudentDashboardHeader = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!getToken()) {
+      router.push("/login");
+    }
+  }, []);
   return (
     <>
       <div className="rbt-dashboard-content-wrapper">

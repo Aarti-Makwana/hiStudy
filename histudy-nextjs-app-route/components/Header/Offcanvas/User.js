@@ -6,7 +6,8 @@ import UserData from "../../../data/user.json";
 const User = () => {
   return (
     <>
-      <div className="rbt-user-menu-list-wrapper">
+      <div className="user-dropdown-wrapper" style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 9999, minWidth: 260 }}>
+        <div className="rbt-user-menu-list-wrapper" style={{ boxShadow: '0 6px 18px rgba(0,0,0,0.08)', background: '#fff', borderRadius: 6, overflow: 'hidden' }}>
         {UserData &&
           UserData.user.map((person, index) => (
             <div className="inner" key={index}>
@@ -65,6 +66,7 @@ const User = () => {
               </ul>
             </div>
           ))}
+        </div>
       </div>
     </>
   );

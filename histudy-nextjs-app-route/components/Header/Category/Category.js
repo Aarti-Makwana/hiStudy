@@ -1,8 +1,19 @@
-import Link from "next/link";
-import CategoryData from "../../../data/elements/category";
-import SingleCategory from "./CategoryProps/SingleCategory";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { getToken, getUser } from "../../../utils/storage";
 
 const Category = () => {
+  const [logged, setLogged] = useState(false);
+  const [user, setUserState] = useState(null);
+
+  useEffect(() => {
+    const t = getToken();
+    const u = getUser();
+    setLogged(!!t);
+    setUserState(u);
+  }, []);
+
   return (
     <div className="rbt-category-menu-wrapper rbt-category-update">
       <div className="rbt-category-btn">
@@ -12,36 +23,10 @@ const Category = () => {
           </span>
           <i title="Category" className="feather-grid d-block d-xl-none"></i>
         </div>
-        <span className="category-text d-none d-xl-block">Category</span>
+        <span className="category-text d-none d-xl-block">{logged && user?.name ? `Hi, ${user.name}` : 'Category'}</span>
       </div>
 
-      <div className="update-category-dropdown">
-        <div className="inner">
-          <ul className="dropdown-parent-wrapper">
-            <SingleCategory
-              title="Course School"
-              isActive={false}
-              CategoryData={CategoryData}
-              CategoryNum={CategoryData.categoryItemOne}
-            />
-            <SingleCategory
-              title="Online School"
-              isActive={false}
-              CategoryData={CategoryData}
-              CategoryNum={CategoryData.categoryItemTwo}
-            />
-            <SingleCategory
-              title="kindergarten"
-              isActive={false}
-              CategoryData={CategoryData}
-              CategoryNum={CategoryData.categoryItemThree}
-            />
-            <li className="dropdown-parent-list">
-              <Link href="#">Classic LMS</Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+        {/* Dropdown intentionally disabled for left-side greeting. */}
     </div>
   );
 };

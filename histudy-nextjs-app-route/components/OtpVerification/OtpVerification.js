@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
 import { UserAuthServices } from "../../services/User";
-import Toaster, { showToast } from "../Toaster/Toaster";
 import Link from "next/link";
+import Swal from "sweetalert2";
+import { setToken, setUser } from "../../utils/storage";
 
-const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
+const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/login", hideInternalButton = false }, ref) => {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
 
       const res = await UserAuthServices.otpVerify(formData, headers);
       if (res && res.status === "success") {
-        showToast("success", res.message || "OTP verified");
+        Swal.fire("Success!", res.message || "OTP verified", "success");
         setOtp("");
         // If this was a forgot password flow, redirect to reset-password with token
         if (xAction === "forgot") {
@@ -43,20 +44,29 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
           const url = `/reset-password?email=${encodeURIComponent(email || "")}&token=${encodeURIComponent(token)}`;
           router.push(url);
         } else {
-          // generic redirect
-          router.push(redirectPath);
+          // For login/register OTP verification, store token and user and redirect to home
+          const token = res?.data?.token || "";
+          const userObj = res?.data?.user || null;
+          if (token) setToken(token);
+          if (userObj) setUser(userObj);
+          router.push("/");
         }
 
       } else {
         const msg = res?.message || "OTP verification failed";
-        showToast("error", msg);
+        Swal.fire("Oops!", msg, "error");
       }
     } catch (err) {
-      showToast("error", err?.message || "OTP verification error");
+      Swal.fire("Oops!", err?.message || "OTP verification error", "error");
     } finally {
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    verify: handleVerify,
+    isReady: () => otp.length === 6,
+  }));
 
   // Resend OTP handler with simple 30s cooldown
   const handleResend = async () => {
@@ -67,7 +77,7 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
       const body = { email: email || "", type: currentXAction || xAction || "forgot" };
       const resp = await UserAuthServices.resendOtp(body);
       if (resp && resp.status === "success") {
-        showToast("success", resp.message || "OTP resent");
+      Swal.fire("Success!", resp.message || "OTP resent", "success");
         // update current xId/xAction from response so verify uses latest headers
         const newXId = resp?.data?.x_id;
         const newXAction = resp?.data?.x_action;
@@ -81,10 +91,10 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
           }
         } catch (e) { }
       } else {
-        showToast("error", resp?.message || "Failed to resend OTP");
+        Swal.fire("Oops!", resp?.message || "Failed to resend OTP", "error");
       }
     } catch (err) {
-      showToast("error", err?.message || "Resend OTP error");
+      Swal.fire("Oops!", err?.message || "Resend OTP error", "error");
     }
     // start countdown timer
     const timer = setInterval(() => {
@@ -101,7 +111,6 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
 
   return (
     <div className="otp-verification">
-      <Toaster />
       <h4>Enter OTP</h4>
       <p>We've sent a 6-digit code to <strong>{email}</strong></p>
       <div className="form-group">
@@ -114,16 +123,18 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
           inputMode="numeric"
         />
       </div>
-      <div className="form-submit-group">
-        <button
-          type="button"
-          className="rbt-btn btn-md btn-gradient hover-icon-reverse"
-          disabled={otp.length !== 6 || loading}
-          onClick={handleVerify}
-        >
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
-      </div>
+      {!hideInternalButton && (
+        <div className="form-submit-group">
+          <button
+            type="button"
+            className="rbt-btn btn-md btn-gradient hover-icon-reverse"
+            disabled={otp.length !== 6 || loading}
+            onClick={handleVerify}
+          >
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
+        </div>
+      )}
       <div className="mt-2 text-center">
         {/* <button type="button" className="rbt-btn-link" onClick={handleResend} disabled={resendDisabled}>
           {resendDisabled ? `Resend OTP (${resendCountdown}s)` : "Resend OTP"}
@@ -144,6 +155,6 @@ const OtpVerification = ({ email, xId, xAction, redirectPath = "/login" }) => {
       </div>
     </div>
   );
-};
+});
 
 export default OtpVerification;

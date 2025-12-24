@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { loginSchema } from "../../validations/auth/validation";
 import { UserAuthServices } from "../../services/User";
-import Toaster, { showToast } from "../Toaster/Toaster";
 import OtpVerification from "../OtpVerification/OtpVerification";
+import Swal from "sweetalert2";
+import { getToken } from "../../utils/storage";
 
 const Login = () => {
+  const router = useRouter();
   const [showOtp, setShowOtp] = React.useState(false);
   const [otpProps, setOtpProps] = React.useState(null);
+  const [showHint, setShowHint] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) {
+      router.push("/");
+    }
+  }, []);
 
   return (
     <>
@@ -24,7 +34,7 @@ const Login = () => {
               try {
                 const res = await UserAuthServices.userLogin(values);
                 if (res && res.status === 'success') {
-                  showToast('success', res.message || 'Login successful');
+                  Swal.fire('Success!', res.message || 'Login successful', 'success');
                   const x_id = res?.data?.x_id;
                   const x_action = res?.data?.x_action;
                   const email = values.email;
@@ -32,9 +42,11 @@ const Login = () => {
                   setShowOtp(true);
                 } else {
                   setErrors({ submit: res?.message || 'Login failed' });
+                  Swal.fire('Oops!', res?.message || 'Login failed', 'error');
                 }
               } catch (err) {
                 setErrors({ submit: err.message || 'Login failed' });
+                Swal.fire('Oops!', err.message || 'Login failed', 'error');
               } finally {
                 setSubmitting(false);
               }
@@ -42,13 +54,21 @@ const Login = () => {
           >
             {({ isSubmitting, values }) => (
               <Form className="max-width-auto">
-                <Toaster />
                 {!showOtp && (
                   <>
                     <div className="form-group">
-                      <Field name="email" type="text" placeholder="Username or email *" />
-                      <span className="focus-border"></span>
+                      <Field name="email">
+                        {({ field }) => (
+                          <>
+                            <input {...field} type="text" placeholder="Username or email *" onFocus={() => setShowHint(true)} onBlur={() => setShowHint(false)} />
+                            <span className="focus-border"></span>
+                          </>
+                        )}
+                      </Field>
                       <div className="text-danger"><ErrorMessage name="email" /></div>
+                      {showHint && (
+                        <p style={{ color: "#999", fontSize: "12px", marginTop: "6px" }}>Must be in format: example@email.com</p>
+                      )}
                     </div>
                     <div className="form-group">
                       <Field name="password" type="password" placeholder="Password *" />

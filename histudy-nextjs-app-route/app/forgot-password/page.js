@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { forgotSchema } from "../../validations/auth/validation";
-import Toaster, { showToast } from "../../components/Toaster/Toaster";
+import Swal from "sweetalert2";
 import OtpVerification from "../../components/OtpVerification/OtpVerification";
 import { UserAuthServices } from "../../services/User";
 import Link from "next/link";
@@ -42,7 +42,7 @@ const ForgotPasswordPage = () => {
 
                                     const res = await UserAuthServices.UserForgotPassword(formData);
                                     if (res && res.status === 'success') {
-                                        showToast('success', res.message || 'OTP sent to email');
+                                        Swal.fire('Success!', res.message || 'OTP sent to email', 'success');
                                         const x_id = res?.data?.x_id;
                                         const x_action = res?.data?.x_action;
                                         setOtpProps({ email: values.email, xId: x_id, xAction: x_action, redirectPath: '/reset-password' });
@@ -59,17 +59,16 @@ const ForgotPasswordPage = () => {
                         >
                             {({ isSubmitting, errors }) => (
                                 <Form>
-                                    <Toaster />
                                     {!showOtp && (
                                         <>
                                             <div className="form-group">
-                                                <Field name="email" type="email" placeholder="Email address *" />
+                                                <Field name="email" type="email" placeholder="**Enter Registered Email ID *" />
                                                 <span className="focus-border"></span>
                                                 <div className="text-danger"><ErrorMessage name="email" /></div>
                                             </div>
 
                                             <div className="form-group">
-                                                <Field name="last4" type="text" placeholder="Last 4 digits of mobile number *" maxLength={4} />
+                                                <Field name="last4" type="text" placeholder="**Last 4 digits of your mobile number *" maxLength={4} />
                                                 <span className="focus-border"></span>
                                                 <div className="text-danger"><ErrorMessage name="last4" /></div>
                                             </div>
