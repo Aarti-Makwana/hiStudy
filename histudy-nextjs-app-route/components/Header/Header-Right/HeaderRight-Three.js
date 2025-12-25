@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/Context";
-import { getToken } from "../../../../utils/storage";
+import { getToken } from "../../../utils/storage";
 
 const HeaderRightThree = ({ btnClass, btnText }) => {
   const { mobile, setMobile, search, setSearch } = useAppContext();
