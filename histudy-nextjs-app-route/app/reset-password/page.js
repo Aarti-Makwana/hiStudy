@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import Toaster, { showToast } from "../../components/Toaster/Toaster";
+import Swal from "sweetalert2";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserAuthServices } from "../../services/User";
 import { resetPasswordSchema } from "../../validations/auth/validation";
@@ -31,7 +31,7 @@ const ResetPasswordPage = () => {
                   const queryParams = { email, token };
                   const res = await UserAuthServices.resetPasswordService(body, queryParams);
                   if (res && res.status === 'success') {
-                    showToast('success', res.message || 'Password reset successful');
+                    Swal.fire('Success!', res.message || 'Password reset successful', 'success');
                     router.push('/login');
                   } else {
                     setErrors({ submit: res?.message || 'Reset failed' });
@@ -45,7 +45,6 @@ const ResetPasswordPage = () => {
             >
               {({ isSubmitting, errors }) => (
                 <Form>
-                  <Toaster />
 
                   <div className="form-group">
                     <Field name="new_password" type="password" placeholder="New password *" />

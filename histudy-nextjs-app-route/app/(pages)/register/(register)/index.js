@@ -20,11 +20,11 @@ const RegisterPage = () => {
           <HeaderStyleTen headerSticky="rbt-sticky" headerType="" />
           <MobileMenu />
           <Cart />
-          <BreadCrumb title="Register" text="Register" />
+          {/* <BreadCrumb title="Register" text="Register" /> */}
 
           <div className="rbt-elements-area bg-color-white rbt-section-gap">
             <div className="container">
-              <div className="row gy-5 row--30">
+              <div className="row gy-5 row--30 justify-content-center">
                 <Register />
               </div>
             </div>

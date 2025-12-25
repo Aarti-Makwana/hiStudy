@@ -20,11 +20,11 @@ const LoginPage = () => {
           <HeaderStyleTen headerSticky="rbt-sticky" headerType="" />
           <MobileMenu />
           <Cart />
-          <BreadCrumb title="Login" text="Login" />
+          {/* <BreadCrumb title="Login" text="Login" /> */}
 
           <div className="rbt-elements-area bg-color-white rbt-section-gap">
             <div className="container">
-              <div className="row gy-5 row--30">
+              <div className="row gy-5 row--30 justify-content-center">
                 <Login />
               </div>
             </div>

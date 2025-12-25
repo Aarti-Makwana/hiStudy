@@ -96,7 +96,7 @@ const ClassicLms = ({ blogdata }) => {
       <div className="rbt-newsletter-area bg-gradient-6 ptb--50">
         <NewsletterThree />
       </div>
-      <div className="rbt-course-area bg-color-white rbt-section-gap">
+      <div id="popular-courses" className="rbt-course-area bg-color-white rbt-section-gap">
         <div className="container">
           <div className="row mb--55 g-5 align-items-end">
             <div className="col-lg-6 col-md-6 col-12">

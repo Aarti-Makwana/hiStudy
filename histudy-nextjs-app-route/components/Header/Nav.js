@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
 import { useState } from "react";
 
@@ -35,8 +34,8 @@ const Nav = () => {
             href="#"
           >
             Home
-            <i className="feather-chevron-down"></i>
           </Link>
+          {/*
           <div
             className={`rbt-megamenu menu-skin-dark ${
               activeMenuItem === "home" ? "active d-block" : ""
@@ -130,18 +129,27 @@ const Nav = () => {
               </div>
             </div>
           </div>
+          */}
         </li>
 
         <li className="with-megamenu has-menu-child-item">
           <Link
             className={`${activeMenuItem === "courses" ? "open" : ""}`}
-            href="#"
-            onClick={() => toggleMenuItem("courses")}
+            href="/#popular-courses"
+            onClick={(e) => {
+              try {
+                if (typeof window !== 'undefined' && (pathname === '/' || pathname === '')) {
+                  e.preventDefault();
+                  const el = document.getElementById('popular-courses');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              } catch (err) {}
+            }}
           >
             Courses
-            <i className="feather-chevron-down"></i>
           </Link>
 
+          {/*
           <div
             className={`rbt-megamenu grid-item-2 ${
               activeMenuItem === "courses" ? "active d-block" : ""
@@ -210,6 +218,7 @@ const Nav = () => {
               </div>
             </div>
           </div>
+          */}
         </li>
         <li className="has-dropdown has-menu-child-item">
           <Link
@@ -218,8 +227,8 @@ const Nav = () => {
             onClick={() => toggleMenuItem("dashboard")}
           >
             Dashboard
-            <i className="feather-chevron-down"></i>
           </Link>
+          {/*
           <ul
             className={`submenu ${
               activeMenuItem === "dashboard" ? "active d-block" : ""
@@ -254,6 +263,7 @@ const Nav = () => {
                 return null;
               })}
           </ul>
+          */}
         </li>
         <li className="with-megamenu has-menu-child-item position-static">
           <Link
@@ -262,8 +272,8 @@ const Nav = () => {
             onClick={() => toggleMenuItem("pages")}
           >
             Pages
-            <i className="feather-chevron-down"></i>
           </Link>
+          {/*
           <div
             className={`rbt-megamenu grid-item-4 ${
               activeMenuItem === "pages" ? "active d-block" : ""
@@ -329,6 +339,7 @@ const Nav = () => {
               </div>
             </div>
           </div>
+          */}
         </li>
         <li className="with-megamenu has-menu-child-item position-static">
           <Link
@@ -337,8 +348,8 @@ const Nav = () => {
             onClick={() => toggleMenuItem("elements")}
           >
             Elements
-            <i className="feather-chevron-down"></i>
           </Link>
+          {/*
           <div
             className={`rbt-megamenu grid-item-3 ${
               activeMenuItem === "elements" ? "active d-block" : ""
@@ -387,6 +398,7 @@ const Nav = () => {
               </div>
             </div>
           </div>
+          */}
         </li>
         <li className="with-megamenu has-menu-child-item position-static">
           <Link
@@ -395,8 +407,8 @@ const Nav = () => {
             onClick={() => toggleMenuItem("blog")}
           >
             Blog
-            <i className="feather-chevron-down"></i>
           </Link>
+          {/*
           <div
             className={`rbt-megamenu grid-item-3 ${
               activeMenuItem === "blog" ? "active d-block" : ""
@@ -493,6 +505,7 @@ const Nav = () => {
               </div>
             </div>
           </div>
+          */}
         </li>
       </ul>
     </nav>

@@ -1,26 +1,29 @@
 "use client";
 
 import Link from "next/link";
-
-import { useSelector } from "react-redux";
-
-import User from "../Offcanvas/User";
+import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/Context";
+import User from "../Offcanvas/User";
+import { getToken, getUser } from "../../../utils/storage";
 
 const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
-  const { mobile, setMobile, search, setSearch, cartToggle, setCart } =
-    useAppContext();
+  const { mobile, setMobile, search, setSearch } = useAppContext();
+  const [logged, setLogged] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const { total_items } = useSelector((state) => state.CartReducer);
+  useEffect(() => {
+    const t = getToken();
+    const u = getUser();
+    setLogged(!!t);
+    setUser(u);
+  }, []);
 
   return (
     <div className="header-right">
       <ul className="quick-access">
         <li className="access-icon">
           <Link
-            className={`search-trigger-active rbt-round-btn ${
-              search ? "" : "open"
-            }`}
+            className={`search-trigger-active rbt-round-btn ${search ? "" : "open"}`}
             href="#"
             onClick={() => setSearch(!search)}
           >
@@ -28,45 +31,31 @@ const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
           </Link>
         </li>
 
-        <li className="access-icon rbt-mini-cart">
-          <Link
-            className="rbt-cart-sidenav-activation rbt-round-btn"
-            href="#"
-            onClick={() => setCart(!cartToggle)}
-          >
-            <i className="feather-shopping-cart"></i>
-            <span className="rbt-cart-count">{total_items}</span>
-          </Link>
-        </li>
+        {/* Cart intentionally removed per request (kept design spacing) */}
 
-        <li className="account-access rbt-user-wrapper d-none d-xl-block">
-          <Link href="#">
-            <i className="feather-user"></i>
-            {userType}
-          </Link>
-          <User />
-        </li>
-
-        <li className="access-icon rbt-user-wrapper d-block d-xl-none">
-          <Link className="rbt-round-btn" href="#">
-            <i className="feather-user"></i>
-          </Link>
-          <User />
-        </li>
+        {/* Right-side username/icon hidden. Dropdown moved under Dashboard button. */}
       </ul>
 
+      <div className="rbt-separator d-none d-xl-block" style={{ display: 'inline-block', width: '1px', height: '36px', background: '#e6e6e6', margin: '0 18px' }} />
+
       <div className="rbt-btn-wrapper d-none d-xl-block">
-        <Link className={`rbt-btn ${btnClass}`} href="#">
-          <span data-text={`${btnText}`}>{btnText}</span>
-        </Link>
+        {logged ? (
+          <div className="account-access rbt-user-wrapper" style={{ position: 'relative' }}>
+            <Link className={`rbt-btn ${btnClass}`} href="/dashboard">
+              <span data-text={`Dashboard`}>Dashboard</span>
+            </Link>
+            <User />
+          </div>
+        ) : (
+          <Link className={`rbt-btn ${btnClass}`} href="/register">
+            <span data-text={`Register Now`}>{btnText || 'Register Now'}</span>
+          </Link>
+        )}
       </div>
 
       <div className="mobile-menu-bar d-block d-xl-none">
         <div className="hamberger">
-          <button
-            className="hamberger-button rbt-round-btn"
-            onClick={() => setMobile(!mobile)}
-          >
+          <button className="hamberger-button rbt-round-btn" onClick={() => setMobile(!mobile)}>
             <i className="feather-menu"></i>
           </button>
         </div>
