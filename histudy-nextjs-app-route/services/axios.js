@@ -2,6 +2,7 @@ import axios from "axios";
 import momentTimezone from "moment-timezone";
 import config from "../config";
 import { getLocalStorageToken, logger } from "../utils";
+import { getToken } from "../utils/storage";
 import { toast } from "react-toastify";
 
 const APIrequest = async ({
@@ -12,7 +13,10 @@ const APIrequest = async ({
   bodyData,
   headers: extraHeaders,
 }) => {
-  const apiToken = getLocalStorageToken();
+  // Prefer encrypted token stored by utils.common (NAME_KEY:token). Fall back to plain
+  // `token` used by `utils/storage` (setToken/getToken) so existing OTP/login
+  // flow works without breaking other parts of the app.
+  const apiToken = getLocalStorageToken() || getToken();
 
   // Log resolved config values to help debug why requests target localhost
   logger("Resolved config.API_BASE_URL", config.API_BASE_URL);

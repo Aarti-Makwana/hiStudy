@@ -98,7 +98,7 @@ const UserAuth = {
    * @property {string} method - The HTTP method for User logout (GET).
    */
   getUserDetails: {
-    url: "/auth/me",
+    url: "/api/profile",
     method: "GET",
   },
 
@@ -107,7 +107,7 @@ const UserAuth = {
    * @type {object}
    */
   getUserData: {
-    url: "/User/profile",
+    url: "/api/data",
     method: "GET",
   },
 
