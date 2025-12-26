@@ -1,20 +1,30 @@
-import BackToTop from "@/app/backToTop";
-import SingleCoursePage from "./index";
+import CourseDetails from "@/data/course-details/courseData.json";
+import ClientCoursePage from "./ClientCoursePage";
 
-export const metadata = {
-  title:
-    "Course Filter One Open - Online Courses & Education NEXTJS14 Template",
-  description: "Online Courses & Education NEXTJS14 Template",
-};
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\d+/g, "")
+    .replace("&", "")
+    .replace(/\s+/g, " ")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
 
-const Page = ({ params }) => {
-  return (
-    <>
-      <SingleCoursePage getParams={params} />
+// 👇 THIS is required for output: "export"
+export async function generateStaticParams() {
+  const courses = CourseDetails.courseDetails;
 
-      <BackToTop />
-    </>
-  );
-};
+  const ids = courses.map((c) => ({
+    courseId: slugify(c.category),
+  }));
 
-export default Page;
+  return ids;
+}
+
+export default function Page({ params }) {
+  return <ClientCoursePage getParams={params} />;
+}

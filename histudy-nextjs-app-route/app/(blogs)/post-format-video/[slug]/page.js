@@ -4,6 +4,14 @@ import BlogLayout from "../page";
 
 import { getPostBySlug, getAllPostsMeta } from "@/mdx";
 
+export async function generateStaticParams() {
+  const posts = await getAllPostsMeta();
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
 const getPageContent = async (slug) => {
   try {
     const { meta, content } = await getPostBySlug(slug);
