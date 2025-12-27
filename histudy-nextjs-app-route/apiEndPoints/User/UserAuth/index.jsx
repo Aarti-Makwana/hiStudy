@@ -62,9 +62,9 @@ const UserAuth = {
    * @property {string} url - The URL for updating User account information.
    * @property {string} method - The HTTP method for updating User account information (PUT).
    */
-  accountUpdate: {
-    url: "/User/update-profile",
-    method: "PATCH",
+  userDetailsUpdate: {
+    url: "/api/profile",
+    method: "POST",
   },
 
   /**
@@ -87,8 +87,8 @@ const UserAuth = {
    * @property {string} method - The HTTP method for User logout (POST).
    */
   accountLogout: {
-    url: "/auth/logout",
-    method: "GET",
+    url: "/api/profile/logout",
+    method: "DELETE",
   },
   /**
    * Endpoint for User auth detail.

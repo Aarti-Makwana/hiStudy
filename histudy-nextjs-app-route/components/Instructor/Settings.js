@@ -1,13 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+
+import { UserAuthServices } from "../../services/User";
+import { getUser, setUser } from "../../utils/storage";
 
 const Setting = () => {
   const [textareaText, setTextareaText] = useState(
     "I'm the Front-End Developer for #Rainbow IT in Bangladesh, OR. I have serious passion for UI effects, animations and creating intuitive, dynamic user experiences."
   );
+  const [form, setForm] = useState({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    gender: "",
+    dob: "",
+    phone: "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const u = getUser();
+    if (u) {
+      setForm({
+        first_name: u.profile?.first_name || u.first_name || "",
+        middle_name: u.profile?.middle_name || "",
+        last_name: u.profile?.last_name || u.last_name || "",
+        gender: u.profile?.gender || "",
+        dob: u.profile?.dob || "",
+        phone: u.profile?.phone || u.phone || "",
+      });
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setForm((s) => ({ ...s, [id]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // Call the user details update endpoint
+      const body = {
+        first_name: form.first_name,
+        middle_name: form.middle_name || null,
+        last_name: form.last_name,
+        gender: form.gender,
+        dob: form.dob,
+        phone: form.phone,
+      };
+      const res = await UserAuthServices.userDetailsUpdateService(body);
+      if (res && res.status === "success") {
+        // update stored user
+        const updated = res.data || {};
+        setUser(updated);
+        alert(res.message || "Profile updated");
+      } else {
+        alert(res?.message || "Failed to update profile");
+      }
+    } catch (err) {
+      alert(err.message || "Update error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -106,78 +166,53 @@ const Setting = () => {
                 </div>
               </div>
               <form
-                action="#"
+                onSubmit={handleSubmit}
                 className="rbt-profile-row rbt-default-form row row--15"
               >
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="firstname">First Name</label>
-                    <input id="firstname" type="text" defaultValue="John" />
+                    <label htmlFor="first_name">First Name</label>
+                    <input id="first_name" type="text" value={form.first_name} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="lastname">Last Name</label>
-                    <input id="lastname" type="text" defaultValue="Due" />
+                    <label htmlFor="middle_name">Middle Name</label>
+                    <input id="middle_name" type="text" value={form.middle_name} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="username">User Name</label>
-                    <input id="username" type="text" defaultValue="johndue" />
+                    <label htmlFor="last_name">Last Name</label>
+                    <input id="last_name" type="text" value={form.last_name} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="phonenumber">Phone Number</label>
-                    <input
-                      id="phonenumber"
-                      type="tel"
-                      defaultValue="+1-202-555-0174"
-                    />
+                    <label htmlFor="phone">Phone Number</label>
+                    <input id="phone" type="tel" value={form.phone} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="skill">Skill/Occupation</label>
-                    <input
-                      id="skill"
-                      type="text"
-                      defaultValue="Full Stack Developer"
-                    />
-                  </div>
-                </div>
-                <div className="col-lg-6 col-md-6 col-sm-6 col-12">
-                  <div className="filter-select rbt-modern-select">
-                    <label htmlFor="displayname" className="">
-                      Display name publicly as
-                    </label>
-                    <select id="displayname" className="w-100">
-                      <option>John Due</option>
-                      <option>John</option>
-                      <option>Due</option>
-                      <option>Due John</option>
-                      <option>johndue</option>
+                    <label htmlFor="gender">Gender</label>
+                    <select id="gender" value={form.gender} onChange={handleChange} className="w-100">
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
                 </div>
-                <div className="col-12">
+                <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="bio">Bio</label>
-                    <textarea
-                      id="bio"
-                      cols="20"
-                      rows="5"
-                      value={textareaText}
-                      onChange={(e) => setTextareaText(e.target.value)}
-                    ></textarea>
+                    <label htmlFor="dob">Date of Birth</label>
+                    <input id="dob" type="date" value={form.dob} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="col-12 mt--20">
                   <div className="rbt-form-group">
-                    <Link className="rbt-btn btn-gradient" href="#">
-                      Update Info
-                    </Link>
+                    <button className="rbt-btn btn-gradient" type="submit">{loading ? 'Updating...' : 'Update Info'}</button>
                   </div>
                 </div>
               </form>

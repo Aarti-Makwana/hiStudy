@@ -1,14 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserAuthServices } from "../../services/User";
+import { getToken } from "../../utils/storage";
+import { getLocalStorageToken } from "../../utils";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const router = useRouter();
+
   useEffect(() => {
+    // If no token present (either encrypted or plain), redirect immediately.
+    const token = getLocalStorageToken() || getToken();
+    if (!token) {
+      router.replace("/");
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const res = await UserAuthServices.getUserDataService();
