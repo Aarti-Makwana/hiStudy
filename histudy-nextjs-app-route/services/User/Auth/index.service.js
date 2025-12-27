@@ -187,6 +187,23 @@ export const UserAuthServices = {
     }
   },
   /**
+   * Function for updating user details via /api/profile
+   * @param {Object} bodyData - Updated profile information.
+   */
+  userDetailsUpdateService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.userDetailsUpdate,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+  /**
    * Verify OTP for signup/login flows.
    * @param {FormData} formData - FormData containing `email` and `otp`.
    * @param {Object} headers - Headers object to include X-Id and X-Action.
