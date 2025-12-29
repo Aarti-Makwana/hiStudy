@@ -40,9 +40,8 @@ const HeaderNine = ({
   return (
     <>
       <div
-        className={`rbt-header-wrapper ${gapSpaceBetween} ${transparent} ${
-          !headerType && isSticky ? "rbt-sticky" : ""
-        }`}
+        className={`rbt-header-wrapper ${gapSpaceBetween} ${transparent} ${!headerType && isSticky ? "rbt-sticky" : ""
+          }`}
       >
         <div className="container">
           <div className={`mainbar-row ${navigationEnd} align-items-center`}>
@@ -77,7 +76,7 @@ const HeaderNine = ({
             </div>
             <HeaderRightTwo
               userType="Admin"
-              btnText="Enroll Now"
+              btnText="My Account"
               btnClass="rbt-marquee-btn marquee-auto btn-border-gradient radius-round btn-sm hover-transform-none"
             />
           </div>

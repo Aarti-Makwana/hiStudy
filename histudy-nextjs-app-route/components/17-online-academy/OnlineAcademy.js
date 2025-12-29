@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ParallaxProvider } from "react-scroll-parallax";
@@ -11,7 +13,7 @@ import EventCarouse from "../Events/EventCarouse";
 import TestimonialFour from "../Testimonials/Testimonial-Four";
 import BlogGrid from "../Blogs/BlogGrid";
 
-import CourseDetails from "../../data/course-details/courseData.json";
+import { UserCoursesServices } from "../../services/User/Courses/index.service";
 
 import brand1 from "../../public/images/brand/partner-5.webp";
 import brand2 from "../../public/images/brand/partner-1.webp";
@@ -19,10 +21,41 @@ import brand3 from "../../public/images/brand/partner-6.webp";
 import brand4 from "../../public/images/brand/partner-3.webp";
 
 const OnlineAcademy = ({ blogdata }) => {
-  let getAllCourse = JSON.parse(JSON.stringify(CourseDetails.courseDetails));
-
-  const [courseFilter, setCourseFilter] = useState(getAllCourse);
+  const [getAllCourse, setGetAllCourse] = useState([]);
+  const [courseFilter, setCourseFilter] = useState([]);
   const [activeTab, setActiveTab] = useState("All Course");
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await UserCoursesServices.UserAllCourses();
+
+        if (res && res.success) {
+          // Adapt API data to component structure
+          const adaptedCourses = res.data.map((item) => ({
+            id: item.id,
+            courseImg: item.file ? item.file : brand1, // Fallback to brand1 or similar if null
+            courseTitle: item.title,
+            desc: item.short_description || item.long_description,
+            lesson: item.number_of_lectures,
+            student: item.students_taught || 0, // Fallback
+            review: item.review_count || 0, // Fallback
+            price: item.discounted_price,
+            offPrice: item.actual_price,
+            courseType: item.categories?.[0]?.name || "All Course", // Map category to type for filtering
+            offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
+          }));
+
+          setGetAllCourse(adaptedCourses);
+          setCourseFilter(adaptedCourses);
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const filterItem = (types) => {
     const updateItem = getAllCourse.filter((curElm) => {
@@ -37,7 +70,6 @@ const OnlineAcademy = ({ blogdata }) => {
   };
 
   const handleButtonClick = (courseType) => {
-    setCourseFilter(getAllCourse);
     setActiveTab(courseType);
     filterItem(courseType);
   };
@@ -68,7 +100,7 @@ const OnlineAcademy = ({ blogdata }) => {
           </div>
         </div>
 
-        <div className="rbt-course-area rbt-sec-cir-shadow-1 bg-color-extra2 rbt-section-gap">
+        <div id="popular-courses" className="rbt-course-area rbt-sec-cir-shadow-1 bg-color-extra2 rbt-section-gap">
           <div className="gradient-shape-top"></div>
           <div className="gradient-shape-bottom"></div>
           <div className="container">
@@ -131,9 +163,9 @@ const OnlineAcademy = ({ blogdata }) => {
                                 height={244}
                                 alt="Card image"
                               />
-                              {data.offPrice > 0 ? (
+                              {data.offPricePercentage > 0 ? (
                                 <div className="rbt-badge-3 bg-white">
-                                  <span>-{data.offPrice}%</span>
+                                  <span>-{data.offPricePercentage}%</span>
                                   <span>Off</span>
                                 </div>
                               ) : (
