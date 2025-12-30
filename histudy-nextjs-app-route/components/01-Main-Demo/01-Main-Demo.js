@@ -28,20 +28,27 @@ const MainDemo = ({ blogs }) => {
     const fetchCourses = async () => {
       try {
         const res = await UserCoursesServices.UserAllCourses();
+        console.log("UserAllCourses response:", res); // Debug log
+
         if (res && res.success) {
           const adaptedCourses = res.data.map((item) => ({
             id: item.id,
+            slug: item.slug || item.id, // Fallback to ID if slug is missing
             courseImg: item.file ? item.file : brand1,
             courseTitle: item.title,
             desc: item.short_description || item.long_description,
             lesson: item.number_of_lectures,
             student: item.students_taught || 0,
-            review: item.review_count || 0,
+            review: item.rating_count || item.ratings || 0,
+            rating: item.average_rating || 0,
             price: item.discounted_price,
             offPrice: item.actual_price,
             offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
           }));
+          console.log("Adapted courses:", adaptedCourses); // Debug log
           setCourses(adaptedCourses);
+        } else {
+          console.error("API success false or invalid response", res);
         }
       } catch (error) {
         console.error("Error fetching courses:", error);
@@ -99,6 +106,7 @@ const MainDemo = ({ blogs }) => {
               </div>
             </div>
             <div className="row g-5">
+              {courses.length === 0 && <div className="col-12 text-center">No courses available.</div>}
 
               {courses?.slice(0, 3).map((data, index) => (
                 <div
@@ -110,7 +118,7 @@ const MainDemo = ({ blogs }) => {
                 >
                   <div className="rbt-card variation-01 rbt-hover">
                     <div className="rbt-card-img">
-                      <Link href={`/course-details/${data.id}`}>
+                      <Link href={`/course-details/${data.slug}`}>
                         <Image
                           src={data.courseImg}
                           width={355}
@@ -131,11 +139,13 @@ const MainDemo = ({ blogs }) => {
                       <div className="rbt-card-top">
                         <div className="rbt-review">
                           <div className="rating">
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
-                            <i className="fas fa-star"></i>
+                            {[...Array(5)].map((_, i) => (
+                              <i
+                                key={i}
+                                className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
+                                style={{ color: i < Math.round(data.rating) ? "#ffc107" : "#e4e5e9" }}
+                              ></i>
+                            ))}
                           </div>
                           <span className="rating-count">
                             ({data.review} Reviews)
@@ -149,7 +159,7 @@ const MainDemo = ({ blogs }) => {
                       </div>
 
                       <h4 className="rbt-card-title">
-                        <Link href={`/course-details/${data.id}`}>
+                        <Link href={`/course-details/${data.slug}`}>
                           {data.courseTitle}
                         </Link>
                       </h4>
@@ -174,7 +184,7 @@ const MainDemo = ({ blogs }) => {
                         </div>
                         <Link
                           className="rbt-btn-link"
-                          href={`/course-details/${data.id}`}
+                          href={`/course-details/${data.slug}`}
                         >
                           Learn More<i className="feather-arrow-right"></i>
                         </Link>

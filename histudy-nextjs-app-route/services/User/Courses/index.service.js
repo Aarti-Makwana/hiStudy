@@ -19,4 +19,18 @@ export const UserCoursesServices = {
     }
   },
 
+  UserGetCourse: async (slug) => {
+    try {
+      const payload = {
+        ...UserCourses.getCourse,
+        url: UserCourses.getCourse.url + "/" + slug,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
 };
