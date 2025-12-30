@@ -41,7 +41,7 @@ const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
       <div className="rbt-btn-wrapper d-none d-xl-block">
         {logged ? (
           <div className="account-access rbt-user-wrapper" style={{ position: 'relative' }}>
-            <Link className={`rbt-btn ${btnClass}`} href="/dashboard">
+            <Link className={`rbt-btn ${btnClass}`} href="/instructor-dashboard">
               <span data-text={`Dashboard`}>Dashboard</span>
             </Link>
             <User />
