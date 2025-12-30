@@ -54,8 +54,8 @@ const SingleCourse = ({ getParams }) => {
                 100
               ),
               star: apiData.average_rating || 0,
-              ratingNumber: apiData.rating_count || 0,
-              review: apiData.review_count || 0,
+              ratingNumber: apiData.ratings || 0,
+              review: apiData.ratings || 0,
               studentNumber: apiData.students_taught || 0,
               lesson: apiData.number_of_lectures,
               duration: apiData.duration,
