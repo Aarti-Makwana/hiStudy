@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import sal from "sal.js";
 
 import CategoryOne from "../Category/CategoryOne";
 import MainDemoBanner from "./MainDemoBanner";
-import Card from "../Cards/Card";
 import AboutTwo from "../Abouts/About-Two";
 import CallToAction from "../Call-To-Action/CallToAction";
 import Counter from "../Counters/Counter";
@@ -17,14 +17,53 @@ import BlogGridTop from "../Blogs/Blog-Sections/BlogGrid-Top";
 import NewsletterTwo from "../Newsletters/Newsletter-Two";
 
 import { ParallaxProvider } from "react-scroll-parallax";
+import { UserCoursesServices } from "../../services/User/Courses/index.service";
+
+import brand1 from "../../public/images/brand/partner-5.webp";
 
 const MainDemo = ({ blogs }) => {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await UserCoursesServices.UserAllCourses();
+        console.log("UserAllCourses response:", res); // Debug log
+
+        if (res && res.success) {
+          const adaptedCourses = res.data.map((item) => ({
+            id: item.id,
+            slug: item.slug || item.id, // Fallback to ID if slug is missing
+            courseImg: item.file ? item.file : brand1,
+            courseTitle: item.title,
+            desc: item.short_description || item.long_description,
+            lesson: item.number_of_lectures,
+            student: item.students_taught || 0,
+            review: item.rating_count || item.ratings || 0,
+            rating: item.average_rating || 0,
+            price: item.discounted_price,
+            offPrice: item.actual_price,
+            offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
+          }));
+          console.log("Adapted courses:", adaptedCourses); // Debug log
+          setCourses(adaptedCourses);
+        } else {
+          console.error("API success false or invalid response", res);
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+    fetchCourses();
+  }, []);
+
   useEffect(() => {
     sal({
       threshold: 0.01,
       once: true,
     });
-  }, []);
+  }, [courses]);
+
   return (
     <>
       <main className="rbt-main-wrapper">
@@ -52,7 +91,7 @@ const MainDemo = ({ blogs }) => {
           </div>
         </div>
 
-        <div className="rbt-course-area bg-color-extra2 rbt-section-gap">
+        <div id="popular-courses" className="rbt-course-area bg-color-extra2 rbt-section-gap">
           <div className="container">
             <div className="row mb--60">
               <div className="col-lg-12">
@@ -67,14 +106,93 @@ const MainDemo = ({ blogs }) => {
               </div>
             </div>
             <div className="row g-5">
-              <Card
-                col="col-lg-4 col-md-6 col-sm-6 col-12"
-                mt="mt--30"
-                start={0}
-                end={3}
-                isDesc={true}
-                isUser={true}
-              />
+              {courses.length === 0 && <div className="col-12 text-center">No courses available.</div>}
+
+              {courses?.slice(0, 3).map((data, index) => (
+                <div
+                  className="col-lg-4 col-md-6 col-sm-6 col-12 mt--30"
+                  data-sal-delay="150"
+                  data-sal="slide-up"
+                  data-sal-duration="800"
+                  key={index}
+                >
+                  <div className="rbt-card variation-01 rbt-hover">
+                    <div className="rbt-card-img">
+                      <Link href={`/course-details/${data.slug}`}>
+                        <Image
+                          src={data.courseImg}
+                          width={355}
+                          height={244}
+                          alt="Card image"
+                        />
+                        {data.offPricePercentage > 0 ? (
+                          <div className="rbt-badge-3 bg-white">
+                            <span>-{data.offPricePercentage}%</span>
+                            <span>Off</span>
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                      </Link>
+                    </div>
+                    <div className="rbt-card-body">
+                      <div className="rbt-card-top">
+                        <div className="rbt-review">
+                          <div className="rating">
+                            {[...Array(5)].map((_, i) => (
+                              <i
+                                key={i}
+                                className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
+                                style={{ color: i < Math.round(data.rating) ? "#ffc107" : "#e4e5e9" }}
+                              ></i>
+                            ))}
+                          </div>
+                          <span className="rating-count">
+                            ({data.review} Reviews)
+                          </span>
+                        </div>
+                        <div className="rbt-bookmark-btn">
+                          <Link className="rbt-round-btn" title="Bookmark" href="#">
+                            <i className="feather-bookmark"></i>
+                          </Link>
+                        </div>
+                      </div>
+
+                      <h4 className="rbt-card-title">
+                        <Link href={`/course-details/${data.slug}`}>
+                          {data.courseTitle}
+                        </Link>
+                      </h4>
+
+                      <ul className="rbt-meta">
+                        <li>
+                          <i className="feather-book"></i>
+                          {data.lesson} Lessons
+                        </li>
+                        <li>
+                          <i className="feather-users"></i>
+                          {data.student} Students
+                        </li>
+                      </ul>
+
+                      <p className="rbt-card-text">{data.desc}</p>
+
+                      <div className="rbt-card-bottom">
+                        <div className="rbt-price">
+                          <span className="current-price">${data.price}</span>
+                          <span className="off-price">${data.offPrice}</span>
+                        </div>
+                        <Link
+                          className="rbt-btn-link"
+                          href={`/course-details/${data.slug}`}
+                        >
+                          Learn More<i className="feather-arrow-right"></i>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="row">
               <div className="col-lg-12">

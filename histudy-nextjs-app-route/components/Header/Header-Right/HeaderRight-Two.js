@@ -48,7 +48,7 @@ const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
           </div>
         ) : (
           <Link className={`rbt-btn ${btnClass}`} href="/register">
-            <span data-text={`Register Now`}>{btnText || 'Register Now'}</span>
+            <span data-text={"My Account"}>{"My Account"}</span>
           </Link>
         )}
       </div>
