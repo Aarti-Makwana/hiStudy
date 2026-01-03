@@ -1,103 +1,98 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-import AccordionData from "../../data/elements/accordion.json";
+import { DashboardServices } from "../../services/User/Dashboard/index.services";
 
 const Faq = () => {
+  const [faqs, setFaqs] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        const response = await DashboardServices.getFAQs();
+        if (response.success) {
+          // Group FAQs by category name
+          const grouped = response.data.reduce((acc, item) => {
+            const categoryName = item.category.name;
+            if (!acc[categoryName]) {
+              acc[categoryName] = [];
+            }
+            acc[categoryName].push(item);
+            return acc;
+          }, {});
+          setFaqs(grouped);
+        }
+      } catch (error) {
+        console.error("Error fetching FAQs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const categories = Object.keys(faqs);
+
   return (
     <>
       <div className="container">
-        {AccordionData.AccordionThree.map((data, index) => (
-          <div className="row g-5" key={index}>
-            <div className="col-lg-6">
-              <div className="rbt-accordion-style accordion">
-                <div className="section-title text-start mb--60">
-                  <h4 className="title">Purchases & Refunds</h4>
-                </div>
-                <div className="rbt-accordion-style rbt-accordion-04 accordion">
-                  <div className="accordion" id="accordionExamplec3">
-                    {data.faqBody.map((item, innerIndex) => (
-                      <div className="accordion-item card" key={innerIndex}>
-                        <h2
-                          className="accordion-header card-header"
-                          id={item.heading}
-                        >
-                          <button
-                            className={`accordion-button ${
-                              !item.collapsed ? "collapsed" : ""
-                            }`}
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target={`#${item.collapse}`}
-                            aria-expanded={item.expanded}
-                            aria-controls={item.collapse}
+        <div className="row g-5">
+          {categories.length > 0 ? (
+            categories.map((category, index) => (
+              <div className="col-lg-6" key={index}>
+                <div className="rbt-accordion-style accordion">
+                  <div className="section-title text-start mb--60">
+                    <h4 className="title">{category}</h4>
+                  </div>
+                  <div className="rbt-accordion-style rbt-accordion-04 accordion">
+                    <div className="accordion" id={`accordion-${index}`}>
+                      {faqs[category].map((item, innerIndex) => (
+                        <div className="accordion-item card" key={item.id}>
+                          <h2
+                            className="accordion-header card-header"
+                            id={`heading-${item.id}`}
                           >
-                            {item.accordionTitle}
-                          </button>
-                        </h2>
-                        <div
-                          id={item.collapse}
-                          className={`accordion-collapse collapse ${
-                            item.show ? "show" : ""
-                          }`}
-                          aria-labelledby={item.heading}
-                          data-bs-parent="#accordionExamplec3"
-                        >
-                          <div className="accordion-body card-body">
-                            {item.desc}
+                            <button
+                              className={`accordion-button ${innerIndex !== 0 ? "collapsed" : ""
+                                }`}
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target={`#collapse-${item.id}`}
+                              aria-expanded={innerIndex === 0}
+                              aria-controls={`collapse-${item.id}`}
+                            >
+                              {item.question}
+                            </button>
+                          </h2>
+                          <div
+                            id={`collapse-${item.id}`}
+                            className={`accordion-collapse collapse ${innerIndex === 0 ? "show" : ""
+                              }`}
+                            aria-labelledby={`heading-${item.id}`}
+                            data-bs-parent={`#accordion-${index}`}
+                          >
+                            <div className="accordion-body card-body">
+                              {item.answer}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-12">
+              <p>No FAQs found.</p>
             </div>
-            <div className="col-lg-6">
-              <div className="rbt-accordion-style accordion">
-                <div className="section-title text-start mb--60">
-                  <h4 className="title">Making Courses</h4>
-                </div>
-                <div className="rbt-accordion-style rbt-accordion-04 accordion">
-                  <div className="accordion" id="faqs-accordionExamplec3">
-                    {data.faqBody2.map((item, innerIndex) => (
-                      <div className="accordion-item card" key={innerIndex}>
-                        <h2
-                          className="accordion-header card-header"
-                          id={`faq-${item.heading}`}
-                        >
-                          <button
-                            className={`accordion-button ${
-                              !item.collapsed ? "collapsed" : ""
-                            }`}
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target={`#faq-${item.collapse}`}
-                            aria-expanded={item.expanded}
-                            aria-controls={`faq-${item.collapse}`}
-                          >
-                            {item.accordionTitle}
-                          </button>
-                        </h2>
-                        <div
-                          id={`faq-${item.collapse}`}
-                          className={`accordion-collapse collapse ${
-                            item.show ? "show" : ""
-                          }`}
-                          aria-labelledby={`faq-${item.heading}`}
-                          data-bs-parent="#faqs-accordionExamplec3"
-                        >
-                          <div className="accordion-body card-body">
-                            {item.desc}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
     </>
   );
