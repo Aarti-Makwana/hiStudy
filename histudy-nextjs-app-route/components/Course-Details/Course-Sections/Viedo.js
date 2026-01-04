@@ -69,13 +69,63 @@ const Viedo = ({ checkMatchCourses }) => {
     };
   }, []);
 
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    const res = await loadRazorpay();
+
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    const options = {
+      // key: "rzp_test_YOUR_KEY_HERE", // Enter the Key ID generated from the Dashboard
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY, // Enter the Key ID generated from the Dashboard
+      amount: checkMatchCourses.price * 100, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+      currency: "INR",
+      name: "Histudy",
+      description: checkMatchCourses.courseTitle,
+      image: "https://example.com/your_logo",
+      handler: function (response) {
+        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+        // validate payment on backend
+      },
+      prefill: {
+        name: "Gaurav Kumar",
+        email: "gaurav.kumar@example.com",
+        contact: "9999999999",
+      },
+      notes: {
+        address: "Razorpay Corporate Office",
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+  };
+
   return (
     <>
       {!disableVideo ? (
         <Link
-          className={`video-popup-with-text video-popup-wrapper text-center popup-video sidebar-video-hidden mb--15 ${
-            hideOnScroll ? "d-none" : ""
-          }`}
+          className={`video-popup-with-text video-popup-wrapper text-center popup-video sidebar-video-hidden mb--15 ${hideOnScroll ? "d-none" : ""
+            }`}
           data-vbtype="video"
           href="https://www.youtube.com/watch?v=nA1Aqp0sPQo"
         >
@@ -104,9 +154,8 @@ const Viedo = ({ checkMatchCourses }) => {
       )}
       {isVideo ? (
         <div
-          className={`radius-6 overflow-hidden sidebar-video-hidden mb--30 ${
-            hideOnScroll ? "d-none" : ""
-          }`}
+          className={`radius-6 overflow-hidden sidebar-video-hidden mb--30 ${hideOnScroll ? "d-none" : ""
+            }`}
         >
           <div className="plyr__video-embed rbtplayer">
             <iframe
@@ -122,7 +171,7 @@ const Viedo = ({ checkMatchCourses }) => {
       ) : (
         ""
       )}
-      
+
       <div className="content-item-content">
         <div className="rbt-price-wrapper d-flex flex-wrap align-items-center justify-content-between">
           <div className="rbt-price">
@@ -156,6 +205,10 @@ const Viedo = ({ checkMatchCourses }) => {
           <Link
             className="rbt-btn btn-border icon-hover w-100 d-block text-center"
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              handlePayment();
+            }}
           >
             <span className="btn-text">Buy Now</span>
             <span className="btn-icon">
@@ -167,9 +220,8 @@ const Viedo = ({ checkMatchCourses }) => {
           <i className="feather-rotate-ccw"></i> 30-Day Money-Back Guarantee
         </span>
         <div
-          className={`rbt-widget-details has-show-more ${
-            toggle ? "active" : ""
-          }`}
+          className={`rbt-widget-details has-show-more ${toggle ? "active" : ""
+            }`}
         >
           <ul className="has-show-more-inner-content rbt-course-details-list-wrapper">
             {checkMatchCourses &&
