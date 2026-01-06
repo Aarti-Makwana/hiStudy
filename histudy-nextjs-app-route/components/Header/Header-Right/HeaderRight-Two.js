@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/Context";
 import User from "../Offcanvas/User";
 import { getToken, getUser } from "../../../utils/storage";
+import { getLocalStorageToken } from "../../../utils/common.util";
 
 const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
   const { mobile, setMobile, search, setSearch } = useAppContext();
@@ -12,10 +13,29 @@ const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const t = getToken();
-    const u = getUser();
-    setLogged(!!t);
-    setUser(u);
+    // Helper to check auth
+    const checkAuth = () => {
+      // Check for encrypted token first (common.util), then fallback to plain (storage)
+      let t = getLocalStorageToken() || getToken();
+      // Validate that t is not just a string "null" or "false" which can happen in some storage states
+      if (t === "null" || t === "false" || t === "undefined") t = false;
+
+      const u = getUser();
+      // Require both valid token AND user data to consider logged in
+      setLogged(!!t && !!u);
+      setUser(u);
+    };
+
+    // Check initially
+    checkAuth();
+
+    // Listen for custom auth events for real-time updates
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener("auth-change", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("auth-change", handleAuthChange);
+    };
   }, []);
 
   return (

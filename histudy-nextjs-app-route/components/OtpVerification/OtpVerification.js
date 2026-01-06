@@ -6,6 +6,7 @@ import { UserAuthServices } from "../../services/User";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { setToken, setUser } from "../../utils/storage";
+import { setLocalStorageToken } from "../../utils/common.util";
 
 const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/login", hideInternalButton = false }, ref) => {
   const router = useRouter();
@@ -47,8 +48,10 @@ const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/logi
           // For login/register OTP verification, store token and user and redirect to home
           const token = res?.data?.token || "";
           const userObj = res?.data?.user || null;
-          if (token) setToken(token);
+          if (token) setLocalStorageToken(token); // Use encrypted storage
           if (userObj) setUser(userObj);
+
+          window.dispatchEvent(new Event("auth-change")); // Sync header state
           router.push("/");
         }
 
@@ -77,7 +80,7 @@ const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/logi
       const body = { email: email || "", type: currentXAction || xAction || "forgot" };
       const resp = await UserAuthServices.resendOtp(body);
       if (resp && resp.status === "success") {
-      Swal.fire("Success!", resp.message || "OTP resent", "success");
+        Swal.fire("Success!", resp.message || "OTP resent", "success");
         // update current xId/xAction from response so verify uses latest headers
         const newXId = resp?.data?.x_id;
         const newXAction = resp?.data?.x_action;

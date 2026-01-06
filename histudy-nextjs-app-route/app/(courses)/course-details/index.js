@@ -16,6 +16,7 @@ import CourseHead from "@/components/Course-Details/Course-Sections/course-head"
 import CourseDetailsOne from "@/components/Course-Details/CourseDetails-One";
 import CourseActionBottom from "@/components/Course-Details/Course-Sections/Course-Action-Bottom";
 import SimilarCourses from "@/components/Course-Details/Course-Sections/SimilarCourses";
+import Loader from "@/components/Common/Loader";
 
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 
@@ -136,7 +137,7 @@ const SingleCourse = ({ getParams }) => {
   }, [courseId, router]);
 
   if (!courseData) {
-    return <div>Loading...</div>; // Or a proper loader component
+    return <Loader />;
   }
 
   return (

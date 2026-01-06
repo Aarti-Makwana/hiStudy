@@ -26,7 +26,26 @@ const Login = () => {
     <>
       <div className="col-lg-6">
         <div className="rbt-contact-form contact-form-style-1 max-width-auto">
-          {!showOtp && <h3 className="title">Login</h3>}
+          {!showOtp && (
+            <>
+              <h3 className="title">Login</h3>
+              <div className="rbt-social-login-wrapper mb--20 d-flex flex-column gap-2">
+                <button type="button" className="rbt-btn btn-md w-100 btn-white" style={{ border: "1px solid #ddd" }}>
+                  <span className="icon-reverse-wrapper">
+                    <span className="btn-text">Login with Google</span>
+                  </span>
+                </button>
+                <button type="button" className="rbt-btn btn-md w-100 btn-white" style={{ border: "1px solid #ddd" }}>
+                  <span className="icon-reverse-wrapper">
+                    <span className="btn-text">Login with GitHub</span>
+                  </span>
+                </button>
+              </div>
+              <div className="text-center mb--20">
+                <span className="text-muted">OR</span>
+              </div>
+            </>
+          )}
           <Formik
             initialValues={{ email: "", password: "", rememberme: false }}
             validationSchema={loginSchema}

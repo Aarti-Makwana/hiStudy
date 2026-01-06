@@ -1,21 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { registerSchema } from "../../validations/auth/validation";
 import { UserAuthServices } from "../../services/User";
-import OtpVerification from "../OtpVerification/OtpVerification";
-import Swal from "sweetalert2";
-import { getToken } from "../../utils/storage";
+import { getToken, setUser } from "../../utils/storage";
+import { setLocalStorageToken } from "../../utils/common.util";
+import { step1Schema, step2Schema, step3Schema } from "../../validations/auth/validation";
+import { showSuccess, showError } from "../../utils/swal";
+
 const Register = () => {
   const router = useRouter();
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpProps, setOtpProps] = useState(null);
   const [step, setStep] = useState(1);
   const [showHint, setShowHint] = useState(false);
-  const otpRef = useRef(null);
 
   useEffect(() => {
     if (getToken()) {
@@ -23,192 +21,275 @@ const Register = () => {
     }
   }, []);
 
+  const getValidationSchema = (currentStep) => {
+    switch (currentStep) {
+      case 1:
+        return step1Schema;
+      case 2:
+        return step2Schema;
+      case 3:
+        return step3Schema;
+      default:
+        return step1Schema;
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) setStep(step - 1);
+  };
+
   return (
-    <>
-      <div className="col-lg-6">
-        <div className="rbt-contact-form contact-form-style-1 max-width-auto">
-          <h3 className="title">Register</h3>
-          <Formik
-            initialValues={{ name: "", phone: "", email: "", password: "", confirmPassword: "", profession: "", company: "", university: "" }}
-            validationSchema={registerSchema}
-              onSubmit={async (values, { setSubmitting, setErrors }) => {
-                try {
-                  const formData = new FormData();
-                  formData.append('name', values.name || '');
-                  formData.append('phone', values.phone || '');
-                  formData.append('email', values.email || '');
-                  formData.append('password', values.password || '');
+    <div className="col-lg-6">
+      <div className="rbt-contact-form contact-form-style-1 max-width-auto">
+        <h3 className="title">Register</h3>
+        <Formik
+          initialValues={{
+            name: "",
+            phone: "",
+            email: "",
+            profession: "",
+            company: "",
+            university: "",
+            otp: "",
+            password: "",
+            confirmPassword: "",
+          }}
+          validationSchema={getValidationSchema(step)}
+          onSubmit={async (values, { setSubmitting, setErrors }) => {
+            try {
+              const formData = new FormData();
 
-                  const professionValue = values.profession === 'Working Professional' ? (values.company || '') : (values.profession || '');
-                  formData.append('profession', professionValue);
+              // Helper to append common fields
+              const appendCommonFields = () => {
+                formData.append("name", values.name);
+                formData.append("phone", values.phone);
+                formData.append("email", values.email);
 
-                  if (values.profession === '1st Year' || values.profession === 'Final Year') {
-                    formData.append('university', values.university || '');
-                  }
+                // Payload Logic:
+                // If "Working Professional": profession = company name, university = null
+                // If Student: profession = null, university = university name
 
-                  const res = await UserAuthServices.userRegister(formData);
-                  if (res && res.status === 'success') {
-                    Swal.fire('Success!', res.message || 'Registration successful', 'success');
-                    const x_id = res?.data?.x_id;
-                    const x_action = res?.data?.x_action;
-                    setOtpProps({ email: values.email, xId: x_id, xAction: x_action, redirectPath: '/' });
-                    setShowOtp(true);
-                  } else {
-                    setErrors({ submit: res?.message || 'Registration failed' });
-                    Swal.fire('Oops!', res?.message || 'Registration failed', 'error');
-                  }
-                } catch (err) {
-                  setErrors({ submit: err.message || 'Registration failed' });
-                  Swal.fire('Oops!', err.message || 'Registration failed', 'error');
-                } finally {
-                  setSubmitting(false);
+                if (values.profession === "Working Professional") {
+                  formData.append("profession", values.company || "");
+                  formData.append("university", ""); // send empty/null
+                } else if (["1st–Final Year", "Pre-Final Year"].includes(values.profession)) {
+                  formData.append("profession", ""); // send empty/null
+                  formData.append("university", values.university || "");
+                } else {
+                  // Fallback
+                  formData.append("profession", "");
+                  formData.append("university", "");
                 }
-              }}
-          >
-              {({ isSubmitting, errors, values, setFieldValue, validateForm, setErrors }) => (
-              <Form className="max-width-auto">
-                  {/* Email hint and 2-step flow implemented below */}
+              };
 
-                  {step === 1 && (
-                    <>
-                      <div className="form-group">
-                        <Field name="name" type="text" placeholder="Full name *" />
-                        <span className="focus-border"></span>
-                        <div className="text-danger"><ErrorMessage name="name" /></div>
-                      </div>
+              if (step === 1) {
+                appendCommonFields();
+                formData.append("status", "register");
 
-                      <div className="form-group">
-                        <Field name="phone" type="text" placeholder="Phone *" />
-                        <span className="focus-border"></span>
-                        <div className="text-danger"><ErrorMessage name="phone" /></div>
-                      </div>
+                const res = await UserAuthServices.userRegister(formData);
+                // Check both API status and data.status flag
+                if (res && res.status === "success" && res.data?.status === true) {
+                  showSuccess("Success!", res.message || "Please check your email for OTP");
+                  setStep(2);
+                } else {
+                  setErrors({ submit: res?.message || "Registration failed" });
+                  showError("Oops!", res?.message || "Registration failed");
+                }
+              } else if (step === 2) {
+                appendCommonFields();
+                formData.append("otp", values.otp);
+                formData.append("status", "otp_verify");
 
-                      <div className="form-group">
-                        <Field name="email">
-                          {({ field }) => (
-                            <>
-                              <input {...field} type="email" placeholder="Email address *" onFocus={() => setShowHint(true)} onBlur={() => setShowHint(false)} />
-                              <span className="focus-border"></span>
-                            </>
-                          )}
-                        </Field>
-                        <div className="text-danger"><ErrorMessage name="email" /></div>
-                        {showHint && (
-                          <p style={{ color: "#999", fontSize: "12px", marginTop: "6px" }}>Must be in format: example@email.com</p>
-                        )}
-                      </div>
+                const res = await UserAuthServices.userRegister(formData);
 
-                      <div className="form-group">
-                        <label className="d-block">Profession</label>
-                        <Field as="select" name="profession" className="w-100 p-2" onChange={(e) => setFieldValue('profession', e.target.value)} value={values.profession}>
-                          <option value="">Select profession</option>
-                          <option value="Working Professional">Working Professional</option>
-                          <option value="1st Year">1st Year</option>
-                          <option value="Final Year">Final Year</option>
-                        </Field>
-                        <div className="text-danger"><ErrorMessage name="profession" /></div>
-                      </div>
+                if (res && res.status === "success" && res.data?.status === true) {
+                  showSuccess("Success!", res.message || "OTP Verified");
+                  setStep(3);
+                } else {
+                  setErrors({ submit: res?.message || "Invalid OTP" });
+                  showError("Oops!", res?.message || "Invalid OTP");
+                }
+              } else if (step === 3) {
+                appendCommonFields();
+                formData.append("password", values.password);
+                formData.append("password_confirmation", values.confirmPassword);
+                formData.append("status", "set_password");
 
-                      {values.profession === 'Working Professional' && (
-                        <div className="form-group">
-                          <Field name="company" type="text" placeholder="Company name *" />
-                          <span className="focus-border"></span>
-                          <div className="text-danger"><ErrorMessage name="company" /></div>
-                        </div>
-                      )}
+                const res = await UserAuthServices.userRegister(formData);
 
-                      {(values.profession === '1st Year' || values.profession === 'Final Year') && (
-                        <div className="form-group">
-                          <Field name="university" type="text" placeholder="University name *" />
-                          <span className="focus-border"></span>
-                          <div className="text-danger"><ErrorMessage name="university" /></div>
-                        </div>
-                      )}
+                // Success check for final step: Respone has token in data, status="success"
+                if (res && res.status === "success" && res.data?.token) {
+                  showSuccess("Success!", res.message || "Registration Complete");
+                  // Store Token and User
+                  setLocalStorageToken(res.data.token);
+                  if (res.data.user) {
+                    setUser(res.data.user);
+                  }
+                  // Notify header to update
+                  window.dispatchEvent(new Event("auth-change"));
 
-                      <div className="form-submit-group">
-                        <button type="button" className="rbt-btn btn-md btn-gradient hover-icon-reverse w-100" onClick={async () => {
-                          const errs = await validateForm();
-                          if (!errs.name && !errs.email && !errs.phone) {
-                            setStep(2);
-                          } else {
-                            setErrors({ submit: 'Please fix required fields before continuing' });
-                          }
-                        }}>
-                          <span className="icon-reverse-wrapper">
-                            <span className="btn-text">Next</span>
-                          </span>
-                        </button>
-                      </div>
+                  // Redirect to home page (auto-login)
+                  router.push("/");
+                } else {
+                  // Handle custom error format: {"status":"error","message":"..."}
+                  if (res?.status === "error") {
+                    showError("Error", res.message || "Failed to set password");
+                    setErrors({ submit: res.message });
+                  } else {
+                    setErrors({ submit: res?.message || "Failed to set password" });
+                    showError("Oops!", res?.message || "Failed to set password");
+                  }
+                }
+              }
+            } catch (err) {
+              setErrors({ submit: err.message || "An error occurred" });
+              showError("Oops!", err.message || "An error occurred");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting, errors, values, setFieldValue }) => (
+            <Form className="max-width-auto">
 
-                      <div className="mt-3 text-center">
-                        <span>Already have an account? </span>
-                        <Link className="rbt-btn-link" href="/login">Login</Link>
-                      </div>
-                    </>
-                  )}
-
-                  {step === 2 && (
-                    <>
-                      <div className="form-group">
-                        <Field name="password" type="password" placeholder="Password *" />
-                        <span className="focus-border"></span>
-                        <div className="text-danger"><ErrorMessage name="password" /></div>
-                      </div>
-
-                      <div className="form-group">
-                        <Field name="confirmPassword" type="password" placeholder="Confirm Password *" />
-                        <span className="focus-border"></span>
-                        <div className="text-danger"><ErrorMessage name="confirmPassword" /></div>
-                      </div>
-
-                      {errors.submit && <div className="text-danger mb-3">{errors.submit}</div>}
-
-                      <div className="form-submit-group">
-                        {!showOtp ? (
-                          <div className="d-flex gap-2">
-                            <button type="button" className="rbt-btn btn-md btn-outline w-50" onClick={() => setStep(1)}>
-                              Back
-                            </button>
-                            <button type="submit" disabled={isSubmitting} className="rbt-btn btn-md btn-gradient hover-icon-reverse w-50">
-                              <span className="icon-reverse-wrapper">
-                                <span className="btn-text">Register</span>
-                              </span>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex gap-2">
-                            <button type="button" className="rbt-btn btn-md btn-outline w-50" onClick={() => setStep(1)}>
-                              Back
-                            </button>
-                            <button type="button" className="rbt-btn btn-md btn-gradient hover-icon-reverse w-50" onClick={() => otpRef.current && otpRef.current.verify()}>
-                              <span className="icon-reverse-wrapper">
-                                <span className="btn-text">Verify OTP</span>
-                              </span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                {showOtp && otpProps && (
-                  <div className="mt-4">
-                    <OtpVerification
-                      ref={otpRef}
-                      hideInternalButton={true}
-                      email={otpProps.email}
-                      xId={otpProps.xId}
-                      xAction={otpProps.xAction}
-                      redirectPath={otpProps.redirectPath}
-                    />
+              {/* Step 1: User Details */}
+              {step === 1 && (
+                <>
+                  <div className="form-group">
+                    <Field name="name" type="text" placeholder="Full Name *" />
+                    <span className="focus-border"></span>
+                    <div className="text-danger"><ErrorMessage name="name" /></div>
                   </div>
-                )}
-              </Form>
-            )}
-          </Formik>
-        </div>
+
+                  <div className="form-group">
+                    <Field name="phone" type="text" placeholder="Phone *" />
+                    <span className="focus-border"></span>
+                    <div className="text-danger"><ErrorMessage name="phone" /></div>
+                  </div>
+
+                  <div className="form-group">
+                    <Field name="email">
+                      {({ field }) => (
+                        <>
+                          <input {...field} type="email" placeholder="Email Address *" onFocus={() => setShowHint(true)} onBlur={() => setShowHint(false)} />
+                          <span className="focus-border"></span>
+                        </>
+                      )}
+                    </Field>
+                    <div className="text-danger"><ErrorMessage name="email" /></div>
+                    {showHint && (
+                      <p style={{ color: "#999", fontSize: "12px", marginTop: "6px" }}>Must be in format: example@email.com</p>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <Field as="select" name="profession" className="w-100 p-2" onChange={(e) => {
+                      setFieldValue("profession", e.target.value);
+                      // Clear conditional fields on change
+                      setFieldValue("company", "");
+                      setFieldValue("university", "");
+                    }}>
+                      <option value="">Select Profession</option>
+                      <option value="Working Professional">Working Professional</option>
+                      <option value="1st–Final Year">1st–Final Year</option>
+                      <option value="Pre-Final Year">Pre-Final Year</option>
+                    </Field>
+                    <div className="text-danger"><ErrorMessage name="profession" /></div>
+                  </div>
+
+                  {values.profession === "Working Professional" && (
+                    <div className="form-group">
+                      <Field name="company" type="text" placeholder="Company Name" />
+                      <span className="focus-border"></span>
+                      <div className="text-danger"><ErrorMessage name="company" /></div>
+                    </div>
+                  )}
+
+                  {(values.profession === "1st–Final Year" || values.profession === "Pre-Final Year") && (
+                    <div className="form-group">
+                      <Field name="university" type="text" placeholder="University Name" />
+                      <span className="focus-border"></span>
+                      <div className="text-danger"><ErrorMessage name="university" /></div>
+                    </div>
+                  )}
+
+                  <div className="form-submit-group">
+                    <button type="submit" disabled={isSubmitting} className="rbt-btn btn-md btn-gradient hover-icon-reverse w-100">
+                      <span className="icon-reverse-wrapper">
+                        <span className="btn-text">Next</span>
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 2: OTP Verification */}
+              {step === 2 && (
+                <>
+                  <div className="otp-verification mb--30">
+                    <h4 className="title mb--20">Verify Email</h4>
+                    <p className="mb--20">Enter the 6-digit code sent to <strong>{values.email}</strong></p>
+                    <div className="form-group">
+                      <Field name="otp" type="text" maxLength="6" placeholder="Enter 6-digit OTP *" />
+                      <span className="focus-border"></span>
+                      <div className="text-danger"><ErrorMessage name="otp" /></div>
+                    </div>
+                  </div>
+
+                  <div className="form-submit-group d-flex gap-2">
+                    <button type="button" className="rbt-btn btn-md btn-outline w-50" onClick={handleBack}>
+                      Back
+                    </button>
+                    <button type="submit" disabled={isSubmitting} className="rbt-btn btn-md btn-gradient hover-icon-reverse w-50">
+                      <span className="icon-reverse-wrapper">
+                        <span className="btn-text">Verify & Next</span>
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 3: Set Password */}
+              {step === 3 && (
+                <>
+                  <div className="form-group">
+                    <Field name="password" type="password" placeholder="Password *" />
+                    <span className="focus-border"></span>
+                    <div className="text-danger"><ErrorMessage name="password" /></div>
+                  </div>
+
+                  <div className="form-group">
+                    <Field name="confirmPassword" type="password" placeholder="Confirm Password *" />
+                    <span className="focus-border"></span>
+                    <div className="text-danger"><ErrorMessage name="confirmPassword" /></div>
+                  </div>
+
+                  <div className="form-submit-group d-flex gap-2">
+                    <button type="button" className="rbt-btn btn-md btn-outline w-50" onClick={handleBack}>
+                      Back
+                    </button>
+                    <button type="submit" disabled={isSubmitting} className="rbt-btn btn-md btn-gradient hover-icon-reverse w-50">
+                      <span className="icon-reverse-wrapper">
+                        <span className="btn-text">Set Password</span>
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {errors.submit && <div className="text-danger mt-3">{errors.submit}</div>}
+
+              {step === 1 && (
+                <div className="mt-3 text-center">
+                  <span>Already have an account? </span>
+                  <Link className="rbt-btn-link" href="/login">Login</Link>
+                </div>
+              )}
+            </Form>
+          )}
+        </Formik>
       </div>
-    </>
+    </div>
   );
 };
 
