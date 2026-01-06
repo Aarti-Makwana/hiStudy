@@ -101,11 +101,13 @@ const APIrequest = async ({
     });
 
     const res = await axios(axiosConfig);
-    console.log('yaha res ',res);
-    
+    logger(res, 'yaha res ');
+
     return res.data;
   } catch (error) {
     // Handle different error scenarios.
+
+
     if (axios.isCancel(error)) {
       logger("API canceled", error);
       throw new Error(error);
@@ -137,7 +139,7 @@ const APIrequest = async ({
           logger("Failed to parse HTML error response", parseErr);
           toast.error("Server error (500).");
         }
-        return null;
+        return { status: 'error', message: "Server returned an HTML error page." };
       }
     }
 
@@ -152,14 +154,15 @@ const APIrequest = async ({
 
     // 403 Forbidden: treat as hard auth failure per request — clear token and redirect to module login
     if (statusCode === 403) {
-      return null;
+      return { status: 'error', message: message || "Access denied (403)." };
     }
 
-    // Other errors: show a message and return null
+    // Other errors: show a message and return the error data payload so the caller can handle it
     if (message) {
       toast.error(message);
     }
-    return null;
+
+    return errorRes?.data || { status: 'error', message: message || 'An error occurred' };
   }
 };
 

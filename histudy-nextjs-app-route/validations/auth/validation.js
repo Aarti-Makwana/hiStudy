@@ -1,13 +1,24 @@
 import * as Yup from 'yup';
 
-export const registerSchema = Yup.object({
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  name: Yup.string().min(3, 'Too short').required('Name is required'),
-  password: Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
-  phone: Yup.string().required('Phone is required'),
+// Step 1: User Details
+export const step1Schema = Yup.object().shape({
+  name: Yup.string().required("Full name is required"),
+  phone: Yup.string().required("Phone number is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  profession: Yup.string().required("Profession is required"),
+});
+
+// Step 2: OTP
+export const step2Schema = Yup.object({
+  otp: Yup.string().length(6, "OTP must be 6 digits").required("OTP is required"),
+});
+
+// Step 3: Password
+export const step3Schema = Yup.object({
+  password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Required'),
+    .oneOf([Yup.ref("password"), null], "Passwords must match")
+    .required("Confirm Password is required"),
 });
 
 export const loginSchema = Yup.object({
@@ -28,8 +39,11 @@ export const resetPasswordSchema = Yup.object({
     .oneOf([Yup.ref('new_password'), null], 'Passwords must match')
     .required('Confirm password is required'),
 });
+
 export default {
-  registerSchema,
+  step1Schema,
+  step2Schema,
+  step3Schema,
   loginSchema,
   forgotSchema,
   resetPasswordSchema,
