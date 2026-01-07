@@ -30,8 +30,7 @@ const Nav = () => {
         <li className="with-megamenu has-menu-child-item position-static">
           <Link
             className={`${activeMenuItem === "home" ? "open" : ""}`}
-            onClick={() => toggleMenuItem("home")}
-            href="#"
+            href="/"
           >
             Home
           </Link>
@@ -143,7 +142,7 @@ const Nav = () => {
                   const el = document.getElementById('popular-courses');
                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-              } catch (err) {}
+              } catch (err) { }
             }}
           >
             Courses
