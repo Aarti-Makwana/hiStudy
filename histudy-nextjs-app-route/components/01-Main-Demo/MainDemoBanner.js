@@ -7,7 +7,7 @@ import shape2 from "../../public/images/shape/shape-02.png";
 
 import HomeCourses from "./Home-Sections/HomeCourse";
 
-const MainDemoBanner = () => {
+const MainDemoBanner = ({ courses }) => {
   return (
     <>
       <div className="container-fluid">
@@ -66,7 +66,7 @@ const MainDemoBanner = () => {
               </div>
 
               <div className="banner-card pb--60 swiper rbt-dot-bottom-center banner-swiper-active">
-                <HomeCourses start={0} end={3} />
+                <HomeCourses start={0} end={3} courses={courses} />
               </div>
             </div>
           </div>
