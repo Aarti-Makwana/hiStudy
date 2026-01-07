@@ -10,6 +10,8 @@ import "venobox/dist/venobox.min.css";
 import { useDispatch, useSelector } from "react-redux";
 import { useAppContext } from "@/context/Context";
 import { addToCartAction } from "@/redux/action/CartAction";
+import { getToken, getUser } from "@/utils/storage";
+import { getLocalStorageToken } from "@/utils/common.util";
 
 const Viedo = ({ checkMatchCourses }) => {
   const pathname = usePathname();
@@ -68,57 +70,6 @@ const Viedo = ({ checkMatchCourses }) => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  const loadRazorpay = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
-
-  const handlePayment = async () => {
-    const res = await loadRazorpay();
-
-    if (!res) {
-      alert("Razorpay SDK failed to load. Are you online?");
-      return;
-    }
-
-    const options = {
-      // key: "rzp_test_YOUR_KEY_HERE", // Enter the Key ID generated from the Dashboard
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY, // Enter the Key ID generated from the Dashboard
-      amount: checkMatchCourses.price * 100, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-      currency: "INR",
-      name: "Histudy",
-      description: checkMatchCourses.courseTitle,
-      image: "https://example.com/your_logo",
-      handler: function (response) {
-        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
-        // validate payment on backend
-      },
-      prefill: {
-        name: "Gaurav Kumar",
-        email: "gaurav.kumar@example.com",
-        contact: "9999999999",
-      },
-      notes: {
-        address: "Razorpay Corporate Office",
-      },
-      theme: {
-        color: "#3399cc",
-      },
-    };
-
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
-  };
 
   return (
     <>
@@ -207,7 +158,17 @@ const Viedo = ({ checkMatchCourses }) => {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              handlePayment();
+              const t = getLocalStorageToken() || getToken();
+              const u = getUser();
+              if (!!t && !!u) {
+                const itemInCart = cart.find((i) => i.id === checkMatchCourses.id);
+                if (!itemInCart) {
+                  addToCartFun(checkMatchCourses.id, amount, checkMatchCourses);
+                }
+                window.location.href = `/checkout?id=${checkMatchCourses.id}`;
+              } else {
+                window.location.href = "/login";
+              }
             }}
           >
             <span className="btn-text">Buy Now</span>

@@ -25,12 +25,18 @@
 
     .rbt-card-img {
         position: relative;
+        aspect-ratio: 710 / 488;
+        overflow: hidden;
+        border-radius: var(--radius);
 
         a {
             display: block;
+            height: 100%;
+            width: 100%;
 
             img {
                 width: 100%;
+                height: 100%;
                 transition: 0.5s;
                 object-fit: cover;
                 border-radius: var(--radius);
@@ -431,11 +437,7 @@
 
 
             .rbt-card-img {
-                .thumbnail-link {
-                    &::before {
-                        // background: rgba(216, 216, 216, 0.15);
-                    }
-                }
+                .thumbnail-link {}
             }
 
             &:hover {

@@ -1,25 +1,85 @@
 "use client";
 
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 
-import CheckoutForm from "./CheckoutForm";
+import CheckoutCartList from "./CheckoutCartList";
 
 const Checkout = () => {
-  const { cart, total_amount, shipping_fee } = useSelector(
+  const { cart: reduxCart, total_amount: reduxTotal, shipping_fee } = useSelector(
     (state) => state.CartReducer
   );
+  const searchParams = useSearchParams();
+  const buyNowId = searchParams.get("id");
+
+  const cart = buyNowId
+    ? reduxCart.filter((item) => item.id == buyNowId)
+    : reduxCart;
+
+  const total_amount = buyNowId
+    ? cart.reduce((total, item) => total + item.price * 1, 0)
+    : reduxTotal;
+
+  const [couponOpen, setCouponOpen] = useState(false);
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    const res = await loadRazorpay();
+
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+      amount: (total_amount + shipping_fee) * 100,
+      currency: "INR",
+      name: "Histudy",
+      description: "Course Purchase",
+      image: "/images/logo/logo.png",
+      handler: function (response) {
+        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+      },
+      prefill: {
+        name: "User Name",
+        email: "user@example.com",
+        contact: "9999999999",
+      },
+      theme: {
+        color: "#192335",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+  };
 
   return (
     <>
       <div className="container">
         <div className="row g-5 checkout-form">
-          <CheckoutForm />
+          <CheckoutCartList cart={cart} buyNowId={buyNowId} />
 
           <div className="col-lg-5">
             <div className="row pl--50 pl_md--0 pl_sm--0">
               <div className="col-12 mb--60">
-                <h4 className="checkout-title">Cart Total</h4>
+                <h4 className="checkout-title">Summary</h4>
 
                 <div className="checkout-cart-total">
                   <h4>
@@ -30,22 +90,44 @@ const Checkout = () => {
                     {cart.map((data, index) => (
                       <li key={index}>
                         {data.product.courseTitle || data.product.title}
-                        <span>${data.product.price * data.amount}.00</span>
+                        <span>Rs. {buyNowId ? data.product.price : data.product.price * data.amount}</span>
                       </li>
                     ))}
                   </ul>
 
                   <p>
                     Sub Total
-                    <span>${total_amount}.00</span>
+                    <span>Rs. {total_amount}</span>
                   </p>
 
                   <p>
-                    Shipping Fee <span>${shipping_fee}.00</span>
+                    Shipping Fee <span>Rs. {shipping_fee}</span>
                   </p>
 
+                  <div className="coupon-section mt--20">
+                    <div
+                      className="checkout-coupon-toggle d-flex justify-content-between align-items-center"
+                      onClick={() => setCouponOpen(!couponOpen)}
+                    >
+                      <span>Got a coupon? Enter here</span>
+                      <i className={`feather-${couponOpen ? 'chevron-up' : 'chevron-down'}`}></i>
+                    </div>
+                    {couponOpen && (
+                      <div className="checkout-coupon-input mt--10 d-flex">
+                        <input
+                          type="text"
+                          placeholder="Coupon Code"
+                          className="w-100 mr--10"
+                        />
+                        <button className="rbt-btn btn-gradient btn-sm d-flex justify-content-center align-items-center">
+                          Apply
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <h4 className="mt--30">
-                    Grand Total <span>${total_amount + shipping_fee}.00</span>
+                    Grand Total <span>Rs. {total_amount + shipping_fee}</span>
                   </h4>
                 </div>
               </div>
@@ -53,7 +135,7 @@ const Checkout = () => {
               <div className="col-12 mb--60">
                 <h4 className="checkout-title">Payment Method</h4>
                 <div
-                  className="checkout-payment-method accordion rbt-accordion-style rbt-accordion-05 accordion"
+                  className="checkout-payment-method accordion rbt-accordion-style rbt-accordion-05"
                   id="accordionExamplea1"
                 >
                   <div className="single-method">
@@ -62,143 +144,9 @@ const Checkout = () => {
                       id="payment_check"
                       name="payment-method"
                       value="check"
+                      defaultChecked
                     />
-                    <label
-                      htmlFor="payment_check"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#payment"
-                      aria-expanded="true"
-                      aria-controls="payment"
-                    >
-                      Check Payment
-                    </label>
-                    <div
-                      className="accordion-collapse collapse"
-                      id="payment"
-                      aria-labelledby="headingOne"
-                      data-bs-parent="#accordionExamplea1"
-                    >
-                      <div className="accordion-body">
-                        Please send a Check to Store name with Store Street,
-                        Store Town, Store State, Store Postcode, Store Country.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="single-method">
-                    <input
-                      type="radio"
-                      id="payment_bank"
-                      name="payment-method"
-                      value="bank"
-                    />
-                    <label
-                      htmlFor="payment_bank"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#bank"
-                      aria-expanded="true"
-                      aria-controls="bank"
-                    >
-                      Direct Bank Transfer
-                    </label>
-                    <div
-                      className="accordion-collapse collapse"
-                      id="bank"
-                      aria-labelledby="headingOne"
-                      data-bs-parent="#accordionExamplea1"
-                    >
-                      <div className="accordion-body">
-                        Please send a Check to Store name with Store Street,
-                        Store Town, Store State, Store Postcode, Store Country.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="single-method">
-                    <input
-                      type="radio"
-                      id="payment_cash"
-                      name="payment-method"
-                      value="cash"
-                    />
-                    <label
-                      htmlFor="payment_cash"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#cash"
-                      aria-expanded="true"
-                      aria-controls="cash"
-                    >
-                      Cash on Delivery
-                    </label>
-                    <div
-                      className="accordion-collapse collapse"
-                      id="cash"
-                      aria-labelledby="headingOne"
-                      data-bs-parent="#accordionExamplea1"
-                    >
-                      <div className="accordion-body">
-                        Please send a Check to Store name with Store Street,
-                        Store Town, Store State, Store Postcode, Store Country.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="single-method">
-                    <input
-                      type="radio"
-                      id="payment_paypal"
-                      name="payment-method"
-                      value="paypal"
-                    />
-                    <label
-                      htmlFor="payment_paypal"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#paypal"
-                      aria-expanded="true"
-                      aria-controls="paypal"
-                    >
-                      Paypal
-                    </label>
-                    <div
-                      className="accordion-collapse collapse"
-                      id="paypal"
-                      aria-labelledby="headingOne"
-                      data-bs-parent="#accordionExamplea1"
-                    >
-                      <div className="accordion-body">
-                        Please send a Check to Store name with Store Street,
-                        Store Town, Store State, Store Postcode, Store Country.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="single-method">
-                    <input
-                      type="radio"
-                      id="payment_payoneer"
-                      name="payment-method"
-                      value="payoneer"
-                    />
-                    <label
-                      htmlFor="payment_payoneer"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#payoneer"
-                      aria-expanded="true"
-                      aria-controls="payoneer"
-                    >
-                      Payoneer
-                    </label>
-                    <div
-                      className="accordion-collapse collapse"
-                      id="payoneer"
-                      aria-labelledby="headingOne"
-                      data-bs-parent="#accordionExamplea1"
-                    >
-                      <div className="accordion-body">
-                        Please send a Check to Store name with Store Street,
-                        Store Town, Store State, Store Postcode, Store Country.
-                      </div>
-                    </div>
+                    <label htmlFor="payment_check">Razorpay (Online Payment)</label>
                   </div>
 
                   <div className="single-method">
@@ -209,9 +157,12 @@ const Checkout = () => {
                   </div>
                 </div>
                 <div className="plceholder-button mt--50">
-                  <button className="rbt-btn btn-gradient hover-icon-reverse">
+                  <button
+                    className="rbt-btn btn-gradient hover-icon-reverse w-100"
+                    onClick={handlePayment}
+                  >
                     <span className="icon-reverse-wrapper">
-                      <span className="btn-text">Place order</span>
+                      <span className="btn-text">Proceed to Pay</span>
                       <span className="btn-icon">
                         <i className="feather-arrow-right"></i>
                       </span>

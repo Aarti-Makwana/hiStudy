@@ -31,20 +31,27 @@ const MainDemo = ({ blogs }) => {
         console.log("UserAllCourses response:", res); // Debug log
 
         if (res && res.success) {
-          const adaptedCourses = res.data.map((item) => ({
-            id: item.id,
-            slug: item.slug || item.id, // Fallback to ID if slug is missing
-            courseImg: item.file ? item.file : brand1,
-            courseTitle: item.title,
-            desc: item.short_description || item.long_description,
-            lesson: item.number_of_lectures,
-            student: item.students_taught || 0,
-            review: item.rating_count || item.ratings || 0,
-            rating: item.average_rating || 0,
-            price: item.discounted_price,
-            offPrice: item.actual_price,
-            offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
-          }));
+          const adaptedCourses = res.data.map((item) => {
+            let img = item.file ? item.file : "/images/course/course-online-01.jpg";
+            // If it's a placeholder URL, try to set it to 710x488
+            if (typeof img === 'string' && img.includes('placeholder')) {
+              img = img.replace('400x117', '710x488').replace('400/117', '710/488');
+            }
+            return {
+              id: item.id,
+              slug: item.slug || item.id,
+              courseImg: img,
+              courseTitle: item.title,
+              desc: item.short_description || item.long_description,
+              lesson: item.number_of_lectures,
+              student: item.students_taught || 0,
+              review: item.rating_count || item.ratings || 0,
+              rating: item.average_rating || 0,
+              price: item.discounted_price,
+              offPrice: item.actual_price,
+              offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
+            };
+          });
           console.log("Adapted courses:", adaptedCourses); // Debug log
           setCourses(adaptedCourses);
         } else {
@@ -68,7 +75,7 @@ const MainDemo = ({ blogs }) => {
     <>
       <main className="rbt-main-wrapper">
         <div className="rbt-banner-area rbt-banner-1">
-          <MainDemoBanner />
+          <MainDemoBanner courses={courses} />
         </div>
 
         <div className="rbt-categories-area bg-color-white rbt-section-gapBottom">
@@ -121,8 +128,8 @@ const MainDemo = ({ blogs }) => {
                       <Link href={`/course-details/${data.slug}`}>
                         <Image
                           src={data.courseImg}
-                          width={355}
-                          height={244}
+                          width={710}
+                          height={488}
                           alt="Card image"
                         />
                         {data.offPricePercentage > 0 ? (
@@ -136,34 +143,6 @@ const MainDemo = ({ blogs }) => {
                       </Link>
                     </div>
                     <div className="rbt-card-body">
-                      <div className="rbt-card-top">
-                        <div className="rbt-review">
-                          <div className="rating">
-                            {[...Array(5)].map((_, i) => (
-                              <i
-                                key={i}
-                                className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
-                                style={{ color: i < Math.round(data.rating) ? "#ffc107" : "#e4e5e9" }}
-                              ></i>
-                            ))}
-                          </div>
-                          <span className="rating-count">
-                            ({data.review} Reviews)
-                          </span>
-                        </div>
-                        <div className="rbt-bookmark-btn">
-                          <Link className="rbt-round-btn" title="Bookmark" href="#">
-                            <i className="feather-bookmark"></i>
-                          </Link>
-                        </div>
-                      </div>
-
-                      <h4 className="rbt-card-title">
-                        <Link href={`/course-details/${data.slug}`}>
-                          {data.courseTitle}
-                        </Link>
-                      </h4>
-
                       <ul className="rbt-meta">
                         <li>
                           <i className="feather-book"></i>
@@ -175,7 +154,28 @@ const MainDemo = ({ blogs }) => {
                         </li>
                       </ul>
 
-                      <p className="rbt-card-text">{data.desc}</p>
+                      <h4 className="rbt-card-title">
+                        <Link href={`/course-details/${data.slug}`}>
+                          {data.courseTitle}
+                        </Link>
+                      </h4>
+
+                      <p className="rbt-card-text">{data.desc?.substring(0, 100)}</p>
+
+                      <div className="rbt-review">
+                        <div className="rating">
+                          {[...Array(5)].map((_, i) => (
+                            <i
+                              key={i}
+                              className={`fas fa-star ${i < Math.round(data.rating || 5) ? "" : "off"}`}
+                              style={{ color: i < Math.round(data.rating || 5) ? "#ffc107" : "#e4e5e9" }}
+                            ></i>
+                          ))}
+                        </div>
+                        <span className="rating-count">
+                          ({data.review} Reviews)
+                        </span>
+                      </div>
 
                       <div className="rbt-card-bottom">
                         <div className="rbt-price">
