@@ -11,6 +11,7 @@ import AboutTwo from "../Abouts/About-Two";
 import CallToAction from "../Call-To-Action/CallToAction";
 import Counter from "../Counters/Counter";
 import TestimonialSeven from "../Testimonials/Testimonial-Seven";
+import ReviewSection from "../Reviews/ReviewSection";
 import EventCarouse from "../Events/EventCarouse";
 import TeamTwo from "../Team/TeamTwo";
 import BlogGridTop from "../Blogs/Blog-Sections/BlogGrid-Top";
@@ -236,24 +237,31 @@ const MainDemo = ({ blogs }) => {
         </div>
 
         <div className="rbt-testimonial-area bg-color-white rbt-section-gap overflow-hidden">
-          <div className="wrapper">
-            <div className="container">
-              <div className="row">
-                <div className="col-lg-12">
-                  <div className="section-title text-center mb--10">
-                    <span className="subtitle bg-primary-opacity">
-                      EDUCATION FOR EVERYONE
-                    </span>
-                    <h2 className="title">
-                      People like histudy education. <br /> No joking - here’s
-                      the proof!
-                    </h2>
-                  </div>
+          <div className="container">
+            <div className="row align-items-center">
+              <div className="col-lg-4 left-content">
+                <div className="section-title">
+                  <span className="subtitle bg-primary-opacity">
+                    EDUCATION FOR EVERYONE
+                  </span>
+                  <h2 className="title">
+                    What Our <br /> Learners Say
+                  </h2>
+                </div>
+                <p className="mt--20">Learning communicate to global world and build a bright future with our histudy.</p>
+                <div className="mt--30">
+                  <Link href="/review" className="rbt-btn btn-gradient">
+                    View All Reviews
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-8">
+                <div className="testimonial-cards-wrapper">
+                  <ReviewSection />
                 </div>
               </div>
             </div>
           </div>
-          <TestimonialSeven />
         </div>
 
         <div className="rbt-event-area rbt-section-gap bg-gradient-3">
