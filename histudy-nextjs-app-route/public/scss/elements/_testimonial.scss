@@ -281,30 +281,20 @@ ul {
     position: relative;
     z-index: 1;
 
-    &::before,
-    &::after {
+    &::before {
         position: absolute;
         height: 100%;
-        width: 150px; // Increased width for smoother transition
+        width: 150px;
         background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0) 100%);
-        backdrop-filter: blur(4px); // Subtle blur
+        backdrop-filter: blur(4px);
         z-index: 2;
         content: "";
+        top: 0;
+        left: 0;
 
         @media #{$sm-layout} {
             width: 80px;
         }
-    }
-
-    &::before {
-        top: 0;
-        left: 0;
-    }
-
-    &::after {
-        top: 0;
-        right: 0;
-        transform: rotate(180deg);
     }
 
     &.no-overlay {
