@@ -295,6 +295,10 @@ ul {
         @media #{$sm-layout} {
             width: 80px;
         }
+
+        .active-dark-mode & {
+            background: linear-gradient(90deg, #192335 0%, rgba(25, 35, 53, 0) 100%);
+        }
     }
 
     &.no-overlay {
@@ -326,6 +330,10 @@ ul {
         background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
         backdrop-filter: blur(8px);
         z-index: 1;
+
+        .active-dark-mode & {
+            background: linear-gradient(90deg, rgba(25, 35, 53, 0.9) 0%, rgba(25, 35, 53, 0.3) 50%, rgba(25, 35, 53, 0) 100%);
+        }
     }
 }
 
@@ -342,6 +350,10 @@ ul {
         background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
         backdrop-filter: blur(8px);
         z-index: 1;
+
+        .active-dark-mode & {
+            background: linear-gradient(90deg, rgba(25, 35, 53, 0.9) 0%, rgba(25, 35, 53, 0.3) 50%, rgba(25, 35, 53, 0) 100%);
+        }
     }
 }
 
@@ -809,6 +821,12 @@ ul {
         flex-direction: column;
         justify-content: space-between;
         overflow: hidden;
+
+        .active-dark-mode & {
+            background: var(--color-darker) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid var(--dark-color-border-2);
+        }
 
         &::before {
             display: none !important;
