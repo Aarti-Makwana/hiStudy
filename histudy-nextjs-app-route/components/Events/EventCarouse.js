@@ -59,58 +59,52 @@ const EventCarouse = () => {
           },
         }}
       >
-        {testimonials.map((testimonial, index) => (
+        {testimonials.map((testimonial) => (
           <SwiperSlide className="swiper-wrapper" key={testimonial.id}>
             <div className="swiper-slide">
-              <div className="single-slide">
-                <div className="rbt-card testimonial-grid-card variation-01 rbt-hover-03" style={{ minHeight: '450px' }}>
-                  <div className="rbt-card-img position-relative">
-                    {playingVideo === testimonial.id ? (
-                      <video
-                        controls
-                        autoPlay
-                        width="100%"
-                        height="240"
-                        src={testimonial.video.url}
-                        style={{ objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <>
-                        <Image
-                          src={testimonial.thumbnail.url}
-                          width={710}
-                          height={240}
-                          alt="Testimonial thumbnail"
-                          style={{ objectFit: 'cover' }}
-                        />
-                        <button
-                          className="rbt-btn rounded-player-2 popup-video position-to-top with-animation"
-                          onClick={() => handlePlayVideo(testimonial.id)}
-                          style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 2
-                          }}
-                        >
-                          <span className="play-icon"></span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="rbt-card-body">
-                    <h4 className="rbt-card-title">
-                      {testimonial.name}
-                    </h4>
-                    <p className="description">{testimonial.review}</p>
-                    <div className="rating mt--20">
-                      {Array.from({ length: testimonial.rating }, (_, i) => (
-                        <i key={i} className="fa fa-star"></i>
-                      ))}
-                    </div>
-                  </div>
+              <div
+                className={`video-testimonial-card ${playingVideo === testimonial.id ? "video-playing" : ""}`}
+                onClick={() => handlePlayVideo(testimonial.id)}
+              >
+                <div className="thumbnail">
+                  {playingVideo === testimonial.id ? (
+                    <video
+                      controls
+                      autoPlay
+                      width="100%"
+                      height="100%"
+                      src={testimonial.video?.url}
+                      style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <Image
+                      src={testimonial.thumbnail?.url || "/images/testimonial/client-01.png"}
+                      width={494}
+                      height={650}
+                      alt={testimonial.name}
+                    />
+                  )}
                 </div>
+
+                {playingVideo !== testimonial.id && (
+                  <>
+                    <div className="play-btn">
+                      <i className="fas fa-play"></i>
+                    </div>
+                    <div className="card-content">
+                      <h5 className="title">{testimonial.name}</h5>
+                      <div className="rating">
+                        {[...Array(5)].map((_, i) => (
+                          <i
+                            key={i}
+                            className={`fas fa-star ${i < Math.round(parseFloat(testimonial.rating || 5)) ? "" : "off"}`}
+                          ></i>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </SwiperSlide>

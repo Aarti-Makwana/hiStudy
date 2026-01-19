@@ -277,6 +277,56 @@ ul {
 /* ------------------------------
     Testimonial Style Two 
 -------------------------------- */
+.left-content {
+    position: relative;
+    z-index: 5;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -20px;
+        width: 40px;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+        // backdrop-filter: blur(4px);
+        z-index: 1;
+
+        @media #{$sm-layout} {
+            display: none;
+        }
+
+        .active-dark-mode & {
+            background: linear-gradient(90deg, #192335 0%, rgba(25, 35, 53, 0.5) 50%, rgba(25, 35, 53, 0) 100%);
+        }
+    }
+}
+
+.testimonial-cards-wrapper {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -20px;
+        width: 40px;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+        backdrop-filter: blur(4px);
+        z-index: 1;
+
+        @media #{$sm-layout} {
+            display: none;
+        }
+
+        .active-dark-mode & {
+            background: linear-gradient(90deg, #192335 0%, rgba(25, 35, 53, 0.5) 50%, rgba(25, 35, 53, 0) 100%);
+        }
+    }
+}
+
 .scroll-animation-wrapper {
     position: relative;
     z-index: 1;
@@ -286,7 +336,7 @@ ul {
         height: 100%;
         width: 150px;
         background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0) 100%);
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(2px);
         z-index: 2;
         content: "";
         top: 0;
@@ -316,44 +366,196 @@ ul {
     }
 }
 
-.testimonial-cards-wrapper {
+/* ------------------------------
+    Video Testimonial Style 
+-------------------------------- */
+.video-testimonial-card {
     position: relative;
+    border-radius: var(--radius);
     overflow: hidden;
+    aspect-ratio: 3 / 4.5;
+    background: var(--color-black);
+    cursor: pointer;
 
-    &::before {
-        content: '';
+    .thumbnail {
         position: absolute;
         top: 0;
-        left: -30px;
-        width: 60px;
+        left: 0;
+        width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
-        backdrop-filter: blur(8px);
         z-index: 1;
 
-        .active-dark-mode & {
-            background: linear-gradient(90deg, rgba(25, 35, 53, 0.9) 0%, rgba(25, 35, 53, 0.3) 50%, rgba(25, 35, 53, 0) 100%);
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.22, 1);
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 2;
+            opacity: 0.8;
+            transition: opacity 0.5s ease;
+        }
+    }
+
+    .play-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 2px solid #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+        i {
+            color: #fff;
+            font-size: 20px;
+            margin-left: 4px;
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid #fff;
+            animation: pulse-border 2s infinite;
+        }
+    }
+
+    .card-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 30px 20px;
+        z-index: 4;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.2, 1, 0.22, 1);
+
+        .title {
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .rating {
+            display: flex;
+            gap: 4px;
+
+            i {
+                font-size: 12px;
+                color: #ffc107;
+
+                &.off {
+                    color: rgba(255, 255, 255, 0.3);
+                }
+            }
+        }
+    }
+
+    &:hover {
+        .thumbnail {
+            img {
+                transform: scale(1.1);
+            }
+
+            &::after {
+                opacity: 1;
+            }
+        }
+
+        .play-btn {
+            background: #fff;
+            transform: translate(-50%, -50%) scale(1.1);
+
+            i {
+                color: var(--color-primary);
+            }
+        }
+
+        .card-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    &.video-playing {
+        .thumbnail::after {
+            display: none;
+        }
+
+        .play-btn,
+        .card-content {
+            display: none;
         }
     }
 }
 
-.left-content {
+@keyframes pulse-border {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.testimonial-swiper-wrapper {
     position: relative;
+    padding: 0 50px;
 
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: -30px;
-        width: 60px;
-        height: 100%;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
-        backdrop-filter: blur(8px);
-        z-index: 1;
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 45px;
+        height: 45px;
+        background: var(--color-white);
+        box-shadow: var(--shadow-1);
+        border-radius: 50%;
+        color: var(--color-primary);
+        transition: all 0.3s ease;
 
-        .active-dark-mode & {
-            background: linear-gradient(90deg, rgba(25, 35, 53, 0.9) 0%, rgba(25, 35, 53, 0.3) 50%, rgba(25, 35, 53, 0) 100%);
+        &::after {
+            font-size: 18px;
+            font-weight: 700;
         }
+
+        &:hover {
+            background: var(--color-primary);
+            color: #fff;
+        }
+    }
+
+    .swiper-button-next {
+        right: 0;
+    }
+
+    .swiper-button-prev {
+        left: 0;
     }
 }
 
