@@ -7,6 +7,10 @@ const UserCourses = {
   getCourse: {
     url: "/api/v1/get-single-course",
     method: "GET",
+  },
+  getAllTestimonials: {
+    url: "/api/v1/testimonial/get-all",
+    method: "GET",
   }
 };
 

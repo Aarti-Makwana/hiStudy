@@ -33,4 +33,17 @@ export const UserCoursesServices = {
     }
   },
 
+  UserAllTestimonials: async () => {
+    try {
+      const payload = {
+        ...UserCourses.getAllTestimonials,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
 };
