@@ -271,7 +271,7 @@ const MainDemo = ({ blogs }) => {
                 <span className="subtitle bg-white-opacity">
                   STIMULATED TO TAKE PART IN?
                 </span>
-                <h2 className="title color-white">Upcoming Events</h2>
+                <h2 className="title color-white">Testimonials</h2>
               </div>
             </div>
             <div className="row">
