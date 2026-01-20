@@ -53,7 +53,6 @@ const MainDemo = ({ blogs }) => {
               offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
             };
           });
-          console.log("Adapted courses:", adaptedCourses); // Debug log
           setCourses(adaptedCourses);
         } else {
           console.error("API success false or invalid response", res);
@@ -239,7 +238,7 @@ const MainDemo = ({ blogs }) => {
         <div className="rbt-testimonial-area bg-color-white rbt-section-gap overflow-hidden">
           <div className="container">
             <div className="row align-items-center">
-              <div className="col-lg-4 left-content">
+              <div className="col-lg-3 left-content">
                 <div className="section-title">
                   <span className="subtitle bg-primary-opacity">
                     EDUCATION FOR EVERYONE
@@ -255,7 +254,7 @@ const MainDemo = ({ blogs }) => {
                   </Link>
                 </div>
               </div>
-              <div className="col-lg-8">
+              <div className="col-lg-9">
                 <div className="testimonial-cards-wrapper">
                   <ReviewSection />
                 </div>
