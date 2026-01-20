@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
 
 import { UserCoursesServices } from "../../services/index";
 
@@ -38,14 +38,18 @@ const EventCarouse = () => {
         className="swiper event-activation-1 rbt-arrow-between rbt-dot-bottom-center pb--60 icon-bg-primary"
         slidesPerView={1}
         spaceBetween={30}
-        modules={[Navigation, Pagination]}
+        modules={[Navigation, Pagination, Autoplay]}
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
         pagination={{
           el: ".rbt-swiper-pagination",
           clickable: true,
         }}
         navigation={{
-          nextEl: ".rbt-arrow-left",
-          prevEl: ".rbt-arrow-right",
+          nextEl: ".rbt-arrow-right",
+          prevEl: ".rbt-arrow-left",
         }}
         breakpoints={{
           481: {
@@ -55,7 +59,7 @@ const EventCarouse = () => {
             slidesPerView: 2,
           },
           992: {
-            slidesPerView: 3,
+            slidesPerView: 4,
           },
         }}
       >
@@ -90,7 +94,7 @@ const EventCarouse = () => {
                 {playingVideo !== testimonial.id && (
                   <>
                     <div className="play-btn">
-                      <i className="fas fa-play"></i>
+                      <i className="feather-play"></i>
                     </div>
                     <div className="card-content">
                       <h5 className="title">{testimonial.name}</h5>

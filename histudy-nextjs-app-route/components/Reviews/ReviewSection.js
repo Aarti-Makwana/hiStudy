@@ -31,8 +31,9 @@ const ReviewSection = () => {
     return <Loader />;
   }
 
-  const firstRow = reviews;
-  const secondRow = reviews;
+  const half = Math.ceil(reviews.length / 2);
+  const firstRow = reviews.slice(0, half);
+  const secondRow = reviews.slice(half);
 
   const renderReviewCard = (review) => (
     <div className="rbt-testimonial-box testimonial-card-style" key={review.id}>
