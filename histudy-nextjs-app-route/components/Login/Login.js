@@ -7,14 +7,26 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import { loginSchema } from "../../validations/auth/validation";
 import { UserAuthServices } from "../../services/User";
 import OtpVerification from "../OtpVerification/OtpVerification";
-import Swal from "sweetalert2";
+import { showSuccess, showError } from "../../utils/swal";
 import { getToken } from "../../utils/storage";
+
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
   const router = useRouter();
   const [showOtp, setShowOtp] = React.useState(false);
   const [otpProps, setOtpProps] = React.useState(null);
   const [showHint, setShowHint] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    // Here you would typically send credentialResponse.credential to your backend
+    showSuccess('Success!', 'Google Login successful! (Backend integration pending)');
+    // router.push("/");
+  };
+
+  const handleGoogleError = () => {
+    showError('Error', 'Google Login failed');
+  };
 
   useEffect(() => {
     if (getToken()) {
@@ -29,17 +41,15 @@ const Login = () => {
           {!showOtp && (
             <>
               <h3 className="title">Login</h3>
-              <div className="rbt-social-login-wrapper mb--20 d-flex flex-column gap-2">
-                <button type="button" className="rbt-btn btn-md w-100 btn-white" style={{ border: "1px solid #ddd" }}>
-                  <span className="icon-reverse-wrapper">
-                    <span className="btn-text">Login with Google</span>
-                  </span>
-                </button>
-                <button type="button" className="rbt-btn btn-md w-100 btn-white" style={{ border: "1px solid #ddd" }}>
-                  <span className="icon-reverse-wrapper">
-                    <span className="btn-text">Login with GitHub</span>
-                  </span>
-                </button>
+              <div className="rbt-social-login-wrapper mb--40 d-flex flex-column gap-3 align-items-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_blue"
+                  text="continue_with"
+                  shape="rectangular"
+                  width="100%"
+                />
               </div>
               <div className="text-center mb--20">
                 <span className="text-muted">OR</span>
@@ -53,7 +63,7 @@ const Login = () => {
               try {
                 const res = await UserAuthServices.userLogin(values);
                 if (res && res.status === 'success') {
-                  Swal.fire('Success!', res.message || 'Login successful', 'success');
+                  showSuccess('Success!', res.message || 'Login successful');
                   const x_id = res?.data?.x_id;
                   const x_action = res?.data?.x_action;
                   const email = values.email;
@@ -61,11 +71,11 @@ const Login = () => {
                   setShowOtp(true);
                 } else {
                   setErrors({ submit: res?.message || 'Login failed' });
-                  Swal.fire('Oops!', res?.message || 'Login failed', 'error');
+                  showError('Oops!', res?.message || 'Login failed');
                 }
               } catch (err) {
                 setErrors({ submit: err.message || 'Login failed' });
-                Swal.fire('Oops!', err.message || 'Login failed', 'error');
+                showError('Oops!', err.message || 'Login failed');
               } finally {
                 setSubmitting(false);
               }

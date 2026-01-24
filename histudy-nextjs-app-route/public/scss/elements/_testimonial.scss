@@ -373,7 +373,7 @@ ul {
     position: relative;
     border-radius: var(--radius);
     overflow: hidden;
-    aspect-ratio: 3 / 4.5;
+    aspect-ratio: 9 / 16;
     background: var(--color-black);
     cursor: pointer;
 
@@ -411,34 +411,44 @@ ul {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 60px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border: 2px solid #fff;
+        width: 80px;
+        height: 80px;
+        background: #fff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 3;
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.2), 0 0 0 20px rgba(255, 255, 255, 0.1);
 
         i {
-            color: #fff;
-            font-size: 20px;
+            color: var(--color-primary);
+            font-size: 28px;
             margin-left: 4px;
         }
 
         &::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
             border-radius: 50%;
-            border: 1px solid #fff;
+            border: 1px solid rgba(255, 255, 255, 0.5);
             animation: pulse-border 2s infinite;
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
     }
 
@@ -618,6 +628,11 @@ ul {
         @extend %transition;
         box-shadow: var(--shadow-9);
 
+        .active-dark-mode & {
+            background: var(--color-darker);
+            box-shadow: var(--dark-shadow-1);
+        }
+
         @media #{$laptop-device} {
             padding: 40px 30px;
         }
@@ -755,6 +770,17 @@ ul {
                 }
             }
 
+            .active-dark-mode & {
+                .title {
+                    color: #ffffff !important;
+                }
+
+                span,
+                .designation {
+                    color: #ffffff !important;
+                }
+            }
+
             span {
                 line-height: 28px;
                 display: inline-block;
@@ -772,6 +798,10 @@ ul {
 
         p {
             margin-bottom: 0;
+
+            .active-dark-mode & {
+                color: #ffffff !important;
+            }
         }
 
         .rbt-btn-link {

@@ -20,6 +20,7 @@ import "swiper/css/thumbs";
 // ========= Plugins CSS END =========
 
 import "../public/scss/styles.scss";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function RootLayout({ children }) {
   useEffect(() => {
@@ -28,7 +29,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" dir="ltr">
       <body className="" suppressHydrationWarning={true}>
-        {children}
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+          {children}
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
