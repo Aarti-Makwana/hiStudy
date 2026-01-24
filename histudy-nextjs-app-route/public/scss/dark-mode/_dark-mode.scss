@@ -179,6 +179,33 @@
 
     //================> Global Class END
 
+    .rbt-testimonial-box {
+        .inner {
+            background: var(--color-darker) !important;
+
+            .client-info {
+                .title {
+                    color: #ffffff !important;
+                }
+
+                span,
+                .designation {
+                    color: #ffffff !important;
+                    opacity: 0.8;
+                }
+            }
+
+            .description {
+
+                p,
+                .subtitle-3 {
+                    color: #ffffff !important;
+                    opacity: 0.9;
+                }
+            }
+        }
+    }
+
     .rbt-splash-slider {
         background-image: url(../../images/dark/bg/bg-image-10.jpg);
 

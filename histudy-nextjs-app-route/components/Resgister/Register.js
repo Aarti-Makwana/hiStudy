@@ -10,10 +10,20 @@ import { setLocalStorageToken } from "../../utils/common.util";
 import { step1Schema, step2Schema, step3Schema } from "../../validations/auth/validation";
 import { showSuccess, showError } from "../../utils/swal";
 
+import { GoogleLogin } from "@react-oauth/google";
+
 const Register = () => {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [showHint, setShowHint] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    showSuccess("Success!", "Google Login successful! (Backend integration pending)");
+  };
+
+  const handleGoogleError = () => {
+    showError("Error", "Google Login failed");
+  };
 
   useEffect(() => {
     if (getToken()) {
@@ -42,6 +52,21 @@ const Register = () => {
     <div className="col-lg-6">
       <div className="rbt-contact-form contact-form-style-1 max-width-auto">
         <h3 className="title">Register</h3>
+        {step === 1 && (
+          <div className="rbt-social-login-wrapper mb--40 d-flex flex-column gap-3 align-items-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="filled_blue"
+              text="continue_with"
+              shape="rectangular"
+              width="100%"
+            />
+            <div className="text-center mt--10">
+              <span className="text-muted">OR</span>
+            </div>
+          </div>
+        )}
         <Formik
           initialValues={{
             name: "",
