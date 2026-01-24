@@ -13,6 +13,7 @@ import { UserCoursesServices } from "../../services/index";
 const EventCarouse = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [playingVideo, setPlayingVideo] = useState(null);
+  const [swiperInstance, setSwiperInstance] = useState(null);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -30,6 +31,16 @@ const EventCarouse = () => {
 
   const handlePlayVideo = (id) => {
     setPlayingVideo(id);
+    if (swiperInstance) {
+      swiperInstance.autoplay.stop();
+    }
+  };
+
+  const handleStopVideo = () => {
+    setPlayingVideo(null);
+    if (swiperInstance) {
+      swiperInstance.autoplay.start();
+    }
   };
 
   return (
@@ -39,6 +50,7 @@ const EventCarouse = () => {
         slidesPerView={1}
         spaceBetween={30}
         modules={[Navigation, Pagination, Autoplay]}
+        onSwiper={setSwiperInstance}
         autoplay={{
           delay: 5000,
           disableOnInteraction: false,
@@ -78,8 +90,13 @@ const EventCarouse = () => {
                       width="100%"
                       height="100%"
                       src={testimonial.video?.url}
-                      style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
-                      onClick={(e) => e.stopPropagation()}
+                      style={{ objectFit: "contain", position: "absolute", top: 0, left: 0, backgroundColor: "#000" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Optional: toggle stop on click if already playing, 
+                        // but let's just make sure it stops when finished
+                      }}
+                      onEnded={handleStopVideo}
                     />
                   ) : (
                     <Image
@@ -87,6 +104,7 @@ const EventCarouse = () => {
                       width={494}
                       height={650}
                       alt={testimonial.name}
+                      style={{ height: '100%', objectFit: 'cover' }}
                     />
                   )}
                 </div>
