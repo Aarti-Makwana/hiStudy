@@ -34,7 +34,7 @@ const OnlineAcademy = ({ blogdata }) => {
           // Adapt API data to component structure
           const adaptedCourses = res.data.map((item) => ({
             id: item.id,
-            courseImg: item.file ? item.file : brand1, // Fallback to brand1 or similar if null
+            courseImg: item.file?.url ? item.file.url : brand1, // Extract URL from file object
             courseTitle: item.title,
             desc: item.short_description || item.long_description,
             lesson: item.number_of_lectures,
@@ -189,7 +189,10 @@ const OnlineAcademy = ({ blogdata }) => {
                                 {data.courseTitle}
                               </Link>
                             </h4>
-                            <p className="rbt-card-text">{data.desc}</p>
+                            <div
+                              className="rbt-card-text"
+                              dangerouslySetInnerHTML={{ __html: data.desc }}
+                            ></div>
 
                             <div className="rbt-review">
                               <div className="rating">

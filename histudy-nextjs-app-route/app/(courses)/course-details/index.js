@@ -41,7 +41,7 @@ const SingleCourse = ({ getParams }) => {
             const adaptedData = {
               id: apiData.id,
               courseTitle: apiData.title,
-              courseImg: apiData.file || "/images/course/course-01.jpg", // Fallback image
+              courseImg: apiData.file?.url || "/images/course/course-01.jpg", // Extract URL from file object
               courseVideo: apiData.introVideos?.[0]?.url || "",
               desc: apiData.short_description,
               longDesc: apiData.long_description,
@@ -66,7 +66,7 @@ const SingleCourse = ({ getParams }) => {
 
               // Instructor
               userName: apiData.instructors?.[0]?.name || "Unknown Instructor",
-              userImg: apiData.instructors?.[0]?.file || "/images/client/avatar-02.png", // Fallback avatar
+              userImg: apiData.instructors?.[0]?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
               userCategory: apiData.instructors?.[0]?.expertise || "Instructor",
 
               // Complex structures adapted
@@ -93,7 +93,7 @@ const SingleCourse = ({ getParams }) => {
                   body: apiData.instructors?.map(inst => ({
                     name: inst.name,
                     desc: inst.bio,
-                    img: inst.file || "/images/client/avatar-02.png",
+                    img: inst.file?.url || "/images/client/avatar-02.png",
                     type: inst.subject || "Instructor",
                     ratingNumber: inst.rating_count || 0,
                     studentNumber: inst.students_taught || 0,

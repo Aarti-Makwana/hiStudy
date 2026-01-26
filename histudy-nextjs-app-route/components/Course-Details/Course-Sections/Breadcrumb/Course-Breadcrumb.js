@@ -20,7 +20,7 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
             </li>
           </ul>
           <h2 className="title">{getMatchCourse.courseTitle}</h2>
-          <p className="description">{getMatchCourse.desc}</p>
+          <div className="description" dangerouslySetInnerHTML={{ __html: getMatchCourse.desc }}></div>
 
           <div className="d-flex align-items-center mb--20 flex-wrap rbt-course-details-feature">
             <div className="feature-sin best-seller-badge">

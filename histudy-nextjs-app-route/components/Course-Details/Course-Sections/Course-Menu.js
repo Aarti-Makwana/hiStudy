@@ -16,7 +16,7 @@ const CourseMenu = () => {
     { id: "overview", label: "Overview" },
     { id: "coursecontent", label: "Course Content" },
     { id: "details", label: "Details" },
-    { id: "intructor", label: "Intructor" },
+    { id: "intructor", label: "Instructor" },
     { id: "review", label: "Review" },
   ];
 
@@ -52,9 +52,8 @@ const CourseMenu = () => {
     <>
       <nav className="mainmenu-nav onepagenav">
         <ul
-          className={`mainmenu ${
-            menuClass ? "pt--10 pb--10 px-4 justify-content-center" : ""
-          }`}
+          className={`mainmenu ${menuClass ? "pt--10 pb--10 px-4 justify-content-center" : ""
+            }`}
         >
           {sections.map((sec, i) => (
             <li className={currentSection === sec.id ? "current" : ""} key={i}>

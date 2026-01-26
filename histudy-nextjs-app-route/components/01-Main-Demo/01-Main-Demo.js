@@ -33,7 +33,7 @@ const MainDemo = ({ blogs }) => {
 
         if (res && res.success) {
           const adaptedCourses = res.data.map((item) => {
-            let img = item.file ? item.file : "/images/course/course-online-01.jpg";
+            let img = item.file?.url ? item.file?.url : "/images/course/course-online-01.jpg";
             // If it's a placeholder URL, try to set it to 710x488
             if (typeof img === 'string' && img.includes('placeholder')) {
               img = img.replace('400x117', '710x488').replace('400/117', '710/488');
@@ -160,7 +160,10 @@ const MainDemo = ({ blogs }) => {
                         </Link>
                       </h4>
 
-                      <p className="rbt-card-text">{data.desc?.substring(0, 100)}</p>
+                      <div
+                        className="rbt-card-text"
+                        dangerouslySetInnerHTML={{ __html: data.desc }}
+                      ></div>
 
                       <div className="rbt-review">
                         <div className="rating">
