@@ -121,7 +121,12 @@ const UserAuth = {
     url: "/api/user/resend-otp",
     method: "POST",
   },
+  // Social login endpoint
+  socialLogin: {
+    url: "/api/user/social-login",
+    method: "POST",
+  },
 };
 
 // Export the Auth object for use in other modules
-export default UserAuth;
+export default UserAuth; 

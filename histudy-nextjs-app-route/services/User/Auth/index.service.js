@@ -217,7 +217,26 @@ export const UserAuthServices = {
         headers: headers,
       };
       const res = await APIrequest(payload);
-      
+
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  /**
+   * Function for social login (Google/GitHub).
+   * @param {Object} bodyData - Social login data from provider.
+   * @returns {Promise<Object>} - API response
+   */
+  socialLoginService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.socialLogin,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
       return res;
     } catch (error) {
       logger(error);

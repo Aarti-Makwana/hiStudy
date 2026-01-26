@@ -204,6 +204,19 @@
                 }
             }
         }
+
+        .clint-info-wrapper {
+            .client-info {
+                .title {
+                    color: var(--color-white) !important;
+                }
+
+                span,
+                .designation {
+                    color: var(--color-white-off) !important;
+                }
+            }
+        }
     }
 
     .rbt-splash-slider {
@@ -2949,6 +2962,56 @@
         .inner {
             &::before {
                 opacity: 0.5;
+            }
+        }
+
+        .clint-info-wrapper {
+            .client-info {
+
+                .title,
+                h5 {
+                    color: var(--color-white) !important;
+                }
+
+                span,
+                .designation,
+                p {
+                    color: var(--color-white-off) !important;
+                }
+            }
+        }
+
+        .description {
+
+            p,
+            .subtitle-3 {
+                color: var(--color-white-off) !important;
+            }
+        }
+    }
+
+    // Testimonial card style
+    .testimonial-card-style {
+        .inner {
+            .client-info {
+
+                .title,
+                h5 {
+                    color: var(--color-white) !important;
+                }
+
+                .designation,
+                p {
+                    color: var(--color-white-off) !important;
+                }
+            }
+
+            .description {
+
+                p,
+                .subtitle-3 {
+                    color: var(--color-white-off) !important;
+                }
             }
         }
     }

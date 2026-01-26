@@ -21,13 +21,13 @@
 const _env = typeof process !== "undefined" && process.env ? process.env : {};
 
 const config = {
-  NODE_ENV: _env.VITE_MODE ?? _env.NODE_ENV,
-  NAME_KEY: _env.VITE_NAME_KEY ?? _env.NEXT_PUBLIC_NAME_KEY ?? "App",
-  NAME_TITLE: _env.VITE_NAME_TITLE ?? _env.NEXT_PUBLIC_NAME_TITLE ?? "app",
-  API_BASE_URL: _env.NEXT_PUBLIC_API_BASE_URL ?? _env.API_BASE_URL ?? "",
-  DEFAULT_LANGUAGE: _env.VITE_DEFAULT_LANGUAGE ?? _env.NEXT_PUBLIC_DEFAULT_LANGUAGE ?? "en",
-  IMAGE_URL: _env.VITE_IMAGE_PATH ?? _env.NEXT_PUBLIC_IMAGE_PATH ?? "",
-  UPLOAD_BASE_URL: _env.VITE_UPLOAD_BASE_URL ?? _env.NEXT_PUBLIC_UPLOAD_BASE_URL ?? "",
+  NODE_ENV: process.env.NEXT_PUBLIC_MODE || process.env.NODE_ENV || "development",
+  NAME_KEY: process.env.NEXT_PUBLIC_NAME_KEY || "App",
+  NAME_TITLE: process.env.NEXT_PUBLIC_NAME_TITLE || "app",
+  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "",
+  DEFAULT_LANGUAGE: process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE || "en",
+  IMAGE_URL: process.env.NEXT_PUBLIC_IMAGE_PATH || "",
+  UPLOAD_BASE_URL: process.env.NEXT_PUBLIC_UPLOAD_BASE_URL || "",
 };
 
 export default config;
