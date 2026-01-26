@@ -20,9 +20,8 @@ const CourseCardTwo = ({ course }) => {
   return (
     <>
       <div
-        className={`rbt-course-grid-column list-column-half ${
-          toggle ? "active-list-view" : ""
-        }`}
+        className={`rbt-course-grid-column list-column-half ${toggle ? "active-list-view" : ""
+          }`}
       >
         {course.map((data, index) => (
           <div
@@ -33,9 +32,8 @@ const CourseCardTwo = ({ course }) => {
             key={index}
           >
             <div
-              className={`rbt-card variation-01 rbt-hover ${
-                toggle ? "card-list-2" : ""
-              }`}
+              className={`rbt-card variation-01 rbt-hover ${toggle ? "card-list-2" : ""
+                }`}
             >
               <div className="rbt-card-img">
                 <Link href={`/course-detail-2/${data.id}`}>
@@ -67,10 +65,10 @@ const CourseCardTwo = ({ course }) => {
                     ({data.days} hours total)
                   </span>
                 </span>
-                <p className="rbt-card-text">
-                  It is a long established fact that a reader will be
-                  distracted.
-                </p>
+                <div
+                  className="rbt-card-text"
+                  dangerouslySetInnerHTML={{ __html: data.desc }}
+                ></div>
                 <div className="rbt-card-bottom">
                   <Link
                     className="transparent-button"

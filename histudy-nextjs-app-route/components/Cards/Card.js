@@ -71,7 +71,14 @@ const Card = ({ start, end, col, mt, isDesc, isUser }) => {
                     {data.student} Students
                   </li>
                 </ul>
-                {isDesc ? <p className="rbt-card-text">{data.desc}</p> : ""}
+                {isDesc ? (
+                  <div
+                    className="rbt-card-text"
+                    dangerouslySetInnerHTML={{ __html: data.desc }}
+                  ></div>
+                ) : (
+                  ""
+                )}
                 {isUser ? (
                   <div className="rbt-author-meta mb--10">
                     <div className="rbt-avater">

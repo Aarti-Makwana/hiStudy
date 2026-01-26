@@ -74,9 +74,12 @@ const HomeCourses = ({ start, end, courses }) => {
                       </Link>
                     )}
                   </h4>
-                  <p className={`rbt-card-text ${isLoading ? "rbt-skeleton-loading" : ""}`} style={isLoading ? { width: '100%', height: '40px' } : {}}>
-                    {!isLoading && data.desc?.substring(0, 100)}
-                  </p>
+                  <div
+                    className={`rbt-card-text ${isLoading ? "rbt-skeleton-loading" : ""}`}
+                    style={isLoading ? { width: '100%', height: '40px' } : {}}
+                    dangerouslySetInnerHTML={!isLoading ? { __html: data.desc } : undefined}
+                  >
+                  </div>
                   <div className="rbt-review">
                     <div className={`rating ${isLoading ? "rbt-skeleton-loading" : ""}`} style={isLoading ? { width: '100px', height: '14px' } : {}}>
                       {!isLoading && [...Array(5)].map((_, i) => (

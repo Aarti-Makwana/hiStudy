@@ -14,16 +14,15 @@ const Overview = ({ checkMatchCourses }) => {
   return (
     <>
       <div
-        className={`rbt-course-feature-box overview-wrapper rbt-shadow-box ${
-          addClass ? "rbt-border-with-box" : "mt--30"
-        } has-show-more ${toggle ? "active" : ""}`}
+        className={`rbt-course-feature-box overview-wrapper rbt-shadow-box ${addClass ? "rbt-border-with-box" : "mt--30"
+          } has-show-more ${toggle ? "active" : ""}`}
         id="overview"
       >
         <div className="rbt-course-feature-inner has-show-more-inner-content">
           <div className="section-title">
             <h4 className="rbt-title-style-3">{title}</h4>
           </div>
-          <p>{desc}</p>
+          <div dangerouslySetInnerHTML={{ __html: desc }}></div>
 
           <div className="row g-5 mb--30">
             <div className="col-lg-6">
@@ -48,7 +47,7 @@ const Overview = ({ checkMatchCourses }) => {
               </ul>
             </div>
           </div>
-          <p>{descTwo}</p>
+          <div dangerouslySetInnerHTML={{ __html: descTwo }}></div>
         </div>
         <div
           className={`rbt-show-more-btn ${toggle ? "active" : ""}`}

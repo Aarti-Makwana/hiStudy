@@ -12,7 +12,7 @@ const Instructor = ({ checkMatchCourses }) => {
         {checkMatchCourses.body.map((teacher, innerIndex) => (
           <div className="media align-items-center" key={innerIndex}>
             <div className="thumbnail">
-              <Link href={`/profile/${teacher.id}`}>
+              <Link href={`#`}>
                 <Image
                   src={teacher.img}
                   width={250}
@@ -26,7 +26,7 @@ const Instructor = ({ checkMatchCourses }) => {
                 <h5 className="title">
                   <Link
                     className="hover-flip-item-wrapper"
-                    href={`/profile/${teacher.id}`}
+                    href={`#`}
                   >
                     {teacher.name}
                   </Link>
@@ -52,7 +52,7 @@ const Instructor = ({ checkMatchCourses }) => {
                 </ul>
               </div>
               <div className="content">
-                <p className="description">{teacher.desc}</p>
+                <div className="description" dangerouslySetInnerHTML={{ __html: teacher.desc }}></div>
 
                 <ul className="social-icon social-default icon-naked justify-content-start">
                   {teacher.social.map((social, index) => (
