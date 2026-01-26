@@ -40,6 +40,24 @@ export const resetPasswordSchema = Yup.object({
     .required('Confirm password is required'),
 });
 
+// Social Profile Completion
+export const socialProfileSchema = Yup.object().shape({
+  phone: Yup.string()
+    .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
+    .required("Phone number is required"),
+  profession: Yup.string().required("Profession is required"),
+  company: Yup.string().when("profession", {
+    is: (val) => val === "Working Professional",
+    then: (schema) => schema.required("Company name is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  university: Yup.string().when("profession", {
+    is: (val) => ["1st–Final Year", "Pre-Final Year"].includes(val),
+    then: (schema) => schema.required("University name is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+});
+
 export default {
   step1Schema,
   step2Schema,
@@ -47,4 +65,5 @@ export default {
   loginSchema,
   forgotSchema,
   resetPasswordSchema,
+  socialProfileSchema,
 };

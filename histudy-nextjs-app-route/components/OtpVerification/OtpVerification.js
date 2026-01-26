@@ -8,7 +8,8 @@ import Swal from "sweetalert2";
 import { setToken, setUser } from "../../utils/storage";
 import { setLocalStorageToken } from "../../utils/common.util";
 
-const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/login", hideInternalButton = false }, ref) => {
+const OtpVerification = forwardRef((props, ref) => {
+  const { email, xId, xAction, redirectPath = "/login", hideInternalButton = false, onSuccess } = props;
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,13 @@ const OtpVerification = forwardRef(({ email, xId, xAction, redirectPath = "/logi
 
       const res = await UserAuthServices.otpVerify(formData, headers);
       if (res && res.status === "success") {
+        let handledExternally = false;
+        if (typeof props.onSuccess === 'function') {
+          handledExternally = props.onSuccess(res);
+        }
+
+        if (handledExternally) return;
+
         Swal.fire("Success!", res.message || "OTP verified", "success");
         setOtp("");
         // If this was a forgot password flow, redirect to reset-password with token
