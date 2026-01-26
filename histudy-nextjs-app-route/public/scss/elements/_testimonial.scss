@@ -411,8 +411,8 @@ ul {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
         background: #fff;
         border-radius: 50%;
         display: flex;
@@ -420,12 +420,12 @@ ul {
         justify-content: center;
         z-index: 3;
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.2), 0 0 0 20px rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2), 0 0 0 16px rgba(255, 255, 255, 0.1);
 
         i {
             color: var(--color-primary);
-            font-size: 28px;
-            margin-left: 4px;
+            font-size: 20px;
+            margin-left: 3px;
         }
 
         &::after {
