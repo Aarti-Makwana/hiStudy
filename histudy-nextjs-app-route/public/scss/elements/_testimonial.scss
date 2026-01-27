@@ -1103,12 +1103,20 @@ ul {
                         margin-bottom: 2px !important;
                         color: var(--color-heading) !important;
                         font-weight: 700 !important;
+
+                        .active-dark-mode & {
+                            color: var(--color-white) !important;
+                        }
                     }
 
                     .designation {
                         font-size: 14px !important;
                         color: var(--color-body) !important;
                         margin-bottom: 0 !important;
+
+                        .active-dark-mode & {
+                            color: var(--color-white-off) !important;
+                        }
                     }
                 }
             }
@@ -1134,6 +1142,11 @@ ul {
                 line-height: 26px !important;
                 color: var(--color-body) !important;
                 margin-bottom: 20px !important;
+
+                .active-dark-mode & {
+                    color: var(--color-white-off) !important;
+                }
+
                 display: -webkit-box;
                 -webkit-line-clamp: 3;
                 line-clamp: 3;

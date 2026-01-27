@@ -73,13 +73,20 @@ const Login = () => {
   }, []);
 
   const initiateSocialLogin = (provider) => {
-    const url = `${config.API_BASE_URL}/api/auth/${provider}/redirect`;
+    const origin = encodeURIComponent(window.location.origin);
+
+    const url = `${config.API_BASE_URL}/api/auth / ${provider}/redirect?origin=${origin}`;
+
     const width = 600, height = 700;
     const left = window.innerWidth / 2 - width / 2;
     const top = window.innerHeight / 2 - height / 2;
-    window.open(url, "SocialLogin", `width=${width},height=${height},left=${left},top=${top}`);
-  };
 
+    window.open(
+      url,
+      "SocialLogin",
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+  };
   useEffect(() => {
     if (getToken()) {
       router.push("/");

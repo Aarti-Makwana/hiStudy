@@ -13,13 +13,12 @@ const InstructorModal = ({ instructor, onClose }) => {
         >
             <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-content border-0">
-                    <div className="modal-header border-0 pb-0" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="modal-header">
                         <button
                             type="button"
-                            className="btn-close"
+                            className="rbt-round-btn"
                             onClick={onClose}
                             aria-label="Close"
-                            style={{ position: 'relative', zIndex: 11 }}
                         >
                             <i className="feather-x"></i>
                         </button>
