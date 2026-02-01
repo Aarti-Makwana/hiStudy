@@ -120,9 +120,6 @@ const Checkout = () => {
       }
       const data = await placeOrder(orderPayload);
 
-      // The service returns the response data directly or throws
-      // APIrequest typically returns res.data which corresponds to the body
-      // We need to check the status field from the backend response
       if (data?.status !== "success") {
         setStatus("failed");
         setError("Unable to create order");

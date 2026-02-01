@@ -29,7 +29,6 @@ const MainDemo = ({ blogs }) => {
     const fetchCourses = async () => {
       try {
         const res = await UserCoursesServices.UserAllCourses();
-        console.log("UserAllCourses response:", res); // Debug log
 
         if (res && res.success) {
           const adaptedCourses = res.data.map((item) => {
