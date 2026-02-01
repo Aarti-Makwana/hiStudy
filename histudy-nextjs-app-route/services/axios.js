@@ -93,15 +93,8 @@ const APIrequest = async ({
       }
       axiosConfig.params = queryParamsPayload;
     }
-    // Debug/log baseURL and url to verify where the request will be sent
-    logger("API request config", {
-      baseURL: axiosConfig.baseURL,
-      url: axiosConfig.url,
-      method: axiosConfig.method,
-    });
 
     const res = await axios(axiosConfig);
-    logger(res, 'yaha res ');
 
     return res.data;
   } catch (error) {

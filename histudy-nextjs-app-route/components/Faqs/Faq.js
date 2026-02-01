@@ -13,7 +13,7 @@ const Faq = () => {
         if (response.success) {
           // Group FAQs by category name
           const grouped = response.data.reduce((acc, item) => {
-            const categoryName = item.category.name;
+            const categoryName = item.category?.name;
             if (!acc[categoryName]) {
               acc[categoryName] = [];
             }
