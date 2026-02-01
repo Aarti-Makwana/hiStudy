@@ -112,10 +112,12 @@ const Checkout = () => {
         bundles: [],
         coupon_code: discountedTotal !== null ? couponCode : "",
         order_sub_total: total_amount,
-        order_discount: discountAmount,
-        order_total: finalAmount,
+        order_total: total_amount,
       };
 
+      if (finalAmount) {
+        orderPayload.gateway_amount = finalAmount;
+      }
       const data = await placeOrder(orderPayload);
 
       // The service returns the response data directly or throws
