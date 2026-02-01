@@ -13,7 +13,7 @@ const Faq = () => {
         if (response.success) {
           // Group FAQs by category name
           const grouped = response.data.reduce((acc, item) => {
-            const categoryName = item.category?.name;
+            const categoryName = item.category?.name || "General";
             if (!acc[categoryName]) {
               acc[categoryName] = [];
             }
@@ -46,9 +46,12 @@ const Faq = () => {
             categories.map((category, index) => (
               <div className="col-lg-6" key={index}>
                 <div className="rbt-accordion-style accordion">
-                  <div className="section-title text-start mb--60">
-                    <h4 className="title">{category}</h4>
-                  </div>
+
+                  {category && (
+                    <div className="section-title text-start mb--60">
+                      <h4 className="title">{category}</h4>
+                    </div>
+                  )}
                   <div className="rbt-accordion-style rbt-accordion-04 accordion">
                     <div className="accordion" id={`accordion-${index}`}>
                       {faqs[category].map((item, innerIndex) => (

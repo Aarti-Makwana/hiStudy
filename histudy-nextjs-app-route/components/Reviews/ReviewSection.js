@@ -15,8 +15,7 @@ const ReviewSection = () => {
       try {
         const res = await UserReviewServices.getAllReviews();
         if (res && res.success) {
-          const verifiedReviews = res.data.filter(review => review.verified === 1);
-          setReviews(verifiedReviews);
+          setReviews(res?.data);
         }
       } catch (error) {
         console.error("Error fetching reviews:", error);
