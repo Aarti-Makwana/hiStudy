@@ -11,7 +11,13 @@ import MobileMenu from "@/components/Header/MobileMenu";
 import Cart from "@/components/Header/Offcanvas/Cart";
 import FooterOne from "@/components/Footer/Footer-One";
 
+import { useSettings } from "@/context/SettingsContext";
+import MirrorLoader from "@/components/Common/MirrorLoader";
+
 const ContactPage = () => {
+  const { settings, loading } = useSettings();
+  const contactData = settings?.contact_us;
+
   return (
     <>
       <Provider store={Store}>
@@ -28,9 +34,18 @@ const ContactPage = () => {
                     <span className="subtitle bg-secondary-opacity">
                       Contact Us
                     </span>
-                    <h2 className="title">
-                      Histudy Course Contact <br /> can join with us.
-                    </h2>
+                    {loading ? (
+                      <div className="d-flex justify-content-center mt-3">
+                        <MirrorLoader widthClass="w-400" heightClass="h-50" />
+                      </div>
+                    ) : (
+                      <h2
+                        className="title"
+                        dangerouslySetInnerHTML={{
+                          __html: contactData?.heading?.replace(/\n/g, "<br />") || "Histudy Course Contact <br /> can join with us.",
+                        }}
+                      ></h2>
+                    )}
                   </div>
                 </div>
               </div>
@@ -41,12 +56,16 @@ const ContactPage = () => {
           <ContactForm />
 
           <div className="rbt-google-map bg-color-white rbt-section-gapTop">
-            <iframe
-              className="w-100"
-              src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d2965.0824050173574!2d-93.63905729999999!3d41.998507000000004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sWebFilings%2C+University+Boulevard%2C+Ames%2C+IA!5e0!3m2!1sen!2sus!4v1390839289319"
-              height="600"
-              style={{ border: "0" }}
-            ></iframe>
+            {loading ? (
+              <MirrorLoader widthClass="w-100p" heightClass="h-600" />
+            ) : (
+              <iframe
+                className="w-100"
+                src={contactData?.map_link || "https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d2965.0824050173574!2d-93.63905729999999!3d41.998507000000004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sWebFilings%2C+University+Boulevard%2C+Ames%2C+IA!5e0!3m2!1sen!2sus!4v1390839289319"}
+                height="600"
+                style={{ border: "0" }}
+              ></iframe>
+            )}
           </div>
 
           <FooterOne />

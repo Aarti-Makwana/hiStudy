@@ -2,11 +2,18 @@ import Image from "next/image";
 import { useFormik } from "formik";
 import { toast } from "react-hot-toast";
 
+import { useSettings } from "@/context/SettingsContext";
+import MirrorLoader from "../Common/MirrorLoader";
+
 import img from "../../public/images/about/contact.jpg";
 import { generalInfoValidation } from "@/validations/GeneralInfo/validation";
 import { GeneralInfoService } from "@/services/User";
 
+
 const ContactForm = ({ gap }) => {
+  const { settings, loading } = useSettings();
+  const contactData = settings?.contact_us;
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -19,8 +26,8 @@ const ContactForm = ({ gap }) => {
     onSubmit: async (values, { resetForm, setSubmitting }) => {
       try {
         const response = await GeneralInfoService.generalInquiry(values);
-        if (response.success) {
-          toast.success(response.message || "Message sent successfully!");
+        if (response.status === "success" || response.success) {
+          toast.success(response.message || "Contact create successfully.");
           resetForm();
         } else {
           toast.error(response.message || "Something went wrong.");
@@ -55,9 +62,17 @@ const ContactForm = ({ gap }) => {
                     EDUCATION FOR EVERYONE
                   </span>
                 </div>
-                <h3 className="title">
-                  Get a Free Course You Can Contact With Me
-                </h3>
+                {loading ? (
+                  <MirrorLoader widthClass="w-400" heightClass="h-40" className="mb-4" />
+                ) : (
+                  <h3
+                    className="title"
+                    dangerouslySetInnerHTML={{
+                      __html: contactData?.form_heading?.replace(/\n/g, "<br />") || "Get a Free Course You Can Contact With Me",
+                    }}
+                  ></h3>
+                )}
+
                 <form
                   id="contact-form"
                   onSubmit={formik.handleSubmit}
@@ -106,21 +121,31 @@ const ContactForm = ({ gap }) => {
                       </div>
                     ) : null}
                   </div>
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      id="subject"
-                      name="subject"
-                      placeholder="Your Subject"
-                      {...formik.getFieldProps("subject")}
-                    />
-                    <span className="focus-border"></span>
+                  <div className="form-group mb--20">
+                    {loading ? (
+                      <MirrorLoader widthClass="w-100p" heightClass="h-50" />
+                    ) : (
+                      <select
+                        name="subject"
+                        id="subject"
+                        {...formik.getFieldProps("subject")}
+                        className="rbt-select"
+                      >
+                        <option value="">Select Subject</option>
+                        {contactData?.subjects?.map((subject, index) => (
+                          <option key={index} value={subject}>
+                            {subject}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     {formik.touched.subject && formik.errors.subject ? (
                       <div className="text-danger mt-1">
                         {formik.errors.subject}
                       </div>
                     ) : null}
                   </div>
+
                   <div className="form-group">
                     <textarea
                       name="message"

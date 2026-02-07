@@ -21,6 +21,7 @@ import "swiper/css/thumbs";
 
 import "../public/scss/styles.scss";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { Toaster } from "react-hot-toast";
 import { SettingsProvider, useSettings } from "@/context/SettingsContext";
 
 const Favicon = () => {
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
       <body className="" suppressHydrationWarning={true}>
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
           <SettingsProvider>
+            <Toaster position="top-center" reverseOrder={false} />
             <Favicon />
             {children}
           </SettingsProvider>
