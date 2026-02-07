@@ -265,3 +265,20 @@
         }
     }
 }
+
+.rbt-select {
+    height: 50px;
+    padding: 0 15px;
+    border: 2px solid var(--color-border-2);
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--color-body);
+    background-color: transparent;
+    width: 100%;
+    outline: none;
+    @extend %transition;
+
+    &:focus {
+        border-color: var(--color-primary);
+    }
+}
