@@ -12,6 +12,7 @@ import Nav from "../Nav";
 import logo from "../../../public/images/logo/logo.png";
 import logoLight from "../../../public/images/dark/logo/logo-light.png";
 import { useAppContext } from "@/context/Context";
+import { useSettings } from "@/context/SettingsContext";
 
 const HeaderEight = ({
   headerType,
@@ -23,6 +24,10 @@ const HeaderEight = ({
 }) => {
   const [isSticky, setIsSticky] = useState(false);
   const { isLightTheme } = useAppContext();
+  const { settings } = useSettings();
+
+  const site = settings?.site;
+  const siteLogo = site?.logo || (isLightTheme ? logo : logoLight);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,9 +48,8 @@ const HeaderEight = ({
   return (
     <>
       <div
-        className={`rbt-header-wrapper ${gapSpaceBetween} ${sticky}  ${
-          !headerType && isSticky ? `${headerSticky}` : ""
-        }`}
+        className={`rbt-header-wrapper ${gapSpaceBetween} ${sticky}  ${!headerType && isSticky ? `${headerSticky}` : ""
+          }`}
       >
         <div className={`${container}`}>
           <div className={`mainbar-row ${navigationEnd} align-items-center`}>
@@ -53,23 +57,13 @@ const HeaderEight = ({
               <div className="header-info">
                 <div className="logo">
                   <Link href="/">
-                    {isLightTheme ? (
-                      <Image
-                        src={logo}
-                        width={152}
-                        height={50}
-                        priority={true}
-                        alt="Education Logo Images"
-                      />
-                    ) : (
-                      <Image
-                        src={logoLight}
-                        width={152}
-                        height={50}
-                        priority={true}
-                        alt="Education Logo Images"
-                      />
-                    )}
+                    <Image
+                      src={siteLogo}
+                      width={152}
+                      height={50}
+                      priority={true}
+                      alt={site?.name || "Education Logo Images"}
+                    />
                   </Link>
                 </div>
               </div>

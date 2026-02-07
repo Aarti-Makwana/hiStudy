@@ -21,6 +21,24 @@ import "swiper/css/thumbs";
 
 import "../public/scss/styles.scss";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { SettingsProvider, useSettings } from "@/context/SettingsContext";
+
+const Favicon = () => {
+  const { settings } = useSettings();
+  const favicon = settings?.site?.addonn_favicon || "/favicon.ico";
+
+  useEffect(() => {
+    if (favicon) {
+      const link = document.querySelector("link[rel*='icon']") || document.createElement("link");
+      link.type = "image/x-icon";
+      link.rel = "shortcut icon";
+      link.href = favicon;
+      document.getElementsByTagName("head")[0].appendChild(link);
+    }
+  }, [favicon]);
+
+  return null;
+};
 
 export default function RootLayout({ children }) {
   useEffect(() => {
@@ -30,7 +48,10 @@ export default function RootLayout({ children }) {
     <html lang="en" dir="ltr">
       <body className="" suppressHydrationWarning={true}>
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
-          {children}
+          <SettingsProvider>
+            <Favicon />
+            {children}
+          </SettingsProvider>
         </GoogleOAuthProvider>
       </body>
     </html>

@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import emoji from "../../../public/images/icons/hand-emojji.svg";
 import { useAppContext } from "@/context/Context";
 
 const HeaderTopBar = () => {
@@ -10,9 +9,8 @@ const HeaderTopBar = () => {
   return (
     <>
       <div
-        className={`rbt-header-campaign rbt-header-campaign-1 rbt-header-top-news bg-image1 ${
-          !toggle ? "deactive" : ""
-        }`}
+        className={`rbt-header-campaign rbt-header-campaign-1 rbt-header-top-news bg-image1 ${!toggle ? "deactive" : ""
+          }`}
       >
         <div className="wrapper">
           <div className="container">
@@ -23,10 +21,10 @@ const HeaderTopBar = () => {
                     <span className="rbt-badge variation-02 bg-color-primary color-white radius-round">
                       Limited Time Offer
                     </span>
-                    <span className="news-text color-white-off">
-                      <Image src={emoji} alt="Hand Emojji Images" /> Intro
+                    {/* <span className="news-text color-white-off"> */}
+                    {/* <Image src={emoji} alt="Hand Emojji Images" /> Intro
                       price. Get Histudy for Big Sale -95% off.
-                    </span>
+                    </span> */}
                   </div>
                   <div className="right-button">
                     <Link

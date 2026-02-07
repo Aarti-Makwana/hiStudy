@@ -1,8 +1,38 @@
 import Image from "next/image";
+import { useFormik } from "formik";
+import { toast } from "react-hot-toast";
 
 import img from "../../public/images/about/contact.jpg";
+import { generalInfoValidation } from "@/validations/GeneralInfo/validation";
+import { GeneralInfoService } from "@/services/User";
 
 const ContactForm = ({ gap }) => {
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    },
+    validationSchema: generalInfoValidation,
+    onSubmit: async (values, { resetForm, setSubmitting }) => {
+      try {
+        const response = await GeneralInfoService.generalInquiry(values);
+        if (response.success) {
+          toast.success(response.message || "Message sent successfully!");
+          resetForm();
+        } else {
+          toast.error(response.message || "Something went wrong.");
+        }
+      } catch (error) {
+        toast.error(error?.response?.data?.message || "Internal Server Error");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
   return (
     <>
       <div className={`rbt-contact-address ${gap}`}>
@@ -30,26 +60,51 @@ const ContactForm = ({ gap }) => {
                 </h3>
                 <form
                   id="contact-form"
-                  method="POST"
-                  action="mail.php"
+                  onSubmit={formik.handleSubmit}
                   className="rainbow-dynamic-form max-width-auto"
                 >
                   <div className="form-group">
                     <input
-                      name="contact-name"
+                      name="name"
                       id="contact-name"
                       type="text"
                       placeholder="Name"
+                      {...formik.getFieldProps("name")}
                     />
                     <span className="focus-border"></span>
+                    {formik.touched.name && formik.errors.name ? (
+                      <div className="text-danger mt-1">
+                        {formik.errors.name}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="form-group">
                     <input
-                      name="contact-phone"
+                      name="email"
                       type="email"
                       placeholder="Email"
+                      {...formik.getFieldProps("email")}
                     />
                     <span className="focus-border"></span>
+                    {formik.touched.email && formik.errors.email ? (
+                      <div className="text-danger mt-1">
+                        {formik.errors.email}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="form-group">
+                    <input
+                      name="phone"
+                      type="text"
+                      placeholder="Phone"
+                      {...formik.getFieldProps("phone")}
+                    />
+                    <span className="focus-border"></span>
+                    {formik.touched.phone && formik.errors.phone ? (
+                      <div className="text-danger mt-1">
+                        {formik.errors.phone}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="form-group">
                     <input
@@ -57,26 +112,41 @@ const ContactForm = ({ gap }) => {
                       id="subject"
                       name="subject"
                       placeholder="Your Subject"
+                      {...formik.getFieldProps("subject")}
                     />
                     <span className="focus-border"></span>
+                    {formik.touched.subject && formik.errors.subject ? (
+                      <div className="text-danger mt-1">
+                        {formik.errors.subject}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="form-group">
                     <textarea
-                      name="contact-message"
+                      name="message"
                       id="contact-message"
                       placeholder="Message"
+                      {...formik.getFieldProps("message")}
                     ></textarea>
                     <span className="focus-border"></span>
+                    {formik.touched.message && formik.errors.message ? (
+                      <div className="text-danger mt-1">
+                        {formik.errors.message}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="form-submit-group">
                     <button
                       name="submit"
                       type="submit"
                       id="submit"
+                      disabled={formik.isSubmitting}
                       className="rbt-btn btn-md btn-gradient hover-icon-reverse w-100"
                     >
                       <span className="icon-reverse-wrapper">
-                        <span className="btn-text">GET IT NOW</span>
+                        <span className="btn-text">
+                          {formik.isSubmitting ? "Sending..." : "Submit"}
+                        </span>
                         <span className="btn-icon">
                           <i className="feather-arrow-right"></i>
                         </span>
