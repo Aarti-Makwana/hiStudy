@@ -1,0 +1,70 @@
+.mw-money-back2 {
+    background: #fff;
+    box-shadow: 0 0 91px rgba(216,231,254,.41);
+    border-radius: 40px;
+    padding: 54px 14px
+}
+
+.mw-money-back-p2 {
+    padding-bottom: 45px;
+    font-weight: 400;
+    font-size: 20px;
+    color: #020202;
+    max-width: 728px;
+    line-height: 1.6
+}
+
+.mw-money-back-p2 span {
+    color: #146ef5
+}
+
+.mw-money-back-h2 {
+    font-weight: 700;
+    font-size: 30px;
+    color: #101323
+}
+
+.mw-money-back-btn {
+    padding-bottom: 10px
+}
+
+.mw-money-btn {
+    font-weight: 600
+}
+
+.mw-money-btn,.mw-money-btn:hover {
+    color: var(--azure_clr);
+    background: #eef5ff
+}
+
+.mw-money-back-btn .mw-btn::before {
+    background: url(https://www.milesweb.in/assets/img/mw/right-azure.svg) center center no-repeat
+}
+
+@media (max-width: 768px) {
+    .mw-money-back2-img {
+        display:none
+    }
+
+    .mw-money-kori-s {
+        max-width: 120px;
+        margin: 0;
+        padding-bottom: 10px
+    }
+
+    .mw-money-back-p2 {
+        font-size: 18px
+    }
+
+    .mw-money-back-btn,.mw-money-back-p2 {
+        padding-bottom: 35px
+    }
+
+    .mw-money-back-h2 {
+        font-size: 26px
+    }
+
+    .mw-money-back2 {
+        padding: 44px 18px
+    }
+}
