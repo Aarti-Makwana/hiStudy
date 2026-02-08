@@ -18,7 +18,8 @@ const TeamTwo = () => {
           const data = res.data.sort((a, b) => a.order - b.order);
           setInstructors(data);
           // Set instructor with order 1 as default, or the first one if not found
-          const defaultInstructor = data.find(ins => ins.order === 1) || data[0];
+          const defaultInstructor =
+            data.find((ins) => ins.order === 1) || data[0];
           setSelectedInstructor(defaultInstructor);
         }
       } catch (error) {
@@ -31,7 +32,13 @@ const TeamTwo = () => {
   }, []);
 
   if (loading) {
-    return <div className="row g-5"><div className="col-12 text-center"><Loader /></div></div>;
+    return (
+      <div className="row g-5">
+        <div className="col-12 text-center">
+          <Loader />
+        </div>
+      </div>
+    );
   }
 
   if (instructors.length === 0) {
@@ -39,117 +46,159 @@ const TeamTwo = () => {
   }
 
   return (
-    <>
-      <div className="row g-3 align-items-stretch">
-        <div className="col-lg-7 d-flex">
-          <div className="rbt-team-tab-content tab-content show active w-100 h-100">
-            {selectedInstructor && (
-              <div className="inner h-100 d-flex align-items-center">
-                <div className="rbt-team-thumbnail">
-                  <div className="thumb">
-                    <Image
-                      src={selectedInstructor.file?.url || "/images/team/team-01.jpg"}
-                      width={415}
-                      height={555}
-                      priority
-                      alt={selectedInstructor.name}
-                    />
-                  </div>
-                </div>
-                <div className="rbt-team-details">
-                  <div className="author-info">
-                    <h4 className="title">{selectedInstructor.name}</h4>
-                    <span className="designation theme-gradient">
-                      {selectedInstructor.expertise}
-                    </span>
-                    {selectedInstructor.companies && (
-                      <ul className="rbt-meta justify-content-start mt--10 mb--10 list-horizontal-bullets">
-                        {(typeof selectedInstructor.companies === 'string'
-                          ? selectedInstructor.companies.split(',')
-                          : Array.isArray(selectedInstructor.companies)
-                            ? selectedInstructor.companies
-                            : []
-                        ).map((company, idx) => (
-                          <li key={idx} className="mr--15" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                            {idx > 0 && <span className="bullet-separator mr--15">•</span>}
-                            {typeof company === 'string'
-                              ? company.trim()
-                              : (company && typeof company === 'object' && company.name)
-                                ? company.name
-                                : ''}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <p className="description">{selectedInstructor.short_description}</p>
-                  <ul className="social-icon social-default mt--20 justify-content-start">
-                    {selectedInstructor.socialMedia && selectedInstructor.socialMedia.map((social, idx) => (
-                      <li key={idx}>
-                        <Link href={social.url}>
-                          <i className={`feather-${social.platform.toLowerCase()}`}></i>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-            <div className="top-circle-shape"></div>
+    <div className="rbt-team-area bg-color-white rbt-section-gap">
+      <div className="container">
+        <div className="row mb--60">
+          <div className="col-lg-12">
+            <div className="section-title text-center">
+              <span className="subtitle bg-primary-opacity">Our Teacher</span>
+              <h2 className="title">Whose Inspirations You</h2>
+            </div>
           </div>
         </div>
-
-        <div className="col-lg-5 d-flex">
-          <div className="rbt-team-tab-thumb-wrapper w-100 h-100">
-            <ul className="rbt-team-tab-thumb nav nav-tabs w-100 h-100" id="myTab" role="tablist">
-              {instructors.slice(0, 6).map((data, index) => (
-                <li key={index}>
-                  <button
-                    className={`nav-link ${selectedInstructor?.id === data.id ? "active" : ""}`}
-                    onClick={() => setSelectedInstructor(data)}
-                    type="button"
+        <div className="row g-5">
+          <div className="col-lg-7">
+            {/* Start Tab Content  */}
+            <div
+              className="rbt-team-tab-content tab-content"
+              id="myTabContent"
+            >
+              {instructors.map((instructor, index) => {
+                const isActive = selectedInstructor?.id === instructor.id;
+                return (
+                  <div
+                    key={index}
+                    className={`tab-pane fade ${isActive ? "active show" : ""}`}
+                    id={`team-tab${index + 1}`}
+                    role="tabpanel"
+                    aria-labelledby={`team-tab${index + 1}-tab`}
                   >
-                    <div className="rbt-team-thumbnail">
-                      <div className="thumb">
-                        <Image
-                          src={data.file?.url || "/images/team/team-01.jpg"}
-                          width={415}
-                          height={555}
-                          priority
-                          alt={data.name}
-                        />
-                        {selectedInstructor?.id === data.id && (
-                          <div className="active-overlay">
-                            <i className="feather-corner-up-left"></i>
-                          </div>
-                        )}
+                    <div className="inner">
+                      <div className="rbt-team-thumbnail">
+                        <div className="thumb">
+                          <Image
+                            src={
+                              instructor.file?.url || "/images/team/team-01.jpg"
+                            }
+                            width={415}
+                            height={555}
+                            priority
+                            alt={instructor.name}
+                          />
+                        </div>
+                      </div>
+                      <div className="rbt-team-details">
+                        <div className="author-info">
+                          <h4 className="title">{instructor.name}</h4>
+                          <span className="designation theme-gradient">
+                            {instructor.expertise}
+                          </span>
+                          <span className="team-form">
+                            <i className="feather-map-pin"></i>
+                            <span className="location">CO Miego, AD,USA</span>
+                          </span>
+                        </div>
+                        <p>{instructor.short_description}</p>
+                        <ul className="social-icon social-default mt--20 justify-content-start">
+                          {instructor.socialMedia &&
+                            instructor.socialMedia.length > 0 ? (
+                            instructor.socialMedia.map((social, idx) => (
+                              <li key={idx}>
+                                <Link href={social.url}>
+                                  <i
+                                    className={`feather-${social.platform.toLowerCase()}`}
+                                  ></i>
+                                </Link>
+                              </li>
+                            ))
+                          ) : (
+                            <>
+                              <li>
+                                <a href="https://www.facebook.com/">
+                                  <i className="feather-facebook"></i>
+                                </a>
+                              </li>
+                              <li>
+                                <a href="https://www.twitter.com">
+                                  <i className="feather-twitter"></i>
+                                </a>
+                              </li>
+                              <li>
+                                <a href="https://www.instagram.com/">
+                                  <i className="feather-instagram"></i>
+                                </a>
+                              </li>
+                            </>
+                          )}
+                        </ul>
+                        <ul className="rbt-information-list mt--25">
+                          <li>
+                            <a href="#">
+                              <i className="feather-phone"></i>+1-202-555-0174
+                            </a>
+                          </li>
+                          <li>
+                            <a href="mailto:hello@example.com">
+                              <i className="feather-mail"></i>
+                              example@gmail.com
+                            </a>
+                          </li>
+                        </ul>
                       </div>
                     </div>
-                  </button>
-                </li>
-              ))}
+                  </div>
+                );
+              })}
+              <div className="top-circle-shape"></div>
+            </div>
+            {/* End Tab Content  */}
+          </div>
+
+          <div className="col-lg-5">
+            {/* Start Tab Nav  */}
+            <ul
+              className="rbt-team-tab-thumb nav nav-tabs"
+              id="myTab"
+              role="tablist"
+            >
+              {instructors.slice(0, 6).map((data, index) => {
+                const isActive = selectedInstructor?.id === data.id;
+                return (
+                  <li key={index}>
+                    <a
+                      className={isActive ? "active" : ""}
+                      id={`team-tab${index + 1}-tab`}
+                      data-bs-target={`#team-tab${index + 1}`}
+                      role="tab"
+                      aria-controls={`team-tab${index + 1}`}
+                      aria-selected={isActive}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedInstructor(data);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="rbt-team-thumbnail">
+                        <div className="thumb">
+                          <Image
+                            src={data.file?.url || "/images/team/team-01.jpg"}
+                            width={415}
+                            height={555}
+                            priority
+                            alt={data.name}
+                          />
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
+            {/* End Tab Content  */}
           </div>
         </div>
       </div>
-      <div className="row mt--60">
-        <div className="col-lg-12">
-          <div className="view-more-btn text-center">
-            <Link href="/instructors" className="rbt-btn btn-gradient hover-icon-reverse">
-              <span className="icon-reverse-wrapper">
-                <span className="btn-text">View More</span>
-                <span className="btn-icon">
-                  <i className="feather-arrow-right"></i>
-                </span>
-                <span className="btn-icon">
-                  <i className="feather-arrow-right"></i>
-                </span>
-              </span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 
