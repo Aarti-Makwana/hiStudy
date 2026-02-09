@@ -8,7 +8,7 @@ import { Navigation, Pagination } from "swiper/modules";
 
 const CourseCarousel = ({ courses, title, subTitle }) => {
   return (
-    <div className="rbt-course-area bg-color-extra2 rbt-section-gap">
+    <div className="rbt-course-area ">
       <div className="container">
         <div className="row mb--60">
           <div className="col-lg-12">
@@ -42,15 +42,15 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                 prevEl: ".rbt-arrow-left",
               }}
               breakpoints={{
-                  481: {
-                    slidesPerView: 1,
-                  },
-                  768: {
-                      slidesPerView: 2,
-                  },
-                  992: {
-                      slidesPerView: 3,
-                  },
+                481: {
+                  slidesPerView: 1,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                992: {
+                  slidesPerView: 3,
+                },
               }}
             >
               {courses.map((data, index) => (

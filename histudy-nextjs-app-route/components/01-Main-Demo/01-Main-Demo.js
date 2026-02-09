@@ -15,7 +15,7 @@ import EventCarouse from "../Events/EventCarouse";
 import TeamTwo from "../Team/TeamTwo";
 import BlogGridTop from "../Blogs/Blog-Sections/BlogGrid-Top";
 import NewsletterTwo from "../Newsletters/Newsletter-Two";
-import Contact from "../Contacts/Contact";
+import ContactForm from "../Contacts/Contact-Form";
 
 import CourseCarousel from "../Course/CourseCarousel";
 import MoneyBackGuarantee from "../MoneyBack/MoneyBackGuarantee";
@@ -106,13 +106,13 @@ const MainDemo = ({ blogs }) => {
         <MoneyBackGuarantee />
 
         {/* Why Us (using AboutTwo) */}
-        <div className="rbt-about-area bg-color-white rbt-section-gapTop pb_md--80 pb_sm--80 about-style-1">
+        {/* <div className="rbt-about-area bg-color-white rbt-section-gapTop pb_md--80 pb_sm--80 about-style-1">
           <div className="container">
             <ParallaxProvider>
               <AboutTwo />
             </ParallaxProvider>
           </div>
-        </div>
+        </div> */}
 
         {/* AddOnn In Numbers (Counter) */}
         <div className="rbt-counterup-area bg-color-extra2 rbt-section-gapBottom default-callto-action-overlap" style={{ paddingTop: '60px' }}>
@@ -145,7 +145,7 @@ const MainDemo = ({ blogs }) => {
                 </div>
               </div>
               <div className="col-lg-9">
-                <div className="testimonial-cards-wrapper">
+                <div className="testimonial-cards-wrapper" style={{ width: "100vw" }}>
                   <ReviewSection />
                 </div>
               </div>
@@ -191,7 +191,7 @@ const MainDemo = ({ blogs }) => {
 
         {/* Contact Us */}
         <div className="rbt-contact-area bg-color-extra2 rbt-section-gap">
-          <Contact />
+          <ContactForm />
         </div>
 
         {/* <div className="rbt-rbt-blog-area rbt-section-gap bg-color-extra2">
