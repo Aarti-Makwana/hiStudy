@@ -6,7 +6,7 @@ const AddonAdvantage = () => {
     return (
         <div className="pb-45 pt-45">
             <div className="container">
-                <div className="text-center pb-45 mb-5">
+                <div className="text-center pb-45">
                     <h2 className="mw-h2">MilesWeb vs Others: Who delivers more value?</h2>
                     <p className="mw-p">We’ve compared MilesWeb with leading web hosting providers to help you make the smarter choice.</p>
                 </div>
