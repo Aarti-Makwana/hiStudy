@@ -4,14 +4,13 @@ import Link from "next/link";
 import img from "../../public/images/banner/banner-01.png";
 import shape1 from "../../public/images/shape/shape-01.png";
 import shape2 from "../../public/images/shape/shape-02.png";
-import { useSettings } from "@/context/SettingsContext";
+
 import MirrorLoader from "../Common/MirrorLoader";
 
 import HomeCourses from "./Home-Sections/HomeCourse";
 
-const MainDemoBanner = ({ courses }) => {
-  const { settings, loading } = useSettings();
-  const hero = settings?.hero_section;
+const MainDemoBanner = ({ courses, settings, loading }) => {
+  const hero = settings;
 
   return (
     <>
