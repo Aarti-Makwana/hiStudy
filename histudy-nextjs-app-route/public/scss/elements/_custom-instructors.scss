@@ -130,6 +130,12 @@ Custom Instructors Styles
         height: 100%;
         width: 100%;
         pointer-events: none;
+
+        /* HIDDEN BY DEFAULT */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+
         /* Let clicks pass through to thumbnail underneath */
 
         &>* {
@@ -164,8 +170,8 @@ Custom Instructors Styles
             margin: 0 0 15px 0;
             display: flex;
             gap: 15px;
-            opacity: 0;
-            transform: translateY(10px);
+            /* opacity: 0;  No longer needed separate opacity as parent handles it */
+            /* transform: translateY(10px); */
             transition: 0.4s all ease;
 
             li {
@@ -187,11 +193,15 @@ Custom Instructors Styles
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
+            /* width: 100%; */
+            /* Absolute positioning to prevent layout shift */
+            position: absolute;
+            bottom: 15px;
+            right: 30px;
+            left: auto;
             margin-top: 0;
-            height: 0;
             opacity: 0;
-            overflow: hidden;
+            /* Fade in */
             transition: 0.4s all ease;
 
             .course-count {
@@ -222,6 +232,8 @@ Custom Instructors Styles
         .content-overlay-bottom {
             background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(62, 100, 240, 0.6) 40%, rgba(131, 91, 231, 0.3) 100%);
             opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
 
             .social-icon {
                 opacity: 1;
@@ -229,9 +241,7 @@ Custom Instructors Styles
             }
 
             .hover-content {
-                height: 30px;
                 opacity: 1;
-                margin-top: 15px;
             }
         }
     }

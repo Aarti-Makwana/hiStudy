@@ -39,7 +39,20 @@ const InstructorModal = ({ instructor, onClose }) => {
                                 </div>
                                 <div className="col-lg-7">
                                     <div className="content pl--20 pl_md--0 pl_sm--0">
-                                        <h4 className="title mb--5">{instructor.name}</h4>
+                                        <div className="d-flex align-items-center gap-3 mb--5">
+                                            <h4 className="title mb-0">{instructor.name}</h4>
+                                            {instructor.socialMedia && (
+                                                <ul className="social-icon social-default icon-naked m-0 p-0 d-flex gap-2" style={{ listStyle: 'none' }}>
+                                                    {instructor.socialMedia.map((social, idx) => (
+                                                        <li key={idx} className="m-0">
+                                                            <Link href={social.url} target="_blank" aria-label={social.platform}>
+                                                                <i className={`feather-${social.platform.toLowerCase()}`} style={{ fontSize: '20px', color: 'var(--color-primary)' }}></i>
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
                                         <h6 className="subtitle theme-gradient mb--15">{instructor.expertise}</h6>
 
                                         {instructor.companies && (
@@ -53,11 +66,22 @@ const InstructorModal = ({ instructor, onClose }) => {
                                                     ).map((company, idx) => (
                                                         <li key={idx} className="mr--15" style={{ display: 'inline-flex', alignItems: 'center', fontSize: '14px', color: 'var(--color-body)' }}>
                                                             {idx > 0 && <span className="bullet-separator" style={{ marginRight: '10px' }}>•</span>}
-                                                            {typeof company === 'string'
-                                                                ? company.trim()
-                                                                : (company && typeof company === 'object' && company.name)
-                                                                    ? company.name
-                                                                    : ''}
+                                                            {typeof company === 'string' ? (
+                                                                company.trim()
+                                                            ) : (company && typeof company === 'object') ? (
+                                                                <>
+                                                                    {company.logo && company.logo.url && (
+                                                                        <Image
+                                                                            src={company.logo.url}
+                                                                            width={24}
+                                                                            height={24}
+                                                                            alt={company.name || "Company Logo"}
+                                                                            style={{ marginRight: '8px', objectFit: 'contain', borderRadius: '4px' }}
+                                                                        />
+                                                                    )}
+                                                                    {company.name}
+                                                                </>
+                                                            ) : ''}
                                                         </li>
                                                     ))}
                                                 </ul>

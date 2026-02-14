@@ -8,9 +8,9 @@ import BlogListItems from "./Blog-Sections/BlogList-Items";
 import Pagination from "../Common/Pagination";
 
 const BlogList = ({ isPagination, blogdata }) => {
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState(blogdata);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(Math.ceil(blogdata.length / 7));
 
   const startIndex = (page - 1) * 7;
   const selectedBlogs = blogs.slice(startIndex, startIndex + 7);
@@ -24,13 +24,9 @@ const BlogList = ({ isPagination, blogdata }) => {
   };
 
   useEffect(() => {
-    const getBlogs = () => {
-      setBlogs(blogdata);
-      setTotalPages(Math.ceil(blogdata.length / 7));
-    };
-
-    getBlogs();
-  }, [setBlogs, setTotalPages, 7]);
+    // setBlogs(blogdata); // initialized in state  
+    // setTotalPages(Math.ceil(blogdata.length / 7)); // initialized in state
+  }, [setBlogs, setTotalPages]);
 
   return (
     <>

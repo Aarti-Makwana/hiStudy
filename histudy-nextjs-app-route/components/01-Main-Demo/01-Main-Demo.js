@@ -25,6 +25,7 @@ import { ParallaxProvider } from "react-scroll-parallax";
 import { UserCoursesServices } from "../../services/User/Courses/index.service";
 
 import brand1 from "../../public/images/brand/partner-5.webp";
+import ComparisonTable from "../Addon/ComparisonTable";
 
 const MainDemo = ({ blogs }) => {
   const [courses, setCourses] = useState([]);
@@ -122,7 +123,8 @@ const MainDemo = ({ blogs }) => {
         </div>
 
         {/* AddOnn Advantage */}
-        <AddonAdvantage />
+        {/* <AddonAdvantage /> */}
+        <ComparisonTable />
 
         {/* Reviews */}
         <div className="rbt-testimonial-area bg-color-white rbt-section-gap overflow-hidden">

@@ -14,9 +14,9 @@ import { useAppContext } from "@/context/Context";
 
 const Shop = () => {
   const { cartToggle, setCart } = useAppContext();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(ShopData.shop);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(Math.ceil(ShopData.shop.length / 6));
   const [qty, setQty] = useState(1);
   const dispatch = useDispatch();
   const { cart } = useSelector((state) => state.CartReducer);
@@ -45,8 +45,8 @@ const Shop = () => {
   }, [cart]);
 
   useEffect(() => {
-    setProducts(ShopData.shop);
-    setTotalPages(Math.ceil(products.length / 6));
+    // setProducts(ShopData.shop); // initialized in state
+    // setTotalPages(Math.ceil(products.length / 6)); // initialized in state
   }, [setTotalPages, setProducts, getSelectedCourse]);
 
   return (

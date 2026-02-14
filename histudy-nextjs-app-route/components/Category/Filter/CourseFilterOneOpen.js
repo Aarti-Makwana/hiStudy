@@ -10,9 +10,9 @@ import Pagination from "@/components/Common/Pagination";
 
 const CourseFilterOneOpen = ({ course }) => {
   const { toggle } = useAppContext();
-  const [courses, setCourse] = useState([]);
+  const [courses, setCourse] = useState(course);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(Math.ceil(course.length / 6));
 
   const startIndex = (page - 1) * 6;
 
@@ -27,24 +27,22 @@ const CourseFilterOneOpen = ({ course }) => {
   };
 
   useEffect(() => {
-    setCourse(course);
-    setTotalPages(Math.ceil(course.length / 6));
+    // setCourse(course); // initialized in state  
+    // setTotalPages(Math.ceil(course.length / 6)); // initialized in state
   }, [setTotalPages, setCourse, getSelectedCourse]);
 
   return (
     <>
       <div
-        className={`rbt-course-grid-column ${
-          !toggle ? "active-list-view" : ""
-        }`}
+        className={`rbt-course-grid-column ${!toggle ? "active-list-view" : ""
+          }`}
       >
         {getSelectedCourse &&
           getSelectedCourse.map((data, index) => (
             <div className="course-grid-3" key={index}>
               <div
-                className={`rbt-card variation-01 rbt-hover ${
-                  !toggle ? "card-list-2" : ""
-                }`}
+                className={`rbt-card variation-01 rbt-hover ${!toggle ? "card-list-2" : ""
+                  }`}
               >
                 <div className="rbt-card-img">
                   <Link href={`/course-details/${data.id}`}>

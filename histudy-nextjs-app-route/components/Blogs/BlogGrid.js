@@ -11,9 +11,9 @@ import { usePathname } from "next/navigation";
 
 const BlogGrid = ({ isPagination, blogdata, top, start, end }) => {
   const pathname = usePathname();
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState(blogdata);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(Math.ceil(blogdata.length / 10));
 
   const startIndex = (page - 1) * 10;
   const selectedGridBlogs = blogs.slice(startIndex, startIndex + 10);
@@ -27,8 +27,8 @@ const BlogGrid = ({ isPagination, blogdata, top, start, end }) => {
   };
 
   useEffect(() => {
-    setBlogs(blogdata);
-    setTotalPages(Math.ceil(blogdata.length / 10));
+    // setBlogs(blogdata); // initialized in state
+    // setTotalPages(Math.ceil(blogdata.length / 10)); // initialized in state
   }, [setTotalPages, setBlogs]);
   return (
     <>
