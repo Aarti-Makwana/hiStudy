@@ -1,0 +1,55 @@
+.comparison-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.comparison-table th,
+.comparison-table td {
+    border: 1px solid #e9ecef;
+    padding: 18px;
+    vertical-align: middle;
+}
+
+.comparison-table thead th {
+    background: #f8f9fa;
+}
+
+.section-title td {
+    background-color: #f5f7fa;
+}
+
+/* Highlight middle column (MilesWeb) */
+.highlight-column {
+    background-color: #eef4ff;
+    border-left: 3px solid #2b6df8 !important;
+    border-right: 3px solid #2b6df8 !important;
+}
+
+/* Rounded highlight column */
+.comparison-table thead .highlight-column {
+    border-top: 3px solid #2b6df8 !important;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.comparison-table tbody tr:last-child .highlight-column {
+    border-bottom: 3px solid #2b6df8 !important;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.highlight-column {
+    background: #F0F6FF !important;
+}
+
+
+
+/* Button style */
+.btn-primary {
+    background-color: #2b6df8;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #1f57d6;
+}
