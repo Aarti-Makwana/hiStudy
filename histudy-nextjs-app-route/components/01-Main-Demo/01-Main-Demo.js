@@ -20,6 +20,7 @@ import ContactForm from "../Contacts/Contact-Form";
 import CourseCarousel from "../Course/CourseCarousel";
 import MoneyBackGuarantee from "../MoneyBack/MoneyBackGuarantee";
 import AddonAdvantage from "../Addon/AddonAdvantage";
+import ServiceSplash from "../Services/ServiceSplash";
 
 import { ParallaxProvider } from "react-scroll-parallax";
 import { UserCoursesServices } from "../../services/User/Courses/index.service";
@@ -80,6 +81,12 @@ const MainDemo = ({ blogs }) => {
       <main className="rbt-main-wrapper">
         <div className="rbt-banner-area rbt-banner-1">
           <MainDemoBanner courses={courses} />
+        </div>
+
+        <div className="container">
+          <div className="row">
+            <ServiceSplash />
+          </div>
         </div>
 
         {/* Top Courses */}

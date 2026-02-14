@@ -46,7 +46,7 @@ const TeamTwo = () => {
   }
 
   return (
-    <div className="rbt-team-area bg-color-white rbt-section-gap">
+    <div className="rbt-team-area bg-color-white ">
       <div className="container">
         <div className="row mb--60">
           <div className="col-lg-12">
