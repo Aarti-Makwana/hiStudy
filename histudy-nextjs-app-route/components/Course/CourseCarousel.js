@@ -10,7 +10,7 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
   return (
     <div className="rbt-course-area ">
       <div className="container">
-        <div className="row mb--60">
+        <div className="row mb--60 mt--60">
           <div className="col-lg-12">
             <div className="section-title text-center">
               {subTitle && (

@@ -1,11 +1,26 @@
 import React from "react";
 import "./comparison.css";
 
-const ComparisonTable = () => {
+const ComparisonTable = ({ settings }) => {
+    if (!settings) return null;
+
+    const { heading, features, providers } = settings;
+
+    // Mapping feature text to data keys based on API response structure
+    const keyMap = {
+        "Know Your Tutor Before Joining": "know_tutor",
+        "Curriculum": "curriculum",
+        "Course Updates": "updates",
+        "Resume Help": "resume_help",
+        "Community": "community",
+        "Pricing": "pricing",
+        "Refund Policy": "refund"
+    };
+
     return (
         <div className="container my-5">
             <h2 className="text-center fw-bold mb-3">
-                MilesWeb vs Others: Who delivers more value?
+                {heading}
             </h2>
             <p className="text-center text-muted mb-5">
                 We’ve compared MilesWeb with leading web hosting providers to help you
@@ -20,132 +35,54 @@ const ComparisonTable = () => {
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th className="highlight-column">
-                                        <h5 className="fw-bold">MilesWeb</h5>
-                                        <small className="text-muted">
-                                            Your Hosting, Our Responsibility.
-                                        </small>
-                                    </th>
-                                    <th>
-                                        <h5 className="fw-bold">Hostinger</h5>
-                                    </th>
-                                    <th>
-                                        <h5 className="fw-bold">GoDaddy</h5>
-                                    </th>
+                                    {providers.map((provider, index) => (
+                                        <th key={index} className={provider.highlight === "1" ? "highlight-column" : ""}>
+                                            <h5 className="fw-bold">{provider.name}</h5>
+                                            {provider.highlight === "1" && (
+                                                <small className="text-muted">
+                                                    Your Hosting, Our Responsibility.
+                                                </small>
+                                            )}
+                                        </th>
+                                    ))}
                                 </tr>
                             </thead>
 
                             <tbody>
-                                <tr>
-                                    <td className="text-start fw-semibold">Company origin</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
+                                {features.map((feature, featureIndex) => {
+                                    const dataKey = keyMap[feature] || feature; // Fallback to feature name if no map
+                                    return (
+                                        <tr key={featureIndex}>
+                                            <td className="text-start fw-semibold">{feature}</td>
+                                            {providers.map((provider, providerIndex) => {
+                                                const value = provider.data[dataKey] || "—";
+                                                const isCheck = value.includes("✅");
+                                                const isCross = value.includes("❌");
 
-                                <tr className="section-title">
-                                    <td className="text-primary fw-bold text-start">Price</td>
-                                    <td className="highlight-column"></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Offer price</td>
-                                    <td className="highlight-column fw-bold">₹99.00/mo</td>
-                                    <td>₹129.00/mo</td>
-                                    <td>₹219.00/mo</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Renewal price</td>
-                                    <td className="highlight-column fw-bold">
-                                        ₹99.00/mo
-                                        <div className="text-primary small">
-                                            (Same price at renewal)
-                                        </div>
-                                    </td>
-                                    <td>
-                                        ₹449.00/mo
-                                        <div className="text-warning small">
-                                            (300% increase)
-                                        </div>
-                                    </td>
-                                    <td>
-                                        ₹599.00/mo
-                                        <div className="text-warning small">
-                                            (270% increase)
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <tr className="section-title">
-                                    <td className="text-primary fw-bold text-start">Features</td>
-                                    <td className="highlight-column"></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Email accounts</td>
-                                    <td className="highlight-column">Free</td>
-                                    <td>Paid</td>
-                                    <td>Free</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">SSH access</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Daily backups</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Full website migration</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Email migration</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Database migration</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-start">Application migration</td>
-                                    <td className="highlight-column text-success">✔</td>
-                                    <td className="text-danger">✖</td>
-                                    <td className="text-danger">✖</td>
-                                </tr>
-
+                                                // Simple formatting for check/cross if needed, or just render text
+                                                return (
+                                                    <td key={providerIndex} className={provider.highlight === "1" ? "highlight-column" : ""}>
+                                                        {isCheck ? <span className="text-success">{value}</span> :
+                                                            isCross ? <span className="text-danger">{value}</span> :
+                                                                value}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
                                 <tr>
                                     <td></td>
-                                    <td className="highlight-column">
-                                        <button className="btn btn-primary px-4 rounded-pill">
-                                            Get Started
-                                        </button>
-                                    </td>
-                                    <td></td>
-                                    <td></td>
+                                    {providers.map((provider, index) => (
+                                        <td key={index} className={provider.highlight === "1" ? "highlight-column" : ""}>
+                                            {provider.highlight === "1" && (
+                                                <button className="btn btn-primary px-4 rounded-pill">
+                                                    Get Started
+                                                </button>
+                                            )}
+                                        </td>
+                                    ))}
                                 </tr>
-
                             </tbody>
                         </table>
                     </div>

@@ -6,3 +6,4 @@ export { default as UserReview } from "./Review/index";
 export { default as UserOrder } from "./Order/index";
 export { default as Instructor } from "./Instructor/index";
 export { default as GeneralInfo } from "./GeneralInfo/index";
+export { default as UserHome } from "./Home/index";

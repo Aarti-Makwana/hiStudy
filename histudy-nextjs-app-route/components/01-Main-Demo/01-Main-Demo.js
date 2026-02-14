@@ -6,29 +6,25 @@ import Image from "next/image";
 import sal from "sal.js";
 
 import MainDemoBanner from "./MainDemoBanner";
-import AboutTwo from "../Abouts/About-Two";
-import CallToAction from "../Call-To-Action/CallToAction";
 import Counter from "../Counters/Counter";
-import TestimonialSeven from "../Testimonials/Testimonial-Seven";
 import ReviewSection from "../Reviews/ReviewSection";
 import EventCarouse from "../Events/EventCarouse";
 import TeamTwo from "../Team/TeamTwo";
-import BlogGridTop from "../Blogs/Blog-Sections/BlogGrid-Top";
-import NewsletterTwo from "../Newsletters/Newsletter-Two";
 import ContactForm from "../Contacts/Contact-Form";
 
 import CourseCarousel from "../Course/CourseCarousel";
 import MoneyBackGuarantee from "../MoneyBack/MoneyBackGuarantee";
-import AddonAdvantage from "../Addon/AddonAdvantage";
+import ServiceSplash from "../Services/ServiceSplash";
 
-import { ParallaxProvider } from "react-scroll-parallax";
 import { UserCoursesServices } from "../../services/User/Courses/index.service";
-
-import brand1 from "../../public/images/brand/partner-5.webp";
+import { UserHomeServices } from "../../services/User/index";
 import ComparisonTable from "../Addon/ComparisonTable";
 
 const MainDemo = ({ blogs }) => {
   const [courses, setCourses] = useState([]);
+  const [homeSettings, setHomeSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -65,7 +61,26 @@ const MainDemo = ({ blogs }) => {
         console.error("Error fetching courses:", error);
       }
     };
+
+    const fetchHomeSettings = async () => {
+      try {
+        const res = await UserHomeServices.UserHome();
+        if (res && res.status === 'success') {
+          const settingsMap = {};
+          res.data.forEach(item => {
+            settingsMap[item.key] = item.value;
+          });
+          setHomeSettings(settingsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching home settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCourses();
+    fetchHomeSettings();
   }, []);
 
   useEffect(() => {
@@ -79,7 +94,8 @@ const MainDemo = ({ blogs }) => {
     <>
       <main className="rbt-main-wrapper">
         <div className="rbt-banner-area rbt-banner-1">
-          <MainDemoBanner courses={courses} />
+          <MainDemoBanner courses={courses} settings={homeSettings.hero_section} loading={loading} />
+          {!homeSettings.hero_section && !loading && <p className="text-center">hero_section I didn't find</p>}
         </div>
 
         {/* Top Courses */}
@@ -104,7 +120,23 @@ const MainDemo = ({ blogs }) => {
         />
 
         {/* Money Back Guarantee */}
-        <MoneyBackGuarantee />
+        {homeSettings.moneyback_section ? (
+          <MoneyBackGuarantee settings={homeSettings.moneyback_section} />
+        ) : !loading ? (
+          <div className="container mt-5 mb-5"><p className="text-center">moneyback_section I didn't find</p></div>
+        ) : null}
+
+
+        {/* Why Us */}
+        {homeSettings.whyus_section ? (
+          <div className="rbt-splash-service-area rbt-section-gapBottom">
+            <div className="container">
+              <ServiceSplash settings={homeSettings.whyus_section} />
+            </div>
+          </div>
+        ) : (
+          !loading && <div className="container my-5"><p className="text-center">whyus_section I didn't find</p></div>
+        )}
 
         {/* Why Us (using AboutTwo) */}
         {/* <div className="rbt-about-area bg-color-white rbt-section-gapTop pb_md--80 pb_sm--80 about-style-1">
@@ -118,13 +150,21 @@ const MainDemo = ({ blogs }) => {
         {/* AddOnn In Numbers (Counter) */}
         <div className="rbt-counterup-area bg-color-extra2 rbt-section-gapBottom default-callto-action-overlap" style={{ paddingTop: '60px' }}>
           <div className="container">
-            <Counter isDesc={false} />
+            {homeSettings.counters ? (
+              <Counter isDesc={false} settings={homeSettings.counters} />
+            ) : !loading ? (
+              <p className="text-center">counters I didn't find</p>
+            ) : null}
           </div>
         </div>
 
         {/* AddOnn Advantage */}
         {/* <AddonAdvantage /> */}
-        <ComparisonTable />
+        {homeSettings.comparison ? (
+          <ComparisonTable settings={homeSettings.comparison} />
+        ) : !loading ? (
+          <div className="container mt-5 mb-5"><p className="text-center">comparison I didn't find</p></div>
+        ) : null}
 
         {/* Reviews */}
         <div className="rbt-testimonial-area bg-color-white rbt-section-gap overflow-hidden">
