@@ -64,27 +64,32 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                           height={488}
                           alt="Card image"
                         />
-                        {data.offPricePercentage > 0 ? (
+                        {/* Hide badge if free or if no discount, although user said "discount nahi hoto yaa free hoto wo image ke upar ka off % bhi remove ho jaye" */}
+                        {data.price > 0 && data.offPricePercentage > 0 ? (
                           <div className="rbt-badge-3 bg-white">
                             <span>-{data.offPricePercentage}%</span>
                             <span>Off</span>
                           </div>
-                        ) : (
-                          ""
-                        )}
+                        ) : null}
                       </Link>
                     </div>
                     <div className="rbt-card-body">
-                      <ul className="rbt-meta">
-                        <li>
-                          <i className="feather-book"></i>
-                          {data.lesson} Lessons
-                        </li>
-                        <li>
-                          <i className="feather-users"></i>
-                          {data.student} Students
-                        </li>
-                      </ul>
+
+                      {/* Rating Row - Red */}
+                      <div className="rbt-review mb--10" style={{ color: "red" }}>
+                        <div className="rating">
+                          {[...Array(5)].map((_, i) => (
+                            <i
+                              key={i}
+                              className={`fas fa-star ${i < Math.round(data.rating || 5) ? "" : "off"}`}
+                              style={{ color: "#ffc107" }} // Stars keep gold
+                            ></i>
+                          ))}
+                        </div>
+                        <span className="rating-count" style={{ color: "red", marginLeft: "5px" }}>
+                          {data.rating || 0} ({data.review} Ratings)
+                        </span>
+                      </div>
 
                       <h4 className="rbt-card-title">
                         <Link href={`/course-details/${data.slug}`}>
@@ -92,30 +97,67 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                         </Link>
                       </h4>
 
+                      {/* Icons/Meta Info - Green */}
+                      <ul className="rbt-meta">
+                        <li>
+                          <i className="feather-book" style={{ color: "green" }}></i>
+                          {data.lesson} Lessons
+                        </li>
+                        <li>
+                          <i className="feather-users" style={{ color: "green" }}></i>
+                          {data.student} Students
+                        </li>
+                        {/* Optional: Language & Duration if available */}
+                        {data.language && (
+                          <li>
+                            <i className="feather-globe" style={{ color: "green" }}></i>
+                            {data.language}
+                          </li>
+                        )}
+                        {data.duration && (
+                          <li>
+                            <i className="feather-video" style={{ color: "green" }}></i>
+                            {data.duration}
+                          </li>
+                        )}
+                      </ul>
+
+                      {/* Short Description - Purple */}
                       <div
                         className="rbt-card-text"
+                        style={{ color: "purple" }}
                         dangerouslySetInnerHTML={{ __html: data.desc }}
                       ></div>
 
-                      <div className="rbt-review">
-                        <div className="rating">
-                          {[...Array(5)].map((_, i) => (
-                            <i
-                              key={i}
-                              className={`fas fa-star ${i < Math.round(data.rating || 5) ? "" : "off"}`}
-                              style={{ color: i < Math.round(data.rating || 5) ? "#ffc107" : "#e4e5e9" }}
-                            ></i>
-                          ))}
+                      {/* Instructor & Category - Yellow */}
+                      <div className="rbt-author-meta mb--20">
+                        <div className="rbt-avater">
+                          <Link href="#">
+                            {/* Placeholder avatar or from data if available */}
+                            <Image
+                              src={data.userImg || "/images/client/avatar-02.png"}
+                              width={30}
+                              height={30} // Small avatar
+                              alt={data.instructor}
+                            />
+                          </Link>
                         </div>
-                        <span className="rating-count">
-                          ({data.review} Reviews)
-                        </span>
+                        <div className="rbt-author-info">
+                          By <Link href="#" style={{ color: "#222" }}>{data.instructor}</Link> In <Link href="#" style={{ color: "#ffc107" }}>{data.category}</Link>
+                        </div>
                       </div>
+
 
                       <div className="rbt-card-bottom">
                         <div className="rbt-price">
-                          <span className="current-price">${data.price}</span>
-                          <span className="off-price">${data.offPrice}</span>
+                          {data.price && data.price > 0 ? (
+                            <>
+                              <span className="current-price">${data.price}</span>
+                              {data.offPrice > data.price && <span className="off-price">${data.offPrice}</span>}
+                            </>
+                          ) : (
+                            <span className="current-price">Free</span>
+                          )}
                         </div>
                         <Link
                           className="rbt-btn-link"

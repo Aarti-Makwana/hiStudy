@@ -27,6 +27,11 @@ const Counter = ({ isDesc, head, settings }) => {
           <div className="container" key={index}>
             {head === undefined && settings?.heading ? (
               <div className="section-title text-center mb--40">
+                {settings?.subTitle && (
+                  <span className="subtitle bg-primary-opacity">
+                    {settings.subTitle}
+                  </span>
+                )}
                 <h2 className="title">{settings.heading}</h2>
               </div>
             ) : head === undefined ? (
@@ -45,8 +50,8 @@ const Counter = ({ isDesc, head, settings }) => {
               {data.body.map((item, innerIndex) => (
                 <div
                   className={`${item.top
-                      ? "col-lg-3 col-md-6 col-sm-6 col-12 mt_md--60 mt_sm--60"
-                      : "col-lg-3 col-md-6 col-sm-6 col-12 mt--60 mt_md--30 mt_sm--30 mt_mobile--60"
+                    ? "col-lg-3 col-md-6 col-sm-6 col-12 mt_md--60 mt_sm--60"
+                    : "col-lg-3 col-md-6 col-sm-6 col-12 mt--60 mt_md--30 mt_sm--30 mt_mobile--60"
                     }`}
                   key={innerIndex}
                 >

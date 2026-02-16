@@ -18,5 +18,16 @@ export const UserHomeServices = {
       throw error;
     }
   },
-
+  getAllCourses: async () => {
+    try {
+      const payload = {
+        ...UserHome.getAllCourses,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

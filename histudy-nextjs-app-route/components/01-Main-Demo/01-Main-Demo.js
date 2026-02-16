@@ -19,9 +19,12 @@ import ServiceSplash from "../Services/ServiceSplash";
 import { UserCoursesServices } from "../../services/User/Courses/index.service";
 import { UserHomeServices } from "../../services/User/index";
 import ComparisonTable from "../Addon/ComparisonTable";
+import MainDemoData from "../../data/course-details/courseData.json";
 
 const MainDemo = ({ blogs }) => {
-  const [courses, setCourses] = useState([]);
+  const [topCourses, setTopCourses] = useState([]);
+  const [upcomingCourses, setUpcomingCourses] = useState([]);
+  const [bundleCourses, setBundleCourses] = useState([]);
   const [homeSettings, setHomeSettings] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -29,34 +32,73 @@ const MainDemo = ({ blogs }) => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await UserCoursesServices.UserAllCourses();
+        const res = await UserHomeServices.getAllCourses();
 
         if (res && res.success) {
           const adaptedCourses = res.data.map((item) => {
-            let img = item.file?.url ? item.file?.url : "/images/course/course-online-01.jpg";
-            // If it's a placeholder URL, try to set it to 710x488
-            if (typeof img === 'string' && img.includes('placeholder')) {
-              img = img.replace('400x117', '710x488').replace('400/117', '710/488');
-            }
             return {
               id: item.id,
-              slug: item.slug || item.id,
-              courseImg: img,
+              slug: item.slug,
+              courseImg: item.file?.url || "/images/course/course-online-01.jpg",
               courseTitle: item.title,
-              desc: item.short_description || item.long_description,
+              desc: item.desc || "",
               lesson: item.number_of_lectures,
-              student: item.students_taught || 0,
-              review: item.rating_count || item.ratings || 0,
-              rating: item.average_rating || 0,
+              student: item.enrolled_users_count,
+              review: item.rating_count || 0,
+              rating: item.ratings,
               price: item.discounted_price,
               offPrice: item.actual_price,
-              offPricePercentage: Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
+              offPricePercentage: item.actual_price > 0
+                ? Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
+                : 0,
+              is_live: item.is_live,
+              // New Maps
+              category: item.category?.name || "Category",
+              instructor: item.instructor?.name || "Instructor",
+              // instructorRating: item.instructor?.rating || 0, // Assuming available or default
+              language: item.language || "English",
+              duration: item.duration || "",
             };
           });
-          setCourses(adaptedCourses);
+
+          setTopCourses(adaptedCourses.filter(c => c.is_live).slice(0, 4));
+          setUpcomingCourses(adaptedCourses.filter(c => !c.is_live).slice(0, 4));
+
         } else {
           console.error("API success false or invalid response", res);
         }
+
+        // Static Bundle Courses
+        const staticBundles = MainDemoData.courseDetails.map((item) => {
+          let img = item.courseImg || "/images/course/course-online-01.jpg";
+          // If it's a placeholder URL, try to set it to 710x488
+          if (typeof img === 'string' && img.includes('placeholder')) {
+            img = img.replace('400x117', '710x488').replace('400/117', '710/488');
+          }
+          return {
+            id: item.id,
+            slug: item.id, // Using ID as slug for static data if slug is missing
+            courseImg: img,
+            courseTitle: item.courseTitle,
+            desc: item.courseContent || "", // Using courseContent as short desc? or default to empty
+            lesson: item.lesson,
+            student: item.student,
+            review: item.review,
+            rating: item.star,
+            price: item.price,
+            offPrice: item.offPrice,
+            offPricePercentage: item.offPrice > 0
+              ? Math.round(((item.offPrice - item.price) / item.offPrice) * 100)
+              : 0,
+            // New Maps for static
+            category: item.category || "Web Development",
+            instructor: item.userName || "Instructor",
+            language: item.language || "English",
+            duration: item.days || "15 Days", // Mapping days to duration? Or just use days
+          }
+        });
+        setBundleCourses(staticBundles.slice(0, 4));
+
       } catch (error) {
         console.error("Error fetching courses:", error);
       }
@@ -88,40 +130,46 @@ const MainDemo = ({ blogs }) => {
       threshold: 0.01,
       once: true,
     });
-  }, [courses]);
+  }, [topCourses, upcomingCourses, bundleCourses]);
 
   return (
     <>
       <main className="rbt-main-wrapper">
         <div className="rbt-banner-area rbt-banner-1">
-          <MainDemoBanner courses={courses} settings={homeSettings.hero_section} loading={loading} />
+          <MainDemoBanner courses={topCourses} settings={homeSettings.hero_section} loading={loading} />
           {!homeSettings.hero_section && !loading && <p className="text-center">hero_section I didn't find</p>}
         </div>
 
         {/* Top Courses */}
-        <CourseCarousel
-          courses={courses}
-          title={<>Histudy Course student <br /> can join with us.</>}
-          subTitle="Top Popular Course"
-        />
+        {topCourses && topCourses.length > 0 && (
+          <CourseCarousel
+            courses={topCourses}
+            title={<>Histudy Course student <br /> can join with us.</>}
+            subTitle="Top Popular Course"
+          />
+        )}
 
         {/* Coming Soon */}
-        <CourseCarousel
-          courses={courses}
-          title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
-          subTitle="Coming Soon"
-        />
+        {upcomingCourses && upcomingCourses.length > 0 && (
+          <CourseCarousel
+            courses={upcomingCourses}
+            title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
+            subTitle="Coming Soon"
+          />
+        )}
 
         {/* Course Bundles */}
-        <CourseCarousel
-          courses={courses}
-          title={<>Get More For Less <br /> With Our Exclusive Bundles</>}
-          subTitle="Course Bundles"
-        />
+        {bundleCourses && bundleCourses.length > 0 && (
+          <CourseCarousel
+            courses={bundleCourses}
+            title={<>Get More For Less <br /> With Our Exclusive Bundles</>}
+            subTitle="Course Bundles"
+          />
+        )}
 
         {/* Money Back Guarantee */}
         {homeSettings.moneyback_section ? (
-          <MoneyBackGuarantee settings={homeSettings.moneyback_section} />
+          <MoneyBackGuarantee settings={{ ...homeSettings.moneyback_section, subTitle: "Money Back Guarantee" }} />
         ) : !loading ? (
           <div className="container mt-5 mb-5"><p className="text-center">moneyback_section I didn't find</p></div>
         ) : null}
@@ -131,7 +179,7 @@ const MainDemo = ({ blogs }) => {
         {homeSettings.whyus_section ? (
           <div className="rbt-splash-service-area rbt-section-gapBottom">
             <div className="container">
-              <ServiceSplash settings={homeSettings.whyus_section} />
+              <ServiceSplash settings={{ ...homeSettings.whyus_section, subTitle: "Why Choose Us" }} />
             </div>
           </div>
         ) : (
@@ -151,7 +199,7 @@ const MainDemo = ({ blogs }) => {
         <div className="rbt-counterup-area bg-color-extra2 rbt-section-gapBottom default-callto-action-overlap" style={{ paddingTop: '60px' }}>
           <div className="container">
             {homeSettings.counters ? (
-              <Counter isDesc={false} settings={homeSettings.counters} />
+              <Counter isDesc={false} settings={{ ...homeSettings.counters, subTitle: "Our Achievement" }} />
             ) : !loading ? (
               <p className="text-center">counters I didn't find</p>
             ) : null}
@@ -161,7 +209,7 @@ const MainDemo = ({ blogs }) => {
         {/* AddOnn Advantage */}
         {/* <AddonAdvantage /> */}
         {homeSettings.comparison ? (
-          <ComparisonTable settings={homeSettings.comparison} />
+          <ComparisonTable settings={{ ...homeSettings.comparison, subTitle: "Why We Are Best" }} />
         ) : !loading ? (
           <div className="container mt-5 mb-5"><p className="text-center">comparison I didn't find</p></div>
         ) : null}

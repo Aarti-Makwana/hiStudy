@@ -40,11 +40,14 @@ const ServiceSplash = ({ settings }) => {
     return (
         <>
             <div className="col-lg-12">
-                {settings?.heading && (
-                    <div className="section-title text-center mb--60">
-                        <h2 className="title">{settings.heading}</h2>
-                    </div>
-                )}
+                <div className="section-title text-center">
+                    {settings?.subTitle && (
+                        <span className="subtitle bg-primary-opacity">
+                            {settings.subTitle}
+                        </span>
+                    )}
+                    {settings?.heading && <h2 className="title">{settings.heading}</h2>}
+                </div>
                 <div className="row">
                     <div className="splash-service-main position-relative">
                         <div className="service-wrapper service-white">
