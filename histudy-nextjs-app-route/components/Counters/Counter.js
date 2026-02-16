@@ -45,8 +45,8 @@ const Counter = ({ isDesc, head, settings }) => {
               {data.body.map((item, innerIndex) => (
                 <div
                   className={`${item.top
-                      ? "col-lg-3 col-md-6 col-sm-6 col-12 mt_md--60 mt_sm--60"
-                      : "col-lg-3 col-md-6 col-sm-6 col-12 mt--60 mt_md--30 mt_sm--30 mt_mobile--60"
+                    ? "col-lg-3 col-md-6 col-sm-6 col-12 mt_md--60 mt_sm--60"
+                    : "col-lg-3 col-md-6 col-sm-6 col-12 mt--60 mt_md--30 mt_sm--30 mt_mobile--60"
                     }`}
                   key={innerIndex}
                 >
