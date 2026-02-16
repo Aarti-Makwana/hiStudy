@@ -19,9 +19,16 @@ const ComparisonTable = ({ settings }) => {
 
     return (
         <div className="container my-5">
-            <h2 className="text-center fw-bold mb-3">
-                {heading}
-            </h2>
+            <div className="section-title text-center mb-3">
+                {settings?.subTitle && (
+                    <span className="subtitle bg-primary-opacity">
+                        {settings.subTitle}
+                    </span>
+                )}
+                <h2 className="title fw-bold">
+                    {heading}
+                </h2>
+            </div>
             <p className="text-center text-muted mb-5">
                 We’ve compared MilesWeb with leading web hosting providers to help you
                 make the smarter choice.

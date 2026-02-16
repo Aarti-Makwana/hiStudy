@@ -44,14 +44,20 @@ const MainDemo = ({ blogs }) => {
               desc: item.desc || "",
               lesson: item.number_of_lectures,
               student: item.enrolled_users_count,
-              review: 0,
+              review: item.rating_count || 0,
               rating: item.ratings,
               price: item.discounted_price,
               offPrice: item.actual_price,
               offPricePercentage: item.actual_price > 0
                 ? Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
                 : 0,
-              is_live: item.is_live
+              is_live: item.is_live,
+              // New Maps
+              category: item.category?.name || "Category",
+              instructor: item.instructor?.name || "Instructor",
+              // instructorRating: item.instructor?.rating || 0, // Assuming available or default
+              language: item.language || "English",
+              duration: item.duration || "",
             };
           });
 
@@ -74,7 +80,7 @@ const MainDemo = ({ blogs }) => {
             slug: item.id, // Using ID as slug for static data if slug is missing
             courseImg: img,
             courseTitle: item.courseTitle,
-            desc: item.desc || "",
+            desc: item.courseContent || "", // Using courseContent as short desc? or default to empty
             lesson: item.lesson,
             student: item.student,
             review: item.review,
@@ -84,6 +90,11 @@ const MainDemo = ({ blogs }) => {
             offPricePercentage: item.offPrice > 0
               ? Math.round(((item.offPrice - item.price) / item.offPrice) * 100)
               : 0,
+            // New Maps for static
+            category: item.category || "Web Development",
+            instructor: item.userName || "Instructor",
+            language: item.language || "English",
+            duration: item.days || "15 Days", // Mapping days to duration? Or just use days
           }
         });
         setBundleCourses(staticBundles.slice(0, 4));
@@ -130,29 +141,35 @@ const MainDemo = ({ blogs }) => {
         </div>
 
         {/* Top Courses */}
-        <CourseCarousel
-          courses={topCourses}
-          title={<>Histudy Course student <br /> can join with us.</>}
-          subTitle="Top Popular Course"
-        />
+        {topCourses && topCourses.length > 0 && (
+          <CourseCarousel
+            courses={topCourses}
+            title={<>Histudy Course student <br /> can join with us.</>}
+            subTitle="Top Popular Course"
+          />
+        )}
 
         {/* Coming Soon */}
-        <CourseCarousel
-          courses={upcomingCourses}
-          title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
-          subTitle="Coming Soon"
-        />
+        {upcomingCourses && upcomingCourses.length > 0 && (
+          <CourseCarousel
+            courses={upcomingCourses}
+            title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
+            subTitle="Coming Soon"
+          />
+        )}
 
         {/* Course Bundles */}
-        <CourseCarousel
-          courses={bundleCourses}
-          title={<>Get More For Less <br /> With Our Exclusive Bundles</>}
-          subTitle="Course Bundles"
-        />
+        {bundleCourses && bundleCourses.length > 0 && (
+          <CourseCarousel
+            courses={bundleCourses}
+            title={<>Get More For Less <br /> With Our Exclusive Bundles</>}
+            subTitle="Course Bundles"
+          />
+        )}
 
         {/* Money Back Guarantee */}
         {homeSettings.moneyback_section ? (
-          <MoneyBackGuarantee settings={homeSettings.moneyback_section} />
+          <MoneyBackGuarantee settings={{ ...homeSettings.moneyback_section, subTitle: "Money Back Guarantee" }} />
         ) : !loading ? (
           <div className="container mt-5 mb-5"><p className="text-center">moneyback_section I didn't find</p></div>
         ) : null}
@@ -162,7 +179,7 @@ const MainDemo = ({ blogs }) => {
         {homeSettings.whyus_section ? (
           <div className="rbt-splash-service-area rbt-section-gapBottom">
             <div className="container">
-              <ServiceSplash settings={homeSettings.whyus_section} />
+              <ServiceSplash settings={{ ...homeSettings.whyus_section, subTitle: "Why Choose Us" }} />
             </div>
           </div>
         ) : (
@@ -182,7 +199,7 @@ const MainDemo = ({ blogs }) => {
         <div className="rbt-counterup-area bg-color-extra2 rbt-section-gapBottom default-callto-action-overlap" style={{ paddingTop: '60px' }}>
           <div className="container">
             {homeSettings.counters ? (
-              <Counter isDesc={false} settings={homeSettings.counters} />
+              <Counter isDesc={false} settings={{ ...homeSettings.counters, subTitle: "Our Achievement" }} />
             ) : !loading ? (
               <p className="text-center">counters I didn't find</p>
             ) : null}
@@ -192,7 +209,7 @@ const MainDemo = ({ blogs }) => {
         {/* AddOnn Advantage */}
         {/* <AddonAdvantage /> */}
         {homeSettings.comparison ? (
-          <ComparisonTable settings={homeSettings.comparison} />
+          <ComparisonTable settings={{ ...homeSettings.comparison, subTitle: "Why We Are Best" }} />
         ) : !loading ? (
           <div className="container mt-5 mb-5"><p className="text-center">comparison I didn't find</p></div>
         ) : null}

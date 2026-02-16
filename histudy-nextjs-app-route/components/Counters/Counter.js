@@ -27,6 +27,11 @@ const Counter = ({ isDesc, head, settings }) => {
           <div className="container" key={index}>
             {head === undefined && settings?.heading ? (
               <div className="section-title text-center mb--40">
+                {settings?.subTitle && (
+                  <span className="subtitle bg-primary-opacity">
+                    {settings.subTitle}
+                  </span>
+                )}
                 <h2 className="title">{settings.heading}</h2>
               </div>
             ) : head === undefined ? (

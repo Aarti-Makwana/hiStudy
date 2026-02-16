@@ -19,6 +19,13 @@ const MoneyBackGuarantee = ({ settings }) => {
                             </div>
                         </div>
                         <div className="col-md-9 ps-md-4">
+                            {settings?.subTitle && (
+                                <div className="section-title text-start mb-3">
+                                    <span className="subtitle bg-primary-opacity">
+                                        {settings.subTitle}
+                                    </span>
+                                </div>
+                            )}
                             <h2 className="mw-h2 mw-money-back-h2 mb-3">{settings?.title}</h2>
                             <p className="mw-p mw-money-back-p2 mb-4" dangerouslySetInnerHTML={{ __html: settings?.body }}>
                             </p>
