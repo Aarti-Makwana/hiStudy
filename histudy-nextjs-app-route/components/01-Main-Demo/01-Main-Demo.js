@@ -41,21 +41,21 @@ const MainDemo = ({ blogs }) => {
               slug: item.slug,
               courseImg: item.file?.url || "/images/course/course-online-01.jpg",
               courseTitle: item.title,
-              desc: item.desc || "",
+              desc: item.short_description || "",
               lesson: item.number_of_lectures,
               student: item.enrolled_users_count,
-              review: item.rating_count || 0,
-              rating: item.ratings,
-              price: item.discounted_price,
-              offPrice: item.actual_price,
-              offPricePercentage: item.actual_price > 0
+              review: item.total_star_ratings || 0,
+              rating: item.average_star_rating || 0,
+              price: item.discounted_price ? parseFloat(item.discounted_price) : 0,
+              offPrice: item.actual_price ? parseFloat(item.actual_price) : 0,
+              offPricePercentage: item.actual_price > 0 && item.discounted_price > 0
                 ? Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
                 : 0,
               is_live: item.is_live,
               // New Maps
-              category: item.category?.name || "Category",
-              instructor: item.instructor?.name || "Instructor",
-              // instructorRating: item.instructor?.rating || 0, // Assuming available or default
+              category: item.categories?.[0]?.name || "Category",
+              instructor: item.instructor?.display_name || item.instructor?.name || "Instructor",
+              userImg: item.instructor?.file?.url || "/images/client/avatar-02.png",
               language: item.language || "English",
               duration: item.duration || "",
             };

@@ -75,61 +75,53 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                     </div>
                     <div className="rbt-card-body">
 
-                      {/* Rating Row - Red */}
-                      <div className="rbt-review mb--10" style={{ color: "red" }}>
-                        <div className="rating">
-                          {[...Array(5)].map((_, i) => (
-                            <i
-                              key={i}
-                              className={`fas fa-star ${i < Math.round(data.rating || 5) ? "" : "off"}`}
-                              style={{ color: "#ffc107" }} // Stars keep gold
-                            ></i>
-                          ))}
-                        </div>
-                        <span className="rating-count" style={{ color: "red", marginLeft: "5px" }}>
-                          {data.rating || 0} ({data.review} Ratings)
-                        </span>
-                      </div>
-
                       <h4 className="rbt-card-title">
                         <Link href={`/course-details/${data.slug}`}>
                           {data.courseTitle}
                         </Link>
                       </h4>
+                      <div className="rbt-review mb--10">
+                        <div className="rating">
+                          {[...Array(5)].map((_, i) => (
+                            <i
+                              key={i}
+                              className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
+                            ></i>
+                          ))}
+                        </div>
+                        <span className="rating-count">
+                          {data.rating} ({data.review} Reviews)
+                        </span>
+                      </div>
 
-                      {/* Icons/Meta Info - Green */}
+                      <div className="rbt-card-text" dangerouslySetInnerHTML={{ __html: data.desc }}></div>
+
+
                       <ul className="rbt-meta">
                         <li>
-                          <i className="feather-book" style={{ color: "green" }}></i>
+                          <i className="feather-book"></i>
                           {data.lesson} Lessons
                         </li>
                         <li>
-                          <i className="feather-users" style={{ color: "green" }}></i>
+                          <i className="feather-users"></i>
                           {data.student} Students
                         </li>
                         {/* Optional: Language & Duration if available */}
                         {data.language && (
                           <li>
-                            <i className="feather-globe" style={{ color: "green" }}></i>
+                            <i className="feather-globe"></i>
                             {data.language}
                           </li>
                         )}
                         {data.duration && (
                           <li>
-                            <i className="feather-video" style={{ color: "green" }}></i>
+                            <i className="feather-video"></i>
                             {data.duration}
                           </li>
                         )}
                       </ul>
 
-                      {/* Short Description - Purple */}
-                      <div
-                        className="rbt-card-text"
-                        style={{ color: "purple" }}
-                        dangerouslySetInnerHTML={{ __html: data.desc }}
-                      ></div>
-
-                      {/* Instructor & Category - Yellow */}
+                      {/* Instructor & Category */}
                       <div className="rbt-author-meta mb--20">
                         <div className="rbt-avater">
                           <Link href="#">
@@ -143,7 +135,7 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                           </Link>
                         </div>
                         <div className="rbt-author-info">
-                          By <Link href="#" style={{ color: "#222" }}>{data.instructor}</Link> In <Link href="#" style={{ color: "#ffc107" }}>{data.category}</Link>
+                          By <Link href="#">{data.instructor}</Link> In <Link href="#">{data.category}</Link>
                         </div>
                       </div>
 
