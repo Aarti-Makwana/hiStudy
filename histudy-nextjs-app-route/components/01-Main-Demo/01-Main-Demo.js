@@ -52,6 +52,7 @@ const MainDemo = ({ blogs }) => {
                 ? Math.round(((item.actual_price - item.discounted_price) / item.actual_price) * 100)
                 : 0,
               is_live: item.is_live,
+              status: item.status,
               // New Maps
               category: item.categories?.[0]?.name || "Category",
               instructor: item.instructor?.display_name || item.instructor?.name || "Instructor",
@@ -61,8 +62,8 @@ const MainDemo = ({ blogs }) => {
             };
           });
 
-          setTopCourses(adaptedCourses.filter(c => c.is_live).slice(0, 4));
-          setUpcomingCourses(adaptedCourses.filter(c => !c.is_live).slice(0, 4));
+          setTopCourses(adaptedCourses.filter(c => c.status).slice(0, 4));
+          setUpcomingCourses(adaptedCourses.filter(c => !c.status).slice(0, 4));
 
         } else {
           console.error("API success false or invalid response", res);
@@ -150,13 +151,13 @@ const MainDemo = ({ blogs }) => {
         )}
 
         {/* Coming Soon */}
-        {upcomingCourses && upcomingCourses.length > 0 && (
-          <CourseCarousel
-            courses={upcomingCourses}
-            title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
-            subTitle="Coming Soon"
-          />
-        )}
+        <CourseCarousel
+          courses={upcomingCourses}
+          title={<>Explore Our Upcoming <br /> Courses & Learning Paths</>}
+          subTitle="Coming Soon"
+          isComingSoon={true}
+        />
+
 
         {/* Course Bundles */}
         {bundleCourses && bundleCourses.length > 0 && (

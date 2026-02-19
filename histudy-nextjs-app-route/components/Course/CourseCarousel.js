@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
-const CourseCarousel = ({ courses, title, subTitle }) => {
+const CourseCarousel = ({ courses, title, subTitle, isComingSoon }) => {
   return (
     <div className="rbt-course-area ">
       <div className="container">
@@ -80,84 +80,81 @@ const CourseCarousel = ({ courses, title, subTitle }) => {
                           {data.courseTitle}
                         </Link>
                       </h4>
-                      <div className="rbt-review mb--10">
-                        <div className="rating">
-                          {[...Array(5)].map((_, i) => (
-                            <i
-                              key={i}
-                              className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
-                            ></i>
-                          ))}
+                      {!isComingSoon && (
+                        <div className="rbt-review mb--10">
+                          <div className="rating">
+                            {[...Array(5)].map((_, i) => (
+                              <i
+                                key={i}
+                                className={`fas fa-star ${i < Math.round(data.rating) ? "" : "off"}`}
+                              ></i>
+                            ))}
+                          </div>
+                          <span className="rating-count">
+                            {data.rating} ({data.review} Reviews)
+                          </span>
                         </div>
-                        <span className="rating-count">
-                          {data.rating} ({data.review} Reviews)
-                        </span>
-                      </div>
+                      )}
 
                       <div className="rbt-card-text" dangerouslySetInnerHTML={{ __html: data.desc }}></div>
 
 
-                      <ul className="rbt-meta">
-                        <li>
-                          <i className="feather-book"></i>
-                          {data.lesson} Lessons
-                        </li>
-                        <li>
-                          <i className="feather-users"></i>
-                          {data.student} Students
-                        </li>
-                        {/* Optional: Language & Duration if available */}
-                        {data.language && (
-                          <li>
-                            <i className="feather-globe"></i>
-                            {data.language}
-                          </li>
-                        )}
-                        {data.duration && (
-                          <li>
-                            <i className="feather-video"></i>
-                            {data.duration}
-                          </li>
-                        )}
-                      </ul>
+                      {!isComingSoon && (
+                        <>
+                          <ul className="rbt-meta">
+                            <li>
+                              <i className="feather-video"></i>
+                              {data.duration || "0 Hours"}
+                            </li>
+                            <li>
+                              <i className="feather-users"></i>
+                              {data.student} Students
+                            </li>
+                            <li>
+                              <i className="feather-globe"></i>
+                              {data.language}
+                            </li>
+                          </ul>
 
-                      {/* Instructor & Category */}
-                      <div className="rbt-author-meta mb--20">
-                        <div className="rbt-avater">
-                          <Link href="#">
-                            {/* Placeholder avatar or from data if available */}
-                            <Image
-                              src={data.userImg || "/images/client/avatar-02.png"}
-                              width={30}
-                              height={30} // Small avatar
-                              alt={data.instructor}
-                            />
-                          </Link>
-                        </div>
-                        <div className="rbt-author-info">
-                          By <Link href="#">{data.instructor}</Link> In <Link href="#">{data.category}</Link>
-                        </div>
-                      </div>
+                          {/* Instructor & Category */}
+                          <div className="rbt-author-meta mb--20">
+                            <div className="rbt-avater">
+                              <Link href="#">
+                                {/* Placeholder avatar or from data if available */}
+                                <Image
+                                  src={data.userImg || "/images/client/avatar-02.png"}
+                                  width={30}
+                                  height={30} // Small avatar
+                                  alt={data.instructor}
+                                />
+                              </Link>
+                            </div>
+                            <div className="rbt-author-info">
+                              By <Link href="#">{data.instructor}</Link> In <Link href="#">{data.category}</Link>
+                            </div>
+                          </div>
 
 
-                      <div className="rbt-card-bottom">
-                        <div className="rbt-price">
-                          {data.price && data.price > 0 ? (
-                            <>
-                              <span className="current-price">${data.price}</span>
-                              {data.offPrice > data.price && <span className="off-price">${data.offPrice}</span>}
-                            </>
-                          ) : (
-                            <span className="current-price">Free</span>
-                          )}
-                        </div>
-                        <Link
-                          className="rbt-btn-link"
-                          href={`/course-details/${data.slug}`}
-                        >
-                          Learn More<i className="feather-arrow-right"></i>
-                        </Link>
-                      </div>
+                          <div className="rbt-card-bottom">
+                            <div className="rbt-price">
+                              {data.price && data.price > 0 ? (
+                                <>
+                                  <span className="current-price">${data.price}</span>
+                                  {data.offPrice > data.price && <span className="off-price">${data.offPrice}</span>}
+                                </>
+                              ) : (
+                                <span className="current-price">Free</span>
+                              )}
+                            </div>
+                            <Link
+                              className="rbt-btn-link"
+                              href={`/course-details/${data.slug}`}
+                            >
+                              Learn More<i className="feather-arrow-right"></i>
+                            </Link>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </SwiperSlide>
