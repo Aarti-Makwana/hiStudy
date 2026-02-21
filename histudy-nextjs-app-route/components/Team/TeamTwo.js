@@ -89,61 +89,106 @@ const TeamTwo = () => {
                       </div>
                       <div className="rbt-team-details">
                         <div className="author-info">
-                          <h4 className="title">{instructor.name}</h4>
-                          <span className="designation theme-gradient">
-                            {instructor.expertise}
-                          </span>
-                          <span className="team-form">
-                            <i className="feather-map-pin"></i>
-                            <span className="location">CO Miego, AD,USA</span>
-                          </span>
-                        </div>
-                        <p>{instructor.short_description}</p>
-                        <ul className="social-icon social-default mt--20 justify-content-start">
-                          {instructor.socialMedia &&
-                            instructor.socialMedia.length > 0 ? (
-                            instructor.socialMedia.map((social, idx) => (
-                              <li key={idx}>
-                                <Link href={social.url}>
+                          <div className="d-flex align-items-center gap-3 mb--5">
+                            <h4 className="title mb-0">{instructor.name}</h4>
+                            {instructor.socialMedia?.find(
+                              (s) => s.platform.toLowerCase() === "linkedin"
+                            ) && (
+                                <Link
+                                  href={
+                                    instructor.socialMedia.find(
+                                      (s) =>
+                                        s.platform.toLowerCase() === "linkedin"
+                                    ).url
+                                  }
+                                  target="_blank"
+                                >
                                   <i
-                                    className={`feather-${social.platform.toLowerCase()}`}
+                                    className="feather-linkedin"
+                                    style={{
+                                      fontSize: "20px",
+                                      color: "var(--color-primary)",
+                                    }}
                                   ></i>
                                 </Link>
-                              </li>
-                            ))
-                          ) : (
-                            <>
-                              <li>
-                                <a href="https://www.facebook.com/">
-                                  <i className="feather-facebook"></i>
-                                </a>
-                              </li>
-                              <li>
-                                <a href="https://www.twitter.com">
-                                  <i className="feather-twitter"></i>
-                                </a>
-                              </li>
-                              <li>
-                                <a href="https://www.instagram.com/">
-                                  <i className="feather-instagram"></i>
-                                </a>
-                              </li>
-                            </>
+                              )}
+                          </div>
+                          <span className="designation theme-gradient">
+                            {instructor.subject}
+                          </span>
+                        </div>
+
+                        {instructor.companies && (
+                          <div className="companies-list mb--20">
+                            <ul className="rbt-meta justify-content-start mt--10 mb--10 list-horizontal-bullets p-0">
+                              {instructor.companies.map((company, idx) => (
+                                <li
+                                  key={idx}
+                                  className="mr--15"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    fontSize: "14px",
+                                    color: "var(--color-body)",
+                                  }}
+                                >
+                                  {idx > 0 && (
+                                    <span
+                                      className="bullet-separator"
+                                      style={{ marginRight: "10px" }}
+                                    >
+                                      •
+                                    </span>
+                                  )}
+                                  {company.logo?.url && (
+                                    <Image
+                                      src={company.logo.url}
+                                      width={24}
+                                      height={24}
+                                      alt={company.name || "Company Logo"}
+                                      style={{
+                                        marginRight: "8px",
+                                        objectFit: "contain",
+                                        borderRadius: "4px",
+                                      }}
+                                    />
+                                  )}
+                                  {company.name}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <p className="description">
+                          {instructor.bio || instructor.short_description}
+                        </p>
+
+                        {instructor.socialMedia?.find(
+                          (s) => s.platform.toLowerCase() === "linkedin"
+                        ) && (
+                            <div className="mt--30">
+                              <Link
+                                href={
+                                  instructor.socialMedia.find(
+                                    (s) => s.platform.toLowerCase() === "linkedin"
+                                  ).url
+                                }
+                                className="rbt-btn btn-gradient hover-icon-reverse btn-sm"
+                                target="_blank"
+                              >
+                                <span className="icon-reverse-wrapper">
+                                  <span className="btn-text">LinkedIn</span>
+                                  <span className="btn-icon">
+                                    <i className="feather-linkedin"></i>
+                                  </span>
+                                  <span className="btn-icon">
+                                    <i className="feather-linkedin"></i>
+                                  </span>
+                                </span>
+                              </Link>
+                            </div>
                           )}
-                        </ul>
-                        <ul className="rbt-information-list mt--25">
-                          <li>
-                            <a href="#">
-                              <i className="feather-phone"></i>+1-202-555-0174
-                            </a>
-                          </li>
-                          <li>
-                            <a href="mailto:hello@example.com">
-                              <i className="feather-mail"></i>
-                              example@gmail.com
-                            </a>
-                          </li>
-                        </ul>
                       </div>
                     </div>
                   </div>

@@ -49,25 +49,34 @@ const SingleCourse = ({ getParams }) => {
               sellsType: apiData.course_type === "paid" ? "Paid" : "Free",
               price: apiData.discounted_price,
               offPrice: apiData.actual_price,
-              discount: Math.round(
+              discount: apiData.actual_price ? Math.round(
                 ((apiData.actual_price - apiData.discounted_price) /
                   apiData.actual_price) *
                 100
-              ),
-              star: apiData.average_rating || 0,
-              ratingNumber: apiData.ratings || 0,
-              review: apiData.ratings || 0,
-              studentNumber: apiData.students_taught || 0,
+              ) : 0,
+              star: apiData.average_star_rating || 0,
+              ratingNumber: apiData.total_star_ratings || 0,
+              review: apiData.total_star_ratings || 0,
+              studentNumber: apiData.enrolled_users_count || 0,
               lesson: apiData.number_of_lectures,
               duration: apiData.duration,
               language: apiData.language,
               date: new Date(apiData.updated_at || Date.now()).toLocaleDateString(),
               courseAward: apiData.is_certificate_enabled ? "Certificate" : "No Certificate",
 
+              // Rating Distribution
+              ratingDistribution: [
+                { rating: 5, percentage: apiData.five_star_percentage || 0 },
+                { rating: 4, percentage: apiData.four_star_percentage || 0 },
+                { rating: 3, percentage: apiData.three_star_percentage || 0 },
+                { rating: 2, percentage: apiData.two_star_percentage || 0 },
+                { rating: 1, percentage: apiData.one_star_percentage || 0 },
+              ],
+
               // Instructor
-              userName: apiData.instructors?.[0]?.name || "Unknown Instructor",
-              userImg: apiData.instructors?.[0]?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
-              userCategory: apiData.instructors?.[0]?.expertise || "Instructor",
+              userName: apiData.instructor?.name || "Unknown Instructor",
+              userImg: apiData.instructor?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
+              userCategory: apiData.instructor?.short_description || "Instructor",
 
               // Complex structures adapted
               courseOverview: [
@@ -82,23 +91,33 @@ const SingleCourse = ({ getParams }) => {
                   title: "Course Curriculum",
                   contentList: apiData.topics?.map(topic => ({
                     title: topic.name,
-                    time: "10 min", // Placeholder as API doesn't seem to have topic duration yet
-                    listItem: [] // Placeholder for lessons inside topics if available
+                    time: topic.progres?.total || "0m",
+                    listItem: topic.course_contents?.map(content => ({
+                      text: content.title,
+                      playIcon: content.icon === "play" || content.category?.slug === "lesson",
+                      time: `${content.hours}h ${content.minutes}m`,
+                      status: !content.is_lock
+                    })) || []
                   })) || []
                 }
               ],
               courseInstructor: [
                 {
                   title: "Instructor",
-                  body: apiData.instructors?.map(inst => ({
-                    name: inst.name,
-                    desc: inst.bio,
-                    img: inst.file?.url || "/images/client/avatar-02.png",
-                    type: inst.subject || "Instructor",
-                    ratingNumber: inst.rating_count || 0,
-                    studentNumber: inst.students_taught || 0,
-                    social: []
-                  })) || []
+                  body: apiData.instructor ? [{
+                    name: apiData.instructor.name,
+                    desc: apiData.instructor.short_description,
+                    img: apiData.instructor.file?.url || "/images/client/avatar-02.png",
+                    type: "Instructor",
+                    ratingNumber: apiData.instructor.rating_count || 0,
+                    star: apiData.instructor.instructor_rating || 0,
+                    studentNumber: apiData.instructor.students_taught || 0,
+                    course: apiData.instructor.courses_count || 0,
+                    social: apiData.instructor.socialMedia?.map(social => ({
+                      icon: social.platform,
+                      link: social.url
+                    })) || []
+                  }] : []
                 }
               ],
               courseRequirement: [
@@ -107,12 +126,37 @@ const SingleCourse = ({ getParams }) => {
                   detailsList: [] // API doesn't have explicit requirements list yet
                 }
               ],
-              featuredReview: [], // API doesn't have reviews list yet
-              similarCourse: [], // API doesn't return similar courses yet
+              featuredReview: [
+                {
+                  title: "Featured Reviews",
+                  body: apiData.reviews?.map(rev => ({
+                    userName: rev.name,
+                    desc: rev.review,
+                    star: rev.rating,
+                    userImg: rev.file?.url || "/images/client/avatar-02.png"
+                  })) || []
+                }
+              ],
+              similarCourse: apiData.related_courses?.map(related => ({
+                id: related.id,
+                title: related.title,
+                img: related.file?.url || "/images/course/course-01.jpg",
+                price: related.discounted_price,
+                offPrice: related.actual_price,
+                rating: related.average_star_rating,
+                review: related.total_star_ratings,
+                lesson: related.number_of_lectures,
+                student: related.enrolled_users_count,
+                author: apiData.instructor?.name || "Instructor",
+                avatar: apiData.instructor?.file?.url || "/images/client/avatar-02.png",
+                post: "Instructor",
+                link: `/course-details/${related.slug}`,
+                desc: related.short_description
+              })) || [],
               relatedCourse: [],
               roadmap: [
-                { text: "Start Date", desc: new Date(apiData.start_date || Date.now()).toLocaleDateString() },
-                { text: "Enrolled", desc: apiData.students_taught || 0 },
+                { text: "Start Date", desc: apiData.start_date || "N/A" },
+                { text: "Enrolled", desc: apiData.enrolled_users_count || 0 },
                 { text: "Lectures", desc: apiData.number_of_lectures || 0 },
                 { text: "Skill Level", desc: apiData.difficulty_level || "All Levels" },
                 { text: "Language", desc: apiData.language || "English" },

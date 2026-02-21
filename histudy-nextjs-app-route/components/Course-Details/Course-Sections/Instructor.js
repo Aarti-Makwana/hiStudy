@@ -58,7 +58,7 @@ const Instructor = ({ checkMatchCourses }) => {
                   {teacher.social.map((social, index) => (
                     <li key={index}>
                       <Link href={social.link}>
-                        <i className={`feather-${social.icon}`}></i>
+                        <i className={`feather-${social.icon === 'linkedin' ? 'linkedin' : social.icon}`}></i>
                       </Link>
                     </li>
                   ))}

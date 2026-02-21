@@ -53,7 +53,7 @@ const InstructorModal = ({ instructor, onClose }) => {
                                                 </ul>
                                             )}
                                         </div>
-                                        <h6 className="subtitle theme-gradient mb--15">{instructor.expertise}</h6>
+                                        <h6 className="subtitle theme-gradient mb--15">{instructor.subject || instructor.expertise}</h6>
 
                                         {instructor.companies && (
                                             <div className="companies-list mb--20">

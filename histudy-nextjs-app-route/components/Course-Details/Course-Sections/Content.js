@@ -17,9 +17,8 @@ const Content = ({ checkMatchCourses }) => {
                   id={`headingTwo${innerIndex}`}
                 >
                   <button
-                    className={`accordion-button ${
-                      !item.collapsed ? "collapsed" : ""
-                    }`}
+                    className={`accordion-button ${!item.collapsed ? "collapsed" : ""
+                      }`}
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target={`#collapseTwo${innerIndex + 1}`}
@@ -32,9 +31,8 @@ const Content = ({ checkMatchCourses }) => {
                 </h2>
                 <div
                   id={`collapseTwo${innerIndex + 1}`}
-                  className={`accordion-collapse collapse ${
-                    item.isShow ? "show" : ""
-                  }`}
+                  className={`accordion-collapse collapse ${item.isShow ? "show" : ""
+                    }`}
                   aria-labelledby={`headingTwo${innerIndex}`}
                   data-bs-parent="#accordionExampleb2"
                 >
@@ -60,6 +58,7 @@ const Content = ({ checkMatchCourses }) => {
                               </div>
                             ) : (
                               <div className="course-content-right">
+                                <span className="min-lable">{list.time}</span>
                                 <span className="course-lock">
                                   <i className="feather-lock"></i>
                                 </span>
