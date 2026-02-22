@@ -130,8 +130,8 @@ const Viedo = ({ checkMatchCourses }) => {
             <span className="off-price">${checkMatchCourses.offPrice}</span>
           </div>
           <div className="discount-time">
-            <span className="rbt-badge color-danger bg-color-danger-opacity">
-              <i className="feather-clock"></i> {checkMatchCourses.days} days
+            <span className="rbt-badge color-danger bg-color-danger-opacity" style={{ color: '#e33e36', background: 'rgba(227, 62, 54, 0.05)' }}>
+              <i className="feather-clock" style={{ color: '#e33e36' }}></i> {checkMatchCourses.days} days
               left!
             </span>
           </div>
@@ -171,29 +171,68 @@ const Viedo = ({ checkMatchCourses }) => {
               }
             }}
           >
-            <span className="btn-text">Buy Now</span>
+            <span className="btn-text">Enroll Now</span>
             <span className="btn-icon">
               <i className="feather-arrow-right"></i>
             </span>
           </Link>
         </div>
         <span className="subtitle">
-          <i className="feather-rotate-ccw"></i> 30-Day Money-Back Guarantee
+          <i className="feather-rotate-ccw"></i> {checkMatchCourses.money_back ? `${checkMatchCourses.money_back_duration || '30'}-Day Money-Back Guarantee` : 'Secure Payment Guarantee'}
         </span>
         <div
           className={`rbt-widget-details has-show-more ${toggle ? "active" : ""
             }`}
         >
           <ul className="has-show-more-inner-content rbt-course-details-list-wrapper">
-            {checkMatchCourses &&
-              checkMatchCourses.roadmap.map((item, innerIndex) => (
-                <li key={innerIndex}>
-                  <span>{item.text}</span>
-                  <span className="rbt-feature-value rbt-badge-5">
-                    {item.desc}
-                  </span>
-                </li>
-              ))}
+            <li>
+              <span>Class Type</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.is_live ? 'Live' : 'Recorded'}
+              </span>
+            </li>
+            <li>
+              <span>{checkMatchCourses.is_live ? 'Batch Start Date' : 'Course Validity'}</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.is_live ? (checkMatchCourses.start_date || '03 March 2026') : (checkMatchCourses.validity || 'Unlimited')}
+              </span>
+            </li>
+            <li>
+              <span>Course Duration</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.duration || (checkMatchCourses.is_live ? '3 Months' : '80 Hours')}
+              </span>
+            </li>
+            <li>
+              <span>Lectures</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.lesson || 0} Lectures
+              </span>
+            </li>
+            <li>
+              <span>Skill Level</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.skill_level || 'All Levels'}
+              </span>
+            </li>
+            <li>
+              <span>Language</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.language || 'Hinglish'}
+              </span>
+            </li>
+            <li>
+              <span>Quizzes</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.quiz_count || 0}
+              </span>
+            </li>
+            <li>
+              <span>Certificate</span>
+              <span className="rbt-feature-value rbt-badge-5">
+                {checkMatchCourses.certificate ? 'Yes' : 'No'}
+              </span>
+            </li>
           </ul>
           <div
             className={`rbt-show-more-btn ${toggle ? "active" : ""}`}

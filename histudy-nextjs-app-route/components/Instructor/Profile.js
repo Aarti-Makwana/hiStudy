@@ -6,41 +6,13 @@ import { UserAuthServices } from "../../services/User";
 import { getToken } from "../../utils/storage";
 import { getLocalStorageToken } from "../../utils";
 
-const Profile = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import { useAppContext } from "../../context/Context";
 
+const Profile = () => {
+  const { userData, loadingUser } = useAppContext();
   const router = useRouter();
 
-  useEffect(() => {
-    // If no token present (either encrypted or plain), redirect immediately.
-    const token = getLocalStorageToken() || getToken();
-    if (!token) {
-      router.replace("/");
-      return;
-    }
-    const fetchProfile = async () => {
-      try {
-        const res = await UserAuthServices.getUserDataService();
-        if (!res) {
-          throw new Error("Failed to fetch profile");
-        }
-        if (res.status && res.status !== "success") {
-          throw new Error(res.message || "Failed to fetch profile");
-        }
-        setProfile(res.data || res);
-      } catch (err) {
-        setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  if (loading) {
+  if (loadingUser) {
     return (
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
         <div className="content">Loading profile...</div>
@@ -48,15 +20,15 @@ const Profile = () => {
     );
   }
 
-  if (error) {
+  if (!userData) {
     return (
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
-        <div className="content">Error: {error}</div>
+        <div className="content">No profile data found.</div>
       </div>
     );
   }
 
-  const p = profile || {};
+  const p = userData || {};
   const prof = p.profile || {};
 
   return (
@@ -68,7 +40,7 @@ const Profile = () => {
           </div>
           <div className="rbt-profile-row row row--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Registration Date</div>
+              <div className="rbt-profile-content b2">Registration</div>
             </div>
             <div className="col-lg-8 col-md-8">
               <div className="rbt-profile-content b2">{p.created_at || "-"}</div>
@@ -84,18 +56,18 @@ const Profile = () => {
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Last Name</div>
+              <div className="rbt-profile-content b2">Middle Name</div>
             </div>
             <div className="col-lg-8 col-md-8">
-              <div className="rbt-profile-content b2">{prof.last_name || "-"}</div>
+              <div className="rbt-profile-content b2">{prof.middle_name || "-"}</div>
             </div>
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Username</div>
+              <div className="rbt-profile-content b2">Last Name</div>
             </div>
             <div className="col-lg-8 col-md-8">
-              <div className="rbt-profile-content b2">{p.name || "-"}</div>
+              <div className="rbt-profile-content b2">{prof.last_name || "-"}</div>
             </div>
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
@@ -108,7 +80,7 @@ const Profile = () => {
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Phone Number</div>
+              <div className="rbt-profile-content b2">Phone</div>
             </div>
             <div className="col-lg-8 col-md-8">
               <div className="rbt-profile-content b2">{p.phone || "-"}</div>
@@ -116,20 +88,32 @@ const Profile = () => {
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Skill/Occupation</div>
+              <div className="rbt-profile-content b2">Profession/Occupation</div>
             </div>
             <div className="col-lg-8 col-md-8">
-              <div className="rbt-profile-content b2">{p.profession || "-"}</div>
+              <div className="rbt-profile-content b2">{p.profession || prof.profession || "-"}</div>
             </div>
           </div>
           <div className="rbt-profile-row row row--15 mt--15">
             <div className="col-lg-4 col-md-4">
-              <div className="rbt-profile-content b2">Biography</div>
+              <div className="rbt-profile-content b2">University/Company</div>
             </div>
             <div className="col-lg-8 col-md-8">
-              <div className="rbt-profile-content b2">{prof.bio || p.status || "-"}</div>
+              <div className="rbt-profile-content b2">{prof.university || prof.company || p.university || "-"}</div>
             </div>
           </div>
+          {(prof.bio || p.status) && (
+            <div className="rbt-profile-row row row--15 mt--15">
+              <div className="col-lg-4 col-md-4">
+                <div className="rbt-profile-content b2">Bio</div>
+              </div>
+              <div className="col-lg-8 col-md-8">
+                <div className="rbt-profile-content b2">
+                  {prof.bio || p.status}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

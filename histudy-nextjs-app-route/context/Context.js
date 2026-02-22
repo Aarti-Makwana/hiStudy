@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { getToken } from "../utils/storage";
+import { getLocalStorageToken } from "../utils";
+import { UserAuthServices } from "../services/User";
 
 export const CreateContext = createContext();
 
@@ -21,6 +24,33 @@ const Context = ({ children }) => {
   const [pricingThree, setPricingThree] = useState(true);
   const [pricingFour, setPricingFour] = useState(true);
   const [isLightTheme, setLightTheme] = useState(true);
+
+  // User Profile State
+  const [userData, setUserData] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(false);
+
+  const fetchUserProfile = async () => {
+    const token = getLocalStorageToken() || getToken();
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+    setLoadingUser(true);
+    try {
+      const res = await UserAuthServices.getUserDataService();
+      if (res && res.status === "success") {
+        setUserData(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile in context:", err);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     dispatch({ type: "COUNT_CART_TOTALS" });
@@ -72,6 +102,10 @@ const Context = ({ children }) => {
         isLightTheme,
         setLightTheme,
         toggleTheme,
+        userData,
+        setUserData,
+        loadingUser,
+        fetchUserProfile,
       }}
     >
       {children}

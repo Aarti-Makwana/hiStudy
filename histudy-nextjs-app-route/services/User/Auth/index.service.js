@@ -243,4 +243,80 @@ export const UserAuthServices = {
       throw error;
     }
   },
+
+  /**
+   * Function for updating user profile.
+   * @param {Object} bodyData - Updated profile information.
+   * @returns {Promise<Object>} - API response
+   */
+  updateProfileService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.updateProfile,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  /**
+   * Function for updating user profile avatar.
+   * @param {Object} bodyData - Updated avatar information (usually FormData).
+   * @returns {Promise<Object>} - API response
+   */
+  profileAvatarService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.profileAvatar,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  /**
+   * Function for changing user password.
+   * @param {Object} bodyData - Password change information.
+   * @returns {Promise<Object>} - API response
+   */
+  profileChangePasswordService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.profileChangePassword,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  /**
+   * Function for changing user contact information.
+   * @param {Object} bodyData - Updated contact information.
+   * @returns {Promise<Object>} - API response
+   */
+  profileChangeContactService: async (bodyData) => {
+    try {
+      const payload = {
+        ...Auth.profileChangeContact,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

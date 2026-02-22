@@ -1,8 +1,32 @@
 import Link from "next/link";
-import Courses from "../../data/dashboard/instructor/instructor.json";
 import CourseWidgets from "./Dashboard-Section/widgets/CourseWidget";
+import { useAppContext } from "../../context/Context";
 
 const MyCourses = () => {
+  const { userData, loadingUser } = useAppContext();
+
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const u = userData || {};
+
+  const mapEnrollmentToCourse = (enrollment) => {
+    const c = enrollment.course || {};
+    return {
+      id: c.id,
+      title: c.title,
+      lectures: c.number_of_lectures,
+      courseDuration: "N/A",
+      enrolledStudent: "N/A",
+      courseThumbnail: "/images/course/course-01.jpg",
+      coursePrice: c.actual_price,
+      offerPrice: c.discounted_price,
+      progressValue: enrollment.completion_percentage,
+      rating: {
+        average: c.reviews_avg_rating || 0,
+      }
+    };
+  };
+
   return (
     <>
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
@@ -68,13 +92,13 @@ const MyCourses = () => {
               aria-labelledby="publish-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 3)?.map((slide, index) => (
+                {(u.active_enrollments || []).map((enrollment, index) => (
                   <div
                     className="col-lg-4 col-md-6 col-12"
                     key={`course-published-${index}`}
                   >
                     <CourseWidgets
-                      data={slide}
+                      data={mapEnrollmentToCourse(enrollment)}
                       courseStyle="two"
                       isEdit={true}
                       isCompleted={false}
@@ -94,13 +118,13 @@ const MyCourses = () => {
               aria-labelledby="pending-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 3)?.map((slide, index) => (
+                {(u.active_enrollments || []).map((enrollment, index) => (
                   <div
                     className="col-lg-4 col-md-6 col-12"
                     key={`course-pending-${index}`}
                   >
                     <CourseWidgets
-                      data={slide}
+                      data={mapEnrollmentToCourse(enrollment)}
                       courseStyle="two"
                       isEdit={true}
                       isCompleted={false}
@@ -120,13 +144,13 @@ const MyCourses = () => {
               aria-labelledby="draft-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 3)?.map((slide, index) => (
+                {(u.active_enrollments || []).map((enrollment, index) => (
                   <div
                     className="col-lg-4 col-md-6 col-12"
                     key={`course-draft-${index}`}
                   >
                     <CourseWidgets
-                      data={slide}
+                      data={mapEnrollmentToCourse(enrollment)}
                       courseStyle="two"
                       isEdit={true}
                       isCompleted={false}

@@ -8,15 +8,12 @@ import { showSuccess, showInfo, showError } from "../../utils/swal";
 import { UserAuthServices } from "../../services/User";
 import { useEffect, useState } from "react";
 
+import { useAppContext } from "../../context/Context";
+
 const InstructorDashboardSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const u = getUser();
-    setUser(u);
-  }, []);
+  const { userData } = useAppContext();
 
   const handleLogout = async (e) => {
     e && e.preventDefault();
@@ -60,7 +57,7 @@ const InstructorDashboardSidebar = () => {
     );
   };
 
-  const welcomeName = user ? user.name || `${user.first_name || ""} ${user.last_name || ""}` : "User";
+  const welcomeName = userData ? userData.name || `${userData.first_name || ""} ${userData.last_name || ""}` : "User";
 
   return (
     <>
@@ -74,7 +71,7 @@ const InstructorDashboardSidebar = () => {
               <nav className="mainmenu-nav">
                 <ul className="dashboard-mainmenu rbt-default-sidebar-list nav-tabs">
                   {SidebarData &&
-                    SidebarData.siderbar.slice(0, 7).map((data, index) => (
+                    SidebarData.siderbar.slice(0, 13).map((data, index) => (
                       <li className="nav-item" key={index} role="presentation">
                         <Link
                           className={`${pathname === data.link ? "active" : ""}`}
@@ -87,7 +84,7 @@ const InstructorDashboardSidebar = () => {
                     ))}
                 </ul>
               </nav>
-
+              {/* 
               <div className="section-title mt--40 mb--20">
                 <h6 className="rbt-title-style-2">Instructor</h6>
               </div>
@@ -118,7 +115,7 @@ const InstructorDashboardSidebar = () => {
                   {SidebarData &&
                     SidebarData.siderbar.slice(11, 13).map((data, index) => renderLink(data, index))}
                 </ul>
-              </nav>
+              </nav> */}
             </div>
           </div>
         </div>

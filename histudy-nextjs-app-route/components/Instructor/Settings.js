@@ -7,63 +7,190 @@ import Link from "next/link";
 import { UserAuthServices } from "../../services/User";
 import { getUser, setUser } from "../../utils/storage";
 
+import { useAppContext } from "../../context/Context";
+
 const Setting = () => {
-  const [textareaText, setTextareaText] = useState(
-    "I'm the Front-End Developer for #Rainbow IT in Bangladesh, OR. I have serious passion for UI effects, animations and creating intuitive, dynamic user experiences."
-  );
+  const { userData, fetchUserProfile } = useAppContext();
   const [form, setForm] = useState({
     first_name: "",
     middle_name: "",
     last_name: "",
-    gender: "",
-    dob: "",
+    profession: "",
+    university: "",
+    email: "",
     phone: "",
+    bio: "",
+    facebook: "",
+    instagram: "",
+    linkedin: "",
+    website: "",
+    github: "",
+    twitter: "",
+    otp: "",
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: "",
+    password: "",
+    password_confirmation: "",
   });
   const [loading, setLoading] = useState(false);
+  const [isPhoneEditable, setIsPhoneEditable] = useState(false);
+  const [isEmailEditable, setIsEmailEditable] = useState(false);
 
   useEffect(() => {
-    const u = getUser();
-    if (u) {
+    if (userData) {
       setForm({
-        first_name: u.profile?.first_name || u.first_name || "",
-        middle_name: u.profile?.middle_name || "",
-        last_name: u.profile?.last_name || u.last_name || "",
-        gender: u.profile?.gender || "",
-        dob: u.profile?.dob || "",
-        phone: u.profile?.phone || u.phone || "",
+        first_name: userData.profile?.first_name || userData.first_name || "",
+        middle_name: userData.profile?.middle_name || "",
+        last_name: userData.profile?.last_name || userData.last_name || "",
+        profession: userData.profile?.profession || "",
+        university: userData.profile?.university || "",
+        email: userData.email || "",
+        phone: userData.profile?.phone || userData.phone || "",
+        bio: userData.profile?.bio || "",
+        facebook: userData.profile?.facebook || "",
+        instagram: userData.profile?.instagram || "",
+        linkedin: userData.profile?.linkedin || "",
+        website: userData.profile?.website || "",
+        github: userData.profile?.github || "",
+        twitter: userData.profile?.twitter || "",
+        otp: "",
       });
     }
-  }, []);
+  }, [userData]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
     setForm((s) => ({ ...s, [id]: value }));
   };
 
+  const handlePasswordChange = (e) => {
+    const { id, value } = e.target;
+    setPasswordForm((s) => ({ ...s, [id]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Call the user details update endpoint
+      // Call the updateProfileService with nested socials
       const body = {
-        first_name: form.first_name,
-        middle_name: form.middle_name || null,
-        last_name: form.last_name,
-        gender: form.gender,
-        dob: form.dob,
-        phone: form.phone,
+        bio: form.bio,
+        profession: form.profession,
+        university: form.university,
+        socials: {
+          facebook: form.facebook,
+          instagram: form.instagram,
+          linkedin: form.linkedin,
+          website: form.website,
+          github: form.github,
+          twitter: form.twitter,
+        },
       };
-      const res = await UserAuthServices.userDetailsUpdateService(body);
+      const res = await UserAuthServices.updateProfileService(body);
       if (res && res.status === "success") {
-        // update stored user
-        const updated = res.data || {};
-        setUser(updated);
+        await fetchUserProfile();
         alert(res.message || "Profile updated");
       } else {
         alert(res?.message || "Failed to update profile");
       }
     } catch (err) {
       alert(err.message || "Update error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      setLoading(true);
+      try {
+        const res = await UserAuthServices.profileAvatarService(formData);
+        if (res && res.status === "success") {
+          await fetchUserProfile();
+          alert("Avatar updated successfully");
+        } else {
+          alert(res?.message || "Failed to update avatar");
+        }
+      } catch (err) {
+        alert(err.message || "Avatar update error");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (passwordForm.password !== passwordForm.password_confirmation) {
+      alert("Passwords do not match");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await UserAuthServices.profileChangePasswordService(passwordForm);
+      if (res && res.status === "success") {
+        alert(res.message || "Password updated successfully");
+        setPasswordForm({
+          current_password: "",
+          password: "",
+          password_confirmation: "",
+        });
+      } else {
+        alert(res?.message || "Failed to update password");
+      }
+    } catch (err) {
+      alert(err.message || "Password update error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContactSubmit = async () => {
+    if (!form.otp) {
+      alert("Please enter OTP");
+      return;
+    }
+    setLoading(true);
+    try {
+      const body = {
+        email: form.email,
+        phone: form.phone,
+        otp: form.otp,
+      };
+      const res = await UserAuthServices.profileChangeContactService(body);
+      if (res && res.status === "success") {
+        await fetchUserProfile();
+        alert(res.message || "Contact updated successfully");
+        setIsEmailEditable(false);
+        setIsPhoneEditable(false);
+      } else {
+        alert(res?.message || "Failed to update contact");
+      }
+    } catch (err) {
+      alert(err.message || "Contact update error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setLoading(true);
+    try {
+      const res = await UserAuthServices.resendOtp({
+        email: form.email || userData.email,
+        type: "change_contact",
+      });
+      if (res && res.status === "success") {
+        alert("OTP sent successfully");
+      } else {
+        alert(res?.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      alert(err.message || "Error sending OTP");
     } finally {
       setLoading(false);
     }
@@ -122,7 +249,7 @@ const Setting = () => {
                   aria-controls="social"
                   aria-selected="false"
                 >
-                  <span className="title">Social Share</span>
+                  <span className="title">Social list</span>
                 </Link>
               </li>
             </ul>
@@ -143,13 +270,20 @@ const Setting = () => {
                       <Image
                         width={300}
                         height={300}
-                        src="/images/team/avatar.jpg"
+                        src={userData?.profile?.avatar || "/images/team/avatar.jpg"}
                         alt="Instructor"
+                        style={{ objectFit: 'cover' }}
                       />
                       <div className="rbt-edit-photo-inner">
-                        <button className="rbt-edit-photo" title="Upload Photo">
+                        <label className="rbt-edit-photo" title="Upload Photo" style={{ cursor: 'pointer' }}>
                           <i className="feather-camera" />
-                        </button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
                       </div>
                     </div>
                   </div>
@@ -172,42 +306,131 @@ const Setting = () => {
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
                     <label htmlFor="first_name">First Name</label>
-                    <input id="first_name" type="text" value={form.first_name} onChange={handleChange} />
+                    <input id="first_name" type="text" value={form.first_name} onChange={handleChange} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
                     <label htmlFor="middle_name">Middle Name</label>
-                    <input id="middle_name" type="text" value={form.middle_name} onChange={handleChange} />
+                    <input id="middle_name" type="text" value={form.middle_name} onChange={handleChange} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
                     <label htmlFor="last_name">Last Name</label>
-                    <input id="last_name" type="text" value={form.last_name} onChange={handleChange} />
+                    <input id="last_name" type="text" value={form.last_name} onChange={handleChange} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }} />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="phone">Phone Number</label>
-                    <input id="phone" type="tel" value={form.phone} onChange={handleChange} />
-                  </div>
-                </div>
-                <div className="col-lg-6 col-md-6 col-sm-6 col-12">
-                  <div className="rbt-form-group">
-                    <label htmlFor="gender">Gender</label>
-                    <select id="gender" value={form.gender} onChange={handleChange} className="w-100">
-                      <option value="">Select</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                    <label htmlFor="profession">Occupation</label>
+                    <select id="profession" value={form.profession} onChange={handleChange} className="w-100">
+                      <option value="">Select Occupation</option>
+                      <option value="Instructor">Instructor</option>
+                      <option value="Developer">Developer</option>
+                      <option value="Designer">Designer</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="dob">Date of Birth</label>
-                    <input id="dob" type="date" value={form.dob} onChange={handleChange} />
+                    <label htmlFor="university">University/Company</label>
+                    <input id="university" type="text" value={form.university} onChange={handleChange} />
+                  </div>
+                </div>
+                <div className="col-lg-6 col-md-6 col-sm-6 col-12">
+                  <div className="rbt-form-group">
+                    <label htmlFor="email">Email</label>
+                    <div className="position-relative">
+                      <input
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        readOnly={!isEmailEditable}
+                        style={!isEmailEditable ? { backgroundColor: '#f8f9fa' } : { borderColor: '#6b7385' }}
+                        autoFocus={isEmailEditable}
+                      />
+                      <i
+                        className={`feather-${isEmailEditable ? 'check' : 'edit'} position-absolute`}
+                        onClick={() => {
+                          if (isEmailEditable) {
+                            handleContactSubmit();
+                          } else {
+                            setIsEmailEditable(true);
+                          }
+                        }}
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: isEmailEditable ? '#2ecc71' : '#6b7385' }}
+                        title={isEmailEditable ? "Save" : "Edit Email"}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-lg-6 col-md-6 col-sm-6 col-12">
+                  <div className="rbt-form-group">
+                    <label htmlFor="phone">Number</label>
+                    <div className="position-relative">
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={handleChange}
+                        readOnly={!isPhoneEditable}
+                        style={!isPhoneEditable ? { backgroundColor: '#f8f9fa' } : { borderColor: '#6b7385' }}
+                        autoFocus={isPhoneEditable}
+                      />
+                      <i
+                        className={`feather-${isPhoneEditable ? 'check' : 'edit'} position-absolute`}
+                        onClick={() => {
+                          if (isPhoneEditable) {
+                            handleContactSubmit();
+                          } else {
+                            setIsPhoneEditable(true);
+                          }
+                        }}
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: isPhoneEditable ? '#2ecc71' : '#6b7385' }}
+                        title={isPhoneEditable ? "Save" : "Edit Number"}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {(isEmailEditable || isPhoneEditable) && (
+                  <div className="col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div className="rbt-form-group">
+                      <label htmlFor="otp">OTP</label>
+                      <div className="position-relative">
+                        <input
+                          id="otp"
+                          type="text"
+                          value={form.otp}
+                          onChange={handleChange}
+                          placeholder="Enter OTP"
+                          className="pr--100"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          className="rbt-btn btn-sm btn-gradient position-absolute"
+                          style={{ right: '5px', top: '50%', transform: 'translateY(-50%)', height: '35px', padding: '0 15px' }}
+                        >
+                          Send OTP
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="col-12 mt--20">
+                  <div className="rbt-form-group">
+                    <label htmlFor="bio">Bio</label>
+                    <textarea
+                      id="bio"
+                      cols="30"
+                      rows="6"
+                      value={form.bio}
+                      onChange={handleChange}
+                    ></textarea>
                   </div>
                 </div>
                 <div className="col-12 mt--20">
@@ -225,46 +448,55 @@ const Setting = () => {
               aria-labelledby="password-tab"
             >
               <form
-                action="#"
+                onSubmit={handlePasswordSubmit}
                 className="rbt-profile-row rbt-default-form row row--15"
               >
                 <div className="col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="currentpassword">Current Password</label>
+                    <label htmlFor="current_password">Current Password</label>
                     <input
-                      id="currentpassword"
+                      id="current_password"
                       type="password"
                       placeholder="Current Password"
+                      value={passwordForm.current_password}
+                      onChange={handlePasswordChange}
+                      required
                     />
                   </div>
                 </div>
                 <div className="col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="newpassword">New Password</label>
+                    <label htmlFor="password">New Password</label>
                     <input
-                      id="newpassword"
+                      id="password"
                       type="password"
                       placeholder="New Password"
+                      value={passwordForm.password}
+                      onChange={handlePasswordChange}
+                      required
                     />
                   </div>
                 </div>
                 <div className="col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="retypenewpassword">
+                    <label htmlFor="password_confirmation">
                       Re-type New Password
                     </label>
                     <input
-                      id="retypenewpassword"
+                      id="password_confirmation"
                       type="password"
                       placeholder="Re-type New Password"
+                      value={passwordForm.password_confirmation}
+                      onChange={handlePasswordChange}
+                      required
                     />
                   </div>
                 </div>
                 <div className="col-12 mt--10">
                   <div className="rbt-form-group">
-                    <Link className="rbt-btn btn-gradient" href="#">
-                      Update Password
-                    </Link>
+                    <button className="rbt-btn btn-gradient" type="submit">
+                      {loading ? 'Updating...' : 'Update Password'}
+                    </button>
                   </div>
                 </div>
               </form>
@@ -277,7 +509,7 @@ const Setting = () => {
               aria-labelledby="social-tab"
             >
               <form
-                action="#"
+                onSubmit={handleSubmit}
                 className="rbt-profile-row rbt-default-form row row--15"
               >
                 <div className="col-12">
@@ -288,19 +520,23 @@ const Setting = () => {
                     <input
                       id="facebook"
                       type="text"
+                      value={form.facebook}
+                      onChange={handleChange}
                       placeholder="https://facebook.com/"
                     />
                   </div>
                 </div>
                 <div className="col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="twitter">
-                      <i className="feather-twitter"></i> Twitter
+                    <label htmlFor="instagram">
+                      <i className="feather-instagram"></i> Instagram
                     </label>
                     <input
-                      id="twitter"
+                      id="instagram"
                       type="text"
-                      placeholder="https://twitter.com/"
+                      value={form.instagram}
+                      onChange={handleChange}
+                      placeholder="https://instagram.com/"
                     />
                   </div>
                 </div>
@@ -312,6 +548,8 @@ const Setting = () => {
                     <input
                       id="linkedin"
                       type="text"
+                      value={form.linkedin}
+                      onChange={handleChange}
                       placeholder="https://linkedin.com/"
                     />
                   </div>
@@ -319,11 +557,13 @@ const Setting = () => {
                 <div className="col-12">
                   <div className="rbt-form-group">
                     <label htmlFor="website">
-                      <i className="feather-globe"></i> Website
+                      <i className="feather-globe"></i> Portfolio
                     </label>
                     <input
                       id="website"
                       type="text"
+                      value={form.website}
+                      onChange={handleChange}
                       placeholder="https://website.com/"
                     />
                   </div>
@@ -331,20 +571,36 @@ const Setting = () => {
                 <div className="col-12">
                   <div className="rbt-form-group">
                     <label htmlFor="github">
-                      <i className="feather-github"></i> Github
+                      <i className="feather-github"></i> Git
                     </label>
                     <input
                       id="github"
                       type="text"
+                      value={form.github}
+                      onChange={handleChange}
                       placeholder="https://github.com/"
+                    />
+                  </div>
+                </div>
+                <div className="col-12">
+                  <div className="rbt-form-group">
+                    <label htmlFor="twitter">
+                      <i className="feather-twitter"></i> Twitter
+                    </label>
+                    <input
+                      id="twitter"
+                      type="text"
+                      value={form.twitter}
+                      onChange={handleChange}
+                      placeholder="https://twitter.com/"
                     />
                   </div>
                 </div>
                 <div className="col-12 mt--10">
                   <div className="rbt-form-group">
-                    <Link className="rbt-btn btn-gradient" href="#">
-                      Update Profile
-                    </Link>
+                    <button className="rbt-btn btn-gradient" type="submit">
+                      {loading ? 'Updating...' : 'Update Profile'}
+                    </button>
                   </div>
                 </div>
               </form>

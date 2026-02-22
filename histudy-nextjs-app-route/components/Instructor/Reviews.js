@@ -1,6 +1,47 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { UserAuthServices } from "../../services/User";
+
+import { useAppContext } from "../../context/Context";
 
 const Reviews = () => {
+  const { userData, loadingUser, fetchUserProfile } = useAppContext();
+
+  // Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [currentReview, setCurrentReview] = useState(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editReviewText, setEditReviewText] = useState("");
+
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const u = userData || {};
+  const reviews = u.reviews || [];
+
+  const handleEditClick = (review) => {
+    setCurrentReview(review);
+    setEditRating(review.rating || 0);
+    setEditReviewText(review.review || "");
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    // Mock API call to save review
+    console.log("Saving Review:", { id: currentReview.id, rating: editRating, review: editReviewText });
+    alert("Review updated successfully (Mock)");
+    setShowEditModal(false);
+    // await fetchUserProfile(); // Refresh data if API was real
+  };
+
+  const handleDelete = (review) => {
+    if (window.confirm("Are you sure you want to delete this review?")) {
+      console.log("Deleting Review:", review.id);
+      alert("Review deleted successfully (Mock)");
+    }
+  };
+
   return (
     <>
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
@@ -61,86 +102,36 @@ const Reviews = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <th>John Due</th>
-                      <td>January 30, 2021</td>
-                      <td>
-                        <span className="b3">
-                          Course: <Link href="#">Speaking Korean for Beginners</Link>
-                        </span>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                          </div>
-                          <span className="rating-count"> (9 Reviews)</span>
-                        </div>
-                        <p className="b2">Good</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>John Due</th>
-                      <td>June 30, 2022</td>
-                      <td>
-                        <span className="b3">
-                          Course: <Link href="#">PHP for Beginners</Link>
-                        </span>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                          </div>
-                          <span className="rating-count"> (5 Reviews)</span>
-                        </div>
-                        <p className="b3">Awesome</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>John Due</th>
-                      <td>April 30, 2022</td>
-                      <td>
-                        <span className="b3">
-                          Course: <Link href="#">WordPress for Beginners</Link>
-                        </span>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                          </div>
-                          <span className="rating-count"> (10 Reviews)</span>
-                        </div>
-                        <p className="b3">Nice Course</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>John Due</th>
-                      <td>March 30, 2022</td>
-                      <td>
-                        <span className="b3">
-                          Course: <Link href="#">Design for Beginners</Link>
-                        </span>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                          </div>
-                          <span className="rating-count"> (15 Reviews)</span>
-                        </div>
-                        <p className="b3">-</p>
-                      </td>
-                    </tr>
+                    {reviews.length > 0 ? (
+                      reviews.map((review, index) => (
+                        <tr key={index}>
+                          <th>{review.user?.name || "Student"}</th>
+                          <td>{review.created_at}</td>
+                          <td>
+                            <span className="b3">
+                              Course: <Link href="#">{review.item?.title || review.item?.course?.title || review.course?.title || review.item?.name || "N/A"}</Link>
+                            </span>
+                            <div className="rbt-review">
+                              <div className="rating">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <i
+                                    key={star}
+                                    className={`${star <= review.rating ? "fas" : "far"} fa-star`}
+                                    style={{ color: star <= review.rating ? "#E5BA12" : "#e1e1e1" }}
+                                  />
+                                ))}
+                              </div>
+                              <span className="rating-count"> ({review.rating} Stars)</span>
+                            </div>
+                            <p className="b2">{review.review}</p>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="text-center">No reviews found</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -156,89 +147,56 @@ const Reviews = () => {
                 <table className="rbt-table table table-borderless">
                   <thead>
                     <tr>
-                      <th>Course Title</th>
+                      <th>Course Name</th>
                       <th>Review</th>
-                      <th></th>
+                      <th>Timestamp</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <th>Course: How to Write Your First Novel</th>
-                      <td>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
+                    {reviews.map((review, index) => (
+                      <tr key={index}>
+                        <th>{review.item?.title || review.item?.course?.title || review.course?.title || review.item?.name || "N/A"}</th>
+                        <td>
+                          <div className="rbt-review">
+                            <div className="rating">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <i
+                                  key={star}
+                                  className={`${star <= (currentReview?.id === review.id ? editRating : review.rating) ? "fas" : "far"} fa-star`}
+                                  style={{ color: star <= (currentReview?.id === review.id ? editRating : review.rating) ? "#E5BA12" : "#e1e1e1" }}
+                                />
+                              ))}
+                            </div>
+                            <span className="rating-count"> ({review.rating} Stars)</span>
                           </div>
-                          <span className="rating-count"> (9 Reviews)</span>
-                        </div>
-                        <p className="b3">Good</p>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group">
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-edit" /> Edit
-                          </Link>
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-trash-2" /> Delete
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Course: How to Web Design</th>
-                      <td>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
+                          <p className="b3">{review.review}</p>
+                        </td>
+                        <td>{review.created_at}</td>
+                        <td>
+                          <div className="rbt-button-group">
+                            {review.status !== "verified" ? (
+                              <>
+                                <button
+                                  className="rbt-btn-link left-icon border-0 bg-transparent"
+                                  onClick={() => handleEditClick(review)}
+                                >
+                                  <i className="feather-edit" /> Edit
+                                </button>
+                                <button
+                                  className="rbt-btn-link left-icon border-0 bg-transparent color-danger"
+                                  onClick={() => handleDelete(review)}
+                                >
+                                  <i className="feather-trash-2" /> Delete
+                                </button>
+                              </>
+                            ) : (
+                              <span className="rbt-badge-5 bg-color-success-opacity color-success">Verified</span>
+                            )}
                           </div>
-                          <span className="rating-count"> (9 Reviews)</span>
-                        </div>
-                        <p className="b3">Awesome Course</p>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group">
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-edit" /> Edit
-                          </Link>
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-trash-2" /> Delete
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Course: English</th>
-                      <td>
-                        <div className="rbt-review">
-                          <div className="rating">
-                            <i className="fas fa-star" />
-                            <i className="fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                            <i className="off fas fa-star" />
-                          </div>
-                          <span className="rating-count"> (9 Reviews)</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group">
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-edit" /> Edit
-                          </Link>
-                          <Link className="rbt-btn-link left-icon" href="#">
-                            <i className="feather-trash-2" /> Delete
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -246,6 +204,60 @@ const Reviews = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Review Modal */}
+      {showEditModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rbt-shadow-box">
+              <div className="modal-header border-0 mt--20">
+                <h5 className="modal-title">Edit Review</h5>
+                <button type="button" className="btn-close" onClick={() => setShowEditModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-4">
+                  <div className="rating" style={{ fontSize: "24px" }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <i
+                        key={star}
+                        className={`${star <= editRating ? "fas" : "far"} fa-star pointer`}
+                        onClick={() => setEditRating(star)}
+                        style={{ color: "#E5BA12", cursor: "pointer", margin: "0 5px" }}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt--10 b3">Rating: {editRating} Stars</p>
+                </div>
+                <div className="rbt-form-group">
+                  <label htmlFor="reviewText" className="mb--10">Your Review</label>
+                  <textarea
+                    id="reviewText"
+                    className="w-100"
+                    rows="5"
+                    value={editReviewText}
+                    onChange={(e) => setEditReviewText(e.target.value)}
+                    placeholder="Share your experience..."
+                  ></textarea>
+                </div>
+              </div>
+              <div className="modal-footer border-0 mb--20">
+                <button
+                  className="rbt-btn btn-sm radius-round-10 btn-border"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rbt-btn btn-sm radius-round-10 btn-gradient"
+                  onClick={handleSaveEdit}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

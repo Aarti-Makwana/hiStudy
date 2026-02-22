@@ -4,8 +4,32 @@ import Link from "next/link";
 import { useState } from "react";
 import Select, { components } from "react-select";
 
+import { useAppContext } from "../../context/Context";
+
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue, hasValue } = props;
+  const nbValues = getValue().length;
+  if (!hasValue) {
+    return (
+      <components.ValueContainer {...props}>
+        {children}
+      </components.ValueContainer>
+    );
+  }
+  return (
+    <components.ValueContainer {...props}>
+      {`${nbValues} items selected`}
+    </components.ValueContainer>
+  );
+};
+
+const MultiValue = (props) => {
+  return "3 Selected";
+};
+
 const Announcement = () => {
-  const components = { ValueContainer, MultiValue };
+  const { userData, loadingUser } = useAppContext();
+  const customComponents = { ValueContainer, MultiValue };
   const [course, setCourses] = useState({ value: "", label: "" });
   const [sortBy, setSortBy] = useState({ value: "Default", label: "Default" });
   const [sortByOffer, setSortByOffer] = useState({
@@ -13,16 +37,12 @@ const Announcement = () => {
     label: "Free",
   });
 
-  const courses = [
-    { value: "Web Design HTML", label: "Web Design HTML" },
-    { value: "Graphic Photoshop", label: "Graphic Photoshop" },
-    { value: "English Career", label: "English Career" },
-    { value: "Spoken English Career", label: "Spoken English Career" },
-    { value: "Art Painting Experts", label: "Art Painting Experts" },
-    { value: "App Development Experts", label: "App Development Experts" },
-    { value: "Web Application Experts", label: "Web Application Experts" },
-    { value: "Php Development Experts", label: "Php Development Experts" },
-  ];
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const courses = (userData?.active_enrollments || []).map(en => ({
+    value: en.course?.id || en.course_id,
+    label: en.course?.title || "Unknown Course"
+  }));
 
   const sortByOptions = [
     { value: "Default", label: "Default" },
@@ -88,7 +108,7 @@ const Announcement = () => {
                     options={courses}
                     closeMenuOnSelect={true}
                     isMulti
-                    components={components}
+                    components={customComponents}
                   />
                 </div>
               </div>
@@ -223,24 +243,3 @@ const Announcement = () => {
 };
 
 export default Announcement;
-
-const ValueContainer = ({ children, ...props }) => {
-  const { getValue, hasValue } = props;
-  const nbValues = getValue().length;
-  if (!hasValue) {
-    return (
-      <components.ValueContainer {...props}>
-        {children}
-      </components.ValueContainer>
-    );
-  }
-  return (
-    <components.ValueContainer {...props}>
-      {`${nbValues} items selected`}
-    </components.ValueContainer>
-  );
-};
-
-const MultiValue = (props) => {
-  return "3 Selected";
-};

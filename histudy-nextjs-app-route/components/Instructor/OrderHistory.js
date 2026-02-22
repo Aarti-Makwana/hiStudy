@@ -1,4 +1,18 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { UserAuthServices } from "../../services/User";
+
+import { useAppContext } from "../../context/Context";
+
 const OrderHistory = () => {
+  const { userData, loadingUser } = useAppContext();
+
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const u = userData || {};
+  const orders = u.orders || [];
+
   return (
     <>
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
@@ -20,182 +34,27 @@ const OrderHistory = () => {
               </thead>
 
               <tbody>
-                <tr>
-                  <th>#5478</th>
-                  <td>App Development</td>
-                  <td>January 27, 2022</td>
-                  <td>$100.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#4585</th>
-                  <td>Graphic</td>
-                  <td>May 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-primary-opacity">
-                      Processing
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#9656</th>
-                  <td>Graphic</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-warning-opacity color-warning">
-                      On Hold
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#2045</th>
-                  <td>Application</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Canceled
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#5478</th>
-                  <td>App Development</td>
-                  <td>January 27, 2022</td>
-                  <td>$100.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#4585</th>
-                  <td>Graphic</td>
-                  <td>May 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-primary-opacity">
-                      Processing
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#9656</th>
-                  <td>Graphic</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-warning-opacity color-warning">
-                      On Hold
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#2045</th>
-                  <td>Application</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Canceled
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#5478</th>
-                  <td>App Development</td>
-                  <td>January 27, 2022</td>
-                  <td>$100.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#4585</th>
-                  <td>Graphic</td>
-                  <td>May 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-primary-opacity">
-                      Processing
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#9656</th>
-                  <td>Graphic</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-warning-opacity color-warning">
-                      On Hold
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#2045</th>
-                  <td>Application</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Canceled
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#5478</th>
-                  <td>App Development</td>
-                  <td>January 27, 2022</td>
-                  <td>$100.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#4585</th>
-                  <td>Graphic</td>
-                  <td>May 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-primary-opacity">
-                      Processing
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#9656</th>
-                  <td>Graphic</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-warning-opacity color-warning">
-                      On Hold
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th>#2045</th>
-                  <td>Application</td>
-                  <td>March 27, 2022</td>
-                  <td>$200.99</td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Canceled
-                    </span>
-                  </td>
-                </tr>
+                {orders.length > 0 ? (
+                  orders.map((order, index) => (
+                    <tr key={index}>
+                      <th>#{order.order_id}</th>
+                      <td>
+                        {order.items?.map(item => item.course?.title).join(", ") || "N/A"}
+                      </td>
+                      <td>{order.created_at}</td>
+                      <td>${order.final_amount}</td>
+                      <td>
+                        <span className={`rbt-badge-5 ${order.status === 'paid' ? 'bg-color-success-opacity color-success' : 'bg-primary-opacity'}`}>
+                          {order.status_label}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center">No orders found</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

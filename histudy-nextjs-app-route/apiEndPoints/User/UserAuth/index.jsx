@@ -126,6 +126,29 @@ const UserAuth = {
     url: "/api/user/social-login",
     method: "POST",
   },
+
+  updateProfile: {
+    url: "/api/profile",
+    method: "POST",
+  },
+
+  profileAvatar: {
+    url: "/api/profile/avatar",
+    method: "POST",
+  },
+
+  profileChangePassword: {
+    url: "/api/profile/change-password",
+    method: "POST",
+  },
+
+  profileChangeContact: {
+    url: "/api/profile/change-contact",
+    method: "POST",
+  },
+
+
+
 };
 
 // Export the Auth object for use in other modules

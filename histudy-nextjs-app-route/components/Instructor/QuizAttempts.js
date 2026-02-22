@@ -1,10 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Select, { components } from "react-select";
 
+import { useAppContext } from "../../context/Context";
+
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue, hasValue } = props;
+  const nbValues = getValue().length;
+  if (!hasValue) {
+    return (
+      <components.ValueContainer {...props}>
+        {children}
+      </components.ValueContainer>
+    );
+  }
+  return (
+    <components.ValueContainer {...props}>
+      {`${nbValues} items selected`}
+    </components.ValueContainer>
+  );
+};
+
+const MultiValue = (props) => {
+  return "3 Selected";
+};
+
 const QuizAttempts = () => {
-  const components = { ValueContainer, MultiValue };
+  const { userData, loadingUser } = useAppContext();
+  const customComponents = { ValueContainer, MultiValue };
   const [course, setCourses] = useState({ value: "", label: "" });
   const [sortBy, setSortBy] = useState({ value: "Default", label: "Default" });
   const [sortByOffer, setSortByOffer] = useState({
@@ -12,16 +37,12 @@ const QuizAttempts = () => {
     label: "Free",
   });
 
-  const courses = [
-    { value: "Web Design HTML", label: "Web Design HTML" },
-    { value: "Graphic Photoshop", label: "Graphic Photoshop" },
-    { value: "English Career", label: "English Career" },
-    { value: "Spoken English Career", label: "Spoken English Career" },
-    { value: "Art Painting Experts", label: "Art Painting Experts" },
-    { value: "App Development Experts", label: "App Development Experts" },
-    { value: "Web Application Experts", label: "Web Application Experts" },
-    { value: "Php Development Experts", label: "Php Development Experts" },
-  ];
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const courses = (userData?.active_enrollments || []).map(en => ({
+    value: en.course?.id || en.course_id,
+    label: en.course?.title || "Unknown Course"
+  }));
 
   const sortByOptions = [
     { value: "Default", label: "Default" },
@@ -60,7 +81,7 @@ const QuizAttempts = () => {
                     options={courses}
                     closeMenuOnSelect={true}
                     isMulti
-                    components={components}
+                    components={customComponents}
                   />
                 </div>
               </div>
@@ -99,187 +120,80 @@ const QuizAttempts = () => {
             <table className="rbt-table table table-borderless">
               <thead>
                 <tr>
-                  <th>Quiz</th>
-                  <th>Qus</th>
-                  <th>TM</th>
-                  <th>CA</th>
-                  <th>Result</th>
-                  <th></th>
+                  <th>Quiz Name</th>
+                  <th>Score %</th>
+                  <th>Attempt</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <th>
-                    <p className="b3 mb--5">December 26, 2022</p>
-                    <span className="h6 mb--5">
-                      Write a short essay on yourself using the 5
-                    </span>
-                    <p className="b3">
-                      Student: <a href="#">John Due</a>
-                    </p>
-                  </th>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <p className="b3">8</p>
-                  </td>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Pass
-                    </span>
-                  </td>
-                  <td>
-                    <div className="rbt-button-group justify-content-end">
-                      <a
-                        className="rbt-btn btn-xs bg-primary-opacity radius-round"
-                        href="#"
-                        title="Edit"
-                      >
-                        <i className="feather-edit pl--0" />
-                      </a>
-                      <a
-                        className="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger"
-                        href="#"
-                        title="Delete"
-                      >
-                        <i className="feather-trash-2 pl--0" />
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>
-                    <p className="b3 mb--5">December 26, 2022</p>
-                    <span className="h6 mb--5">
-                      Write a short essay on yourself using the 5
-                    </span>
-                    <p className="b3">
-                      Student: <a href="#">John Due</a>
-                    </p>
-                  </th>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <p className="b3">8</p>
-                  </td>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Fail
-                    </span>
-                  </td>
-                  <td>
-                    <div className="rbt-button-group justify-content-end">
-                      <a
-                        className="rbt-btn btn-xs bg-primary-opacity radius-round"
-                        href="#"
-                        title="Edit"
-                      >
-                        <i className="feather-edit pl--0" />
-                      </a>
-                      <a
-                        className="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger"
-                        href="#"
-                        title="Delete"
-                      >
-                        <i className="feather-trash-2 pl--0" />
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>
-                    <p className="b3 mb--5">December 26, 2022</p>
-                    <span className="h6 mb--5">
-                      Write a short essay on yourself using the 5
-                    </span>
-                    <p className="b3">
-                      Student: <a href="#">John Due</a>
-                    </p>
-                  </th>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <p className="b3">8</p>
-                  </td>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-success-opacity color-success">
-                      Pass
-                    </span>
-                  </td>
-                  <td>
-                    <div className="rbt-button-group justify-content-end">
-                      <a
-                        className="rbt-btn btn-xs bg-primary-opacity radius-round"
-                        href="#"
-                        title="Edit"
-                      >
-                        <i className="feather-edit pl--0" />
-                      </a>
-                      <a
-                        className="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger"
-                        href="#"
-                        title="Delete"
-                      >
-                        <i className="feather-trash-2 pl--0" />
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <th>
-                    <p className="b3 mb--5">December 26, 2022</p>
-                    <span className="h6 mb--5">
-                      Write a short essay on yourself using the 5
-                    </span>
-                    <p className="b3">
-                      Student: <a href="#">John Due</a>
-                    </p>
-                  </th>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <p className="b3">8</p>
-                  </td>
-                  <td>
-                    <p className="b3">4</p>
-                  </td>
-                  <td>
-                    <span className="rbt-badge-5 bg-color-danger-opacity color-danger">
-                      Fail
-                    </span>
-                  </td>
-                  <td>
-                    <div className="rbt-button-group justify-content-end">
-                      <a
-                        className="rbt-btn btn-xs bg-primary-opacity radius-round"
-                        href="#"
-                        title="Edit"
-                      >
-                        <i className="feather-edit pl--0" />
-                      </a>
-                      <a
-                        className="rbt-btn btn-xs bg-color-danger-opacity radius-round color-danger"
-                        href="#"
-                        title="Delete"
-                      >
-                        <i className="feather-trash-2 pl--0" />
-                      </a>
-                    </div>
-                  </td>
-                </tr>
+                {(userData?.quiz_attempts || []).length > 0 ? (
+                  userData.quiz_attempts.map((attempt, index) => (
+                    <tr key={index}>
+                      <th>
+                        <span className="h6 mb--5">{attempt.quiz?.title || "Quiz Name"}</span>
+                        <p className="b3">Date: {attempt.created_at || "N/A"}</p>
+                      </th>
+                      <td>
+                        <p className="b3">{attempt.score_percentage || 0}%</p>
+                      </td>
+                      <td>
+                        <p className="b3">{attempt.attempt_number || 1}</p>
+                      </td>
+                      <td>
+                        <div className="rbt-button-group justify-content-end">
+                          <Link
+                            className="rbt-btn btn-sm bg-primary-opacity radius-round"
+                            href={`/course-quiz/${attempt.quiz?.id || "#"}`}
+                          >
+                            Reattempt
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <>
+                    <tr>
+                      <th>
+                        <span className="h6 mb--5">User Interface Mock Quiz</span>
+                        <p className="b3">Date: December 26, 2024</p>
+                      </th>
+                      <td>
+                        <p className="b3">85%</p>
+                      </td>
+                      <td>
+                        <p className="b3">1</p>
+                      </td>
+                      <td>
+                        <div className="rbt-button-group justify-content-end">
+                          <Link className="rbt-btn btn-sm bg-primary-opacity radius-round" href="#">
+                            Reattempt
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>
+                        <span className="h6 mb--5">Advanced React Quiz</span>
+                        <p className="b3">Date: January 10, 2025</p>
+                      </th>
+                      <td>
+                        <p className="b3">40%</p>
+                      </td>
+                      <td>
+                        <p className="b3">2</p>
+                      </td>
+                      <td>
+                        <div className="rbt-button-group justify-content-end">
+                          <Link className="rbt-btn btn-sm bg-primary-opacity radius-round" href="#">
+                            Reattempt
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>
@@ -290,24 +204,3 @@ const QuizAttempts = () => {
 };
 
 export default QuizAttempts;
-
-const ValueContainer = ({ children, ...props }) => {
-  const { getValue, hasValue } = props;
-  const nbValues = getValue().length;
-  if (!hasValue) {
-    return (
-      <components.ValueContainer {...props}>
-        {children}
-      </components.ValueContainer>
-    );
-  }
-  return (
-    <components.ValueContainer {...props}>
-      {`${nbValues} items selected`}
-    </components.ValueContainer>
-  );
-};
-
-const MultiValue = (props) => {
-  return "3 Selected";
-};

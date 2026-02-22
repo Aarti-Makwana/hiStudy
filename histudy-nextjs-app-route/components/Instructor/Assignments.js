@@ -4,25 +4,23 @@ import Link from "next/link";
 import { useState } from "react";
 import Select, { components } from "react-select";
 
+import { useAppContext } from "../../context/Context";
+
 const Assignments = () => {
-  const components = { ValueContainer, MultiValue };
-  const [course, setCourses] = useState({ value: "", label: "" });
+  const { userData, loadingUser } = useAppContext();
+  const [course, setCourses] = useState(null);
   const [sortBy, setSortBy] = useState({ value: "Default", label: "Default" });
   const [sortByOffer, setSortByOffer] = useState({
     value: "Free",
     label: "Free",
   });
 
-  const courses = [
-    { value: "Web Design HTML", label: "Web Design HTML" },
-    { value: "Graphic Photoshop", label: "Graphic Photoshop" },
-    { value: "English Career", label: "English Career" },
-    { value: "Spoken English Career", label: "Spoken English Career" },
-    { value: "Art Painting Experts", label: "Art Painting Experts" },
-    { value: "App Development Experts", label: "App Development Experts" },
-    { value: "Web Application Experts", label: "Web Application Experts" },
-    { value: "Php Development Experts", label: "Php Development Experts" },
-  ];
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const courses = (userData?.active_enrollments || []).map(en => ({
+    value: en.course?.id || en.course_id,
+    label: en.course?.title || "Unknown Course"
+  }));
 
   const sortByOptions = [
     { value: "Default", label: "Default" },
@@ -44,7 +42,7 @@ const Assignments = () => {
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
         <div className="content">
           <div className="section-title">
-            <h4 className="rbt-title-style-3">Assignments</h4>
+            <h4 className="rbt-title-style-3">Assignments & Projects</h4>
           </div>
 
           <div className="rbt-dashboard-filter-wrapper">
@@ -60,8 +58,7 @@ const Assignments = () => {
                     onChange={setCourses}
                     options={courses}
                     closeMenuOnSelect={true}
-                    isMulti
-                    components={components}
+                    placeholder="Select Course"
                   />
                 </div>
               </div>
@@ -100,7 +97,7 @@ const Assignments = () => {
             <table className="rbt-table table table-borderless">
               <thead>
                 <tr>
-                  <th>Assignment Name</th>
+                  <th>Assignment/Project Name</th>
                   <th>Total Marks</th>
                   <th>Total Submit</th>
                   <th></th>
@@ -110,17 +107,17 @@ const Assignments = () => {
                 <tr>
                   <th>
                     <span className="h6 mb--5">
-                      Write Link short essay on yourself using the 5
+                      Final Year Research Project
                     </span>
                     <p className="b3">
                       Course: <Link href="#">Fundamentals 101</Link>
                     </p>
                   </th>
                   <td>
-                    <p className="b3">80</p>
+                    <p className="b3">100</p>
                   </td>
                   <td>
-                    <p className="b3">2</p>
+                    <p className="b3">5</p>
                   </td>
                   <td>
                     <div className="rbt-button-group justify-content-end">
@@ -251,24 +248,3 @@ const Assignments = () => {
 };
 
 export default Assignments;
-
-const ValueContainer = ({ children, ...props }) => {
-  const { getValue, hasValue } = props;
-  const nbValues = getValue().length;
-  if (!hasValue) {
-    return (
-      <components.ValueContainer {...props}>
-        {children}
-      </components.ValueContainer>
-    );
-  }
-  return (
-    <components.ValueContainer {...props}>
-      {`${nbValues} items selected`}
-    </components.ValueContainer>
-  );
-};
-
-const MultiValue = (props) => {
-  return "3 Selected";
-};

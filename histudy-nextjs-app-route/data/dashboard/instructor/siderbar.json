@@ -36,21 +36,6 @@
       "icon": "feather-shopping-bag"
     },
     {
-      "link": "/instructor-personal-courses",
-      "text": "My Courses",
-      "icon": "feather-monitor"
-    },
-    {
-      "link": "/instructor-announcements",
-      "text": "Announcements",
-      "icon": "feather-volume-2"
-    },
-    {
-      "link": "/instructor-quiz-attempts",
-      "text": "Quiz Attempts",
-      "icon": "feather-message-square"
-    },
-    {
       "link": "/instructor-assignments",
       "text": "Assignments",
       "icon": "feather-list"
