@@ -96,7 +96,9 @@ const SingleCourse = ({ getParams }) => {
                       text: content.title,
                       playIcon: content.icon === "play" || content.category?.slug === "lesson",
                       time: `${content.hours}h ${content.minutes}m`,
-                      status: !content.is_lock
+                      status: !content.is_lock,
+                      topicId: topic.id,
+                      contentId: content.id
                     })) || []
                   })) || []
                 }
@@ -161,7 +163,8 @@ const SingleCourse = ({ getParams }) => {
                 { text: "Skill Level", desc: apiData.difficulty_level || "All Levels" },
                 { text: "Language", desc: apiData.language || "English" },
                 { text: "Duration", desc: apiData.duration || "0 hours" }
-              ]
+              ],
+              slug: apiData.slug
             };
 
             setCourseData(adaptedData);
@@ -203,6 +206,7 @@ const SingleCourse = ({ getParams }) => {
               <div className="row g-5">
                 <CourseDetailsOne
                   checkMatchCourses={courseData}
+                  courseSlug={courseId}
                 />
               </div>
             </div>

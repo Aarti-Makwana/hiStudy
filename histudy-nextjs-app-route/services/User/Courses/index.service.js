@@ -46,4 +46,20 @@ export const UserCoursesServices = {
     }
   },
 
+  UserGetSingleCourseTopicContent: async (topic_id, content_id) => {
+    try {
+      const payload = {
+        ...UserCourses.getsingleCourseTopicContent,
+        url: UserCourses.getsingleCourseTopicContent.url
+          .replace("{topic_id}", topic_id)
+          .replace("{content_id}", content_id),
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
 };

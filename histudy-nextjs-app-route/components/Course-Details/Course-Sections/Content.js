@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 
-const Content = ({ checkMatchCourses }) => {
+const Content = ({ checkMatchCourses, courseSlug }) => {
   return (
     <>
       <div className="rbt-course-feature-inner">
@@ -40,7 +40,7 @@ const Content = ({ checkMatchCourses }) => {
                     <ul className="rbt-course-main-content liststyle">
                       {item.listItem.map((list, subIndex) => (
                         <li key={subIndex}>
-                          <Link href="/lesson">
+                          <Link href={`/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`}>
                             <div className="course-content-left">
                               {list.playIcon ? (
                                 <i className="feather-play-circle"></i>

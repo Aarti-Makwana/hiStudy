@@ -1,30 +1,57 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import LessonData from "../../data/lesson.json";
 
-const LessonSidebar = () => {
+const LessonSidebar = ({ courseData, courseSlug }) => {
   const [activeTab, setActiveTab] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentContentId = searchParams.get("content_id");
 
-  const isActive = (href) => pathname.startsWith(href);
+  const isActive = (contentId) => currentContentId === String(contentId);
 
   useEffect(() => {
-    const lessonItems = LessonData.lesson;
+    if (courseData?.topics) {
+      courseData.topics.forEach((topic) => {
+        const matchedItem = topic.course_contents?.find(
+          (item) => String(item.id) === currentContentId
+        );
+        if (matchedItem) {
+          setActiveTab(topic.id);
+        }
+      });
+    } else {
+      const lessonItems = LessonData.lesson;
+      lessonItems.forEach((lesson) => {
+        const matchedItem = lesson.listItem.find((item) =>
+          pathname.startsWith(item.lssonLink)
+        );
+        if (matchedItem) {
+          setActiveTab(lesson.id);
+        }
+      });
+    }
+  }, [currentContentId, pathname, courseData]);
 
-    lessonItems.forEach((lesson) => {
-      const matchedItem = lesson.listItem.find((item) =>
-        isActive(item.lssonLink)
+  const topics = courseData?.topics || [];
+
+  const filteredTopics = topics
+    .map((topic) => {
+      const filteredContents = topic.course_contents?.filter((content) =>
+        content.title.toLowerCase().includes(searchValue.toLowerCase())
       );
-
-      if (matchedItem) {
-        setActiveTab(lesson.id);
-      }
-    });
-  }, [pathname]);
+      return { ...topic, course_contents: filteredContents };
+    })
+    .filter(
+      (topic) =>
+        topic.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+        topic.course_contents.length > 0
+    );
 
   return (
     <>
@@ -33,31 +60,109 @@ const LessonSidebar = () => {
           <h4 className="rbt-title-style-3">Course Content</h4>
         </div>
         <div className="lesson-search-wrapper">
-          <form action="#" className="rbt-search-style-1">
+          <div className="rbt-search-style-1">
             <input
               className="rbt-search-active"
               type="text"
               placeholder="Search Lesson"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
             />
             <button className="search-btn disabled">
               <i className="feather-search"></i>
             </button>
-          </form>
+          </div>
         </div>
         <hr className="mt--10" />
         <div className="rbt-accordion-style rbt-accordion-02 for-right-content accordion">
           <div className="accordion" id="accordionExampleb2">
-            {LessonData &&
-              LessonData.lesson.map((data, index) => (
+            {filteredTopics.length > 0
+              ? filteredTopics.map((data, index) => (
                 <div className="accordion-item card" key={index}>
                   <h2
                     className="accordion-header card-header"
                     id={`headingTwo${index + 1}`}
                   >
                     <button
-                      className={`accordion-button ${
-                        data.id === activeTab ? "" : "collapsed"
+                      className={`accordion-button ${data.id === activeTab ? "" : "collapsed"
+                        }`}
+                      type="button"
+                      data-bs-toggle="collapse"
+                      aria-expanded={data.id === activeTab}
+                      data-bs-target={`#collapseTwo${index + 1}`}
+                      aria-controls={`collapseTwo${index + 1}`}
+                      onClick={() => setActiveTab(data.id)}
+                    >
+                      {data.name}
+                      <span className="rbt-badge-5 ml--10">
+                        {data.progres?.completed || 0}/{data.course_contents?.length || 0}
+                      </span>
+                    </button>
+                  </h2>
+                  <div
+                    id={`collapseTwo${index + 1}`}
+                    className={`accordion-collapse collapse ${data.id === activeTab ? "show" : ""
                       }`}
+                    aria-labelledby={`headingTwo${index + 1}`}
+                  >
+                    <div className="accordion-body card-body">
+                      <ul className="rbt-course-main-content liststyle">
+                        {data.course_contents?.map((innerData, innerIndex) => (
+                          <li key={innerIndex}>
+                            <Link
+                              className={isActive(innerData.id) ? "active" : ""}
+                              href={`/lesson?course_slug=${courseSlug}&topic_id=${data.id}&content_id=${innerData.id}`}
+                              onClick={() => setActiveTab(data.id)}
+                            >
+                              <div className="course-content-left">
+                                <i
+                                  className={`feather-${innerData.category?.slug === "lesson"
+                                    ? "play-circle"
+                                    : "file-text"
+                                    }`}
+                                ></i>
+                                <span className="text">{innerData.title}</span>
+                              </div>
+                              <div className="course-content-right">
+                                {innerData.hours > 0 || innerData.minutes > 0 ? (
+                                  <span className="min-lable">
+                                    {innerData.hours > 0 ? `${innerData.hours}h ` : ""}{innerData.minutes} min
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+                                <span
+                                  className={`rbt-check ${isActive(innerData.id) ? "" : "unread"
+                                    }`}
+                                >
+                                  <i
+                                    className={`feather-${isActive(innerData.id) ? "check" : "circle"
+                                      }`}
+                                  ></i>
+                                </span>
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              ))
+              : (topics.length > 0 && searchValue) ? (
+                <div className="text-center p--20">No lessons found.</div>
+              ) : courseSlug ? (
+                // If we have a courseSlug but no topics yet, it's loading or empty. Don't show static data.
+                <div className="text-center p--20">Loading content...</div>
+              ) : LessonData.lesson.map((data, index) => (
+                <div className="accordion-item card" key={index}>
+                  <h2
+                    className="accordion-header card-header"
+                    id={`headingTwo${index + 1}`}
+                  >
+                    <button
+                      className={`accordion-button ${data.id === activeTab ? "" : "collapsed"
+                        }`}
                       type="button"
                       data-bs-toggle="collapse"
                       aria-expanded={data.id === activeTab}
@@ -66,66 +171,12 @@ const LessonSidebar = () => {
                       onClick={() => setActiveTab(data.id)}
                     >
                       {data.title}
-                      {data.title === "Histudy Quiz" ? (
-                        <span className="rbt-badge-5 ml--10">
-                          {isActive("/questions-types")
-                            ? 1
-                            : isActive("/all-questions")
-                            ? 2
-                            : isActive("/pagination-quiz")
-                            ? 3
-                            : isActive("/single-question")
-                            ? 4
-                            : isActive("/quiz-with-point")
-                            ? 5
-                            : isActive("/quiz-with-custom-timer")
-                            ? 6
-                            : isActive("/quiz-passing-grade")
-                            ? 7
-                            : isActive("/lesson-quiz")
-                            ? 8
-                            : isActive("/lesson-quiz-result")
-                            ? 9
-                            : 0}
-                          /{data.listItem.length}
-                        </span>
-                      ) : data.title === "Welcome History" ? (
-                        <span className="rbt-badge-5 ml--10">
-                          {isActive("/lesson")
-                            ? 1
-                            : isActive("/lesson-intro")
-                            ? 2
-                            : 0}
-                          /{data.listItem.length}
-                        </span>
-                      ) : data.title === "Welcome Lessons" ? (
-                        <span className="rbt-badge-5 ml--10">
-                          {isActive("/lesson")
-                            ? 1
-                            : isActive("/lesson-intro")
-                            ? 2
-                            : 0}
-                          /{data.listItem.length}
-                        </span>
-                      ) : data.title === "Histudy Assignments" ? (
-                        <span className="rbt-badge-5 ml--10">
-                          {isActive("/lesson-assignments")
-                            ? 1
-                            : isActive("/lesson-assignments-submit")
-                            ? 2
-                            : 0}
-                          /{data.listItem.length}
-                        </span>
-                      ) : (
-                        ""
-                      )}
                     </button>
                   </h2>
                   <div
                     id={`collapseTwo${index + 1}`}
-                    className={`accordion-collapse collapse ${
-                      data.id === activeTab ? "show" : ""
-                    }`}
+                    className={`accordion-collapse collapse ${data.id === activeTab ? "show" : ""
+                      }`}
                     aria-labelledby={`headingTwo${index + 1}`}
                   >
                     <div className="accordion-body card-body">
@@ -134,7 +185,9 @@ const LessonSidebar = () => {
                           <li key={innerIndex}>
                             <Link
                               className={
-                                isActive(innerData.lssonLink) ? "active" : ""
+                                pathname.startsWith(innerData.lssonLink)
+                                  ? "active"
+                                  : ""
                               }
                               href={`${innerData.lssonLink}`}
                               onClick={() => setActiveTab(data.id)}
@@ -144,11 +197,10 @@ const LessonSidebar = () => {
                                   <i className="feather-help-circle"></i>
                                 ) : (
                                   <i
-                                    className={`feather-${
-                                      innerData.iconFile
-                                        ? "file-text"
-                                        : "play-circle"
-                                    }`}
+                                    className={`feather-${innerData.iconFile
+                                      ? "file-text"
+                                      : "play-circle"
+                                      }`}
                                   ></i>
                                 )}
                                 <span className="text">
@@ -164,18 +216,16 @@ const LessonSidebar = () => {
                                   ""
                                 )}
                                 <span
-                                  className={`rbt-check ${
-                                    isActive(innerData.lssonLink)
-                                      ? ""
-                                      : "unread"
-                                  }`}
+                                  className={`rbt-check ${pathname.startsWith(innerData.lssonLink)
+                                    ? ""
+                                    : "unread"
+                                    }`}
                                 >
                                   <i
-                                    className={`feather-${
-                                      isActive(innerData.lssonLink)
-                                        ? "check"
-                                        : "circle"
-                                    }`}
+                                    className={`feather-${pathname.startsWith(innerData.lssonLink)
+                                      ? "check"
+                                      : "circle"
+                                      }`}
                                   ></i>
                                 </span>
                               </div>

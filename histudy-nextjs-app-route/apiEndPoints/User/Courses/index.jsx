@@ -11,6 +11,11 @@ const UserCourses = {
   getAllTestimonials: {
     url: "/api/v1/testimonial/get-all",
     method: "GET",
+  },
+
+  getsingleCourseTopicContent: {
+    url: "/api/v1/getsingle-course-topic/{topic_id}/contents/{content_id}",
+    method: "GET",
   }
 };
 

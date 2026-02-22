@@ -9,7 +9,7 @@ import Requirements from "./Course-Sections/Requirements";
 import Review from "./Course-Sections/Review";
 import Viedo from "./Course-Sections/Viedo";
 
-const CourseDetailsOne = ({ checkMatchCourses }) => {
+const CourseDetailsOne = ({ checkMatchCourses, courseSlug }) => {
   return (
     <>
       <div className="col-lg-8">
@@ -34,7 +34,7 @@ const CourseDetailsOne = ({ checkMatchCourses }) => {
           >
             {checkMatchCourses &&
               checkMatchCourses.courseContent.map((data, index) => (
-                <Content {...data} key={index} checkMatchCourses={data} />
+                <Content {...data} key={index} checkMatchCourses={data} courseSlug={courseSlug} />
               ))}
           </div>
 
