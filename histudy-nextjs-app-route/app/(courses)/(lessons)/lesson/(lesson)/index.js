@@ -7,6 +7,7 @@ import LessonPagination from "@/components/Lesson/LessonPagination";
 import LessonTop from "@/components/Lesson/LessonTop";
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 import Loader from "@/components/Common/Loader";
+import QuizHead from "@/components/Lesson/Quiz/QuizHead";
 
 const LessonPage = () => {
   const searchParams = useSearchParams();
@@ -100,20 +101,34 @@ const LessonPage = () => {
     fetchLessonContent();
   }, [topic_id, content_id]);
 
-  const renderVideoPlayer = () => {
+  const renderLessonAsset = () => {
     if (!lessonContent?.file?.url && !lessonContent?.video_url && !lessonContent?.url) {
       return (
         <div className="rbt-shadow-box text-center p--50">
-          <h5>No video available for this lesson.</h5>
+          <h5>No content available for this lesson.</h5>
         </div>
       );
     }
 
-    const videoUrl = lessonContent.file?.url || lessonContent.url || lessonContent.video_url;
+    const assetUrl = lessonContent.file?.url || lessonContent.url || lessonContent.video_url;
+
+    // Check if it's a document/PDF
+    if (lessonContent.icon === "document" || assetUrl.toLowerCase().includes(".pdf")) {
+      return (
+        <div className="rbt-shadow-box overflow-hidden" style={{ minHeight: "800px" }}>
+          <iframe
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(assetUrl)}&embedded=true`}
+            className="w-100"
+            style={{ height: "800px", border: "none" }}
+            title="Document Preview"
+          ></iframe>
+        </div>
+      );
+    }
 
     // Check if it's a Vimeo URL
-    if (videoUrl.includes("vimeo.com")) {
-      const vimeoId = videoUrl.split("/").pop();
+    if (assetUrl.includes("vimeo.com")) {
+      const vimeoId = assetUrl.split("/").pop();
       return (
         <div className="plyr__video-embed rbtplayer">
           <iframe
@@ -128,14 +143,14 @@ const LessonPage = () => {
     }
 
     // Check if it's a YouTube URL
-    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+    if (assetUrl.includes("youtube.com") || assetUrl.includes("youtu.be")) {
       let youtubeId = "";
-      if (videoUrl.includes("v=")) {
-        youtubeId = videoUrl.split("v=")[1].split("&")[0];
-      } else if (videoUrl.includes("youtu.be/")) {
-        youtubeId = videoUrl.split("youtu.be/")[1].split("?")[0];
+      if (assetUrl.includes("v=")) {
+        youtubeId = assetUrl.split("v=")[1].split("&")[0];
+      } else if (assetUrl.includes("youtu.be/")) {
+        youtubeId = assetUrl.split("youtu.be/")[1].split("?")[0];
       } else {
-        youtubeId = videoUrl.split("/").pop();
+        youtubeId = assetUrl.split("/").pop();
       }
       return (
         <div className="plyr__video-embed rbtplayer">
@@ -156,7 +171,7 @@ const LessonPage = () => {
           className="w-100"
           controls
           style={{ minHeight: "615px" }}
-          src={videoUrl}
+          src={assetUrl}
         ></video>
       </div>
     );
@@ -183,9 +198,74 @@ const LessonPage = () => {
               </div>
             ) : (
               <div className="inner">
-                {renderVideoPlayer()}
                 <div className="content">
-                  <div className="section-title">
+                  {lessonContent?.category?.slug === "quiz" || (lessonContent?.course_quizzes && lessonContent.course_quizzes.length > 0) ? (
+                    <form id="quiz-form" className="quiz-form-wrapper">
+                      <div className="question">
+                        <QuizHead
+                          questionNo={1}
+                          totalQuestion={lessonContent?.course_quizzes?.length || 0}
+                          attemp={1}
+                        />
+                        {lessonContent?.course_quizzes?.map((quiz, qIndex) => (
+                          <div key={quiz.id} className="rbt-single-quiz mb--40">
+                            <div className="d-flex align-items-start">
+                              <h4 className="mb--0 mr--15">{qIndex + 1}.</h4>
+                              <div
+                                className="question-title-content"
+                                dangerouslySetInnerHTML={{ __html: quiz.question }}
+                              />
+                            </div>
+                            <div className="row g-3 mt--10">
+                              {quiz.options?.map((option, oIndex) => (
+                                <div className="col-lg-6" key={option.id}>
+                                  {quiz.type === "multiple" ? (
+                                    <p className="rbt-checkbox-wrapper">
+                                      <input
+                                        id={`option-${option.id}`}
+                                        name={`quiz-${quiz.id}`}
+                                        type="checkbox"
+                                      />
+                                      <label htmlFor={`option-${option.id}`}>
+                                        {option.option_text}
+                                      </label>
+                                    </p>
+                                  ) : (
+                                    <div className="rbt-form-check">
+                                      <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name={`quiz-${quiz.id}`}
+                                        id={`option-${option.id}`}
+                                      />
+                                      <label
+                                        className="form-check-label"
+                                        htmlFor={`option-${option.id}`}
+                                      >
+                                        {option.option_text}
+                                      </label>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        {lessonContent?.course_quizzes?.length > 0 && (
+                          <div className="rbt-quiz-btn-wrapper mt--30">
+                            <button className="rbt-btn btn-gradient btn-sm" type="button">
+                              Submit Quiz
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </form>
+                  ) : (
+                    renderLessonAsset()
+                  )}
+
+                  <div className="section-title mt--40">
                     {lessonContent?.topic?.name && (
                       <span className="subtitle-5 mb--10 d-block">
                         {lessonContent.topic.name}
@@ -210,7 +290,10 @@ const LessonPage = () => {
 
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: lessonContent?.description || lessonContent?.summary || "No description available for this lesson.",
+                        __html:
+                          lessonContent?.description ||
+                          lessonContent?.summary ||
+                          "No description available for this lesson.",
                       }}
                     />
                   </div>

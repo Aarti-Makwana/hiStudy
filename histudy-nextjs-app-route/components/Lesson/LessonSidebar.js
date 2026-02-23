@@ -118,7 +118,9 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
                                 <i
                                   className={`feather-${innerData.category?.slug === "lesson"
                                     ? "play-circle"
-                                    : "file-text"
+                                    : innerData.category?.slug === "quiz"
+                                      ? "help-circle"
+                                      : "file-text"
                                     }`}
                                 ></i>
                                 <span className="text">{innerData.title}</span>
