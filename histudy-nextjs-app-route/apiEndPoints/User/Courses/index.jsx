@@ -16,7 +16,19 @@ const UserCourses = {
   getsingleCourseTopicContent: {
     url: "/api/v1/getsingle-course-topic/{topic_id}/contents/{content_id}",
     method: "GET",
-  }
+  },
+
+  // POST body: { lesson_id: string, current_time: number (seconds) }
+  trackLessonProgress: {
+    url: "/api/v1/lesson-progress",
+    method: "POST",
+  },
+
+  // GET /api/v1/lesson-progress/{content_id}
+  getLessonProgress: {
+    url: "/api/v1/lesson-progress",
+    method: "GET",
+  },
 };
 
 export default UserCourses;

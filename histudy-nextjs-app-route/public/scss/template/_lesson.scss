@@ -1,11 +1,21 @@
 /*--------------------------
-    Lesson Styles  
+    Lesson Styles
 -----------------------------*/
+
+/* ── Layout: full-height, independent scrollbars (Point 8) ── */
+.rbt-lesson-area {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
 .rbt-lesson-content-wrapper {
     display: flex;
     position: relative;
     width: 100%;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 
     @media #{$md-layout} {
         flex-direction: column;
@@ -14,49 +24,29 @@
     @media #{$sm-layout} {
         flex-direction: column;
     }
-
-    .rbt-lesson-leftsidebar {
-        flex: 0 0 400px;
-        width: 400px;
-        background-color: var(--color-extra2);
-        border-right: 1px solid var(--color-border);
-        max-height: 100%;
-        overflow-y: auto;
-
-        @media #{$md-layout} {
-            width: 100%;
-            border-right: 0 none;
-        }
-
-        @media #{$sm-layout} {
-            width: 100%;
-            border-right: 0 none;
-        }
-    }
-
-    .rbt-lesson-rightsidebar {
-        position: relative;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-
-
-
-    }
 }
 
-
-
-
-/*-------------------------
-    Lesson Page Style  
---------------------------*/
-
+/* ── Left Sidebar (Point 8: own scrollbar, Point 14: overlay on mobile) ── */
 .rbt-lesson-leftsidebar {
+    flex: 0 0 360px;
+    width: 360px;
+    background-color: var(--color-extra2);
+    border-right: 1px solid var(--color-border);
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 0.3s ease, width 0.3s ease;
+    z-index: 100;
 
+    // Point 7: padding inside
     .rbt-title-style-3,
     .lesson-search-wrapper {
-        padding: 16px;
+        padding: 14px 16px;
+    }
+
+    .rbt-title-style-3 {
+        margin-bottom: 6px;
+        font-size: 15px;
     }
 
     .rbt-course-main-content {
@@ -73,40 +63,105 @@
         }
     }
 
-    .rbt-title-style-3 {
-        margin-bottom: 10px;
+    @media #{$md-layout} {
+        width: 100%;
+        border-right: 0 none;
+        height: auto;
+        max-height: 50vh;
+    }
+
+    @media #{$sm-layout} {
+        width: 100%;
+        border-right: 0 none;
+        height: auto;
+        max-height: 50vh;
+    }
+
+    // Point 14: overlay on lg when hidden
+    &.sidebar-hide {
+        @media (min-width: 993px) {
+            width: 0;
+            flex: 0 0 0px;
+            overflow: hidden;
+        }
     }
 }
 
+/* Point 14: overlay backdrop */
+.lesson-sidebar-overlay {
+    display: none;
 
+    @media (max-width: 992px) {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 99;
+    }
+}
+
+/* Point 14: fixed overlay sidebar on mobile */
+@media (max-width: 992px) {
+    .rbt-lesson-leftsidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 100;
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+
+        &.sidebar-hide {
+            transform: translateX(-100%);
+            width: 360px !important;
+        }
+    }
+}
+
+/* ── Right Content (Point 8: own scrollbar) ── */
 .rbt-lesson-rightsidebar {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 
+    &.sidebar-hide {
+        width: 100%;
+    }
+
+    .lesson-right-scroll {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lesson-main-content {
+        flex: 1 1 auto;
+    }
+
+    // legacy inner/content (keep for quiz etc.)
     .inner {
-        padding: 100px 0;
-
-        @media #{$md-layout} {
-            padding: 30px 0;
-        }
-
-        @media #{$sm-layout} {
-            padding: 30px 0;
-        }
+        padding: 0;
     }
 
     .content {
-        padding: 40px 50px;
-        // width: 85%;
+        padding: 30px 40px;
         width: 95%;
         margin: 0 auto;
 
         @media #{$md-layout} {
-            padding: 40px 30px;
+            padding: 20px;
             width: 100%;
         }
 
         @media #{$sm-layout} {
-            padding: 40px 30px;
+            padding: 20px;
             width: 100%;
         }
     }
@@ -115,12 +170,11 @@
     .rbt-form-check {
         label {
             border: 2px solid var(--color-border);
-            height: 40px;
+            height: 44px;
             display: flex;
             align-items: center;
-            padding: 20px;
+            padding: 20px 20px 20px 34px;
             border-radius: 6px;
-            padding-left: 30px;
             cursor: pointer;
         }
 
@@ -146,9 +200,529 @@
             left: 13px;
         }
     }
-
 }
 
+/* ── Sidebar hide transition for wrapper ── */
+.rbt-lesson-content-wrapper.sidebar-hide {
+    .rbt-lesson-leftsidebar {
+        flex: 0 0 0;
+        width: 0;
+        overflow: hidden;
+    }
+}
+
+
+/*--------------------------
+    Lesson Top Bar (Points 1, 5, 11)
+-----------------------------*/
+.lesson-top-bar {
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 50px;
+    flex-shrink: 0;
+    z-index: 10;
+
+    .lesson-top-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .lesson-back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        flex-shrink: 0;
+        transition: background 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        i {
+            font-size: 18px;
+        }
+    }
+
+    .lesson-top-title {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+        color: #fff;
+        font-weight: 500;
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .lesson-hamburger-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        &.sidebar-hidden i::before {
+            content: "\e912"; // feather bars / open
+        }
+
+        i {
+            font-size: 20px;
+        }
+    }
+}
+
+
+/*--------------------------
+    Progress Tab (Point 3)
+-----------------------------*/
+.lesson-progress-tab {
+    padding: 14px 16px 10px;
+    background: var(--color-extra2);
+    border-bottom: 1px solid var(--color-border);
+
+    .lesson-progress-header {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .lesson-progress-percent {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-primary);
+        line-height: 1;
+    }
+
+    .lesson-progress-label {
+        font-size: 12px;
+        color: var(--color-body);
+        font-weight: 500;
+    }
+
+    .lesson-progress-bar-track {
+        height: 6px;
+        background: var(--color-border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .lesson-progress-bar-fill {
+        height: 100%;
+        background: var(--color-primary);
+        border-radius: 3px;
+        transition: width 0.4s ease;
+    }
+
+    .lesson-progress-stats {
+        display: flex;
+        gap: 0;
+        justify-content: space-between;
+    }
+
+    .lesson-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+
+        i {
+            font-size: 14px;
+            color: var(--color-primary);
+        }
+
+        .lesson-stat-label {
+            font-size: 10px;
+            color: var(--color-body);
+            line-height: 1;
+        }
+
+        .lesson-stat-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-heading);
+            line-height: 1;
+        }
+    }
+}
+
+
+/*--------------------------
+    Accordion Heading – Topic badges (Points 4, 7)
+-----------------------------*/
+.accordion-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    .topic-title-text {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .topic-badges {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .topic-time-badge {
+        font-size: 10px;
+        background: rgba(var(--color-primary-rgb, 82, 130, 255), 0.12);
+        color: var(--color-primary);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+}
+
+
+/*--------------------------
+    Subheading Row (Point 13)
+-----------------------------*/
+.rbt-course-main-content {
+    li {
+        a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            gap: 8px;
+            min-height: 54px; // bigger tab height
+            text-decoration: none;
+            border-bottom: 1px solid var(--color-border);
+            transition: background 0.2s;
+
+            &:hover,
+            &.active {
+                background: var(--primary-opacity);
+            }
+
+            .lesson-item-left {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                min-width: 0;
+                flex: 1 1 auto;
+
+                i {
+                    font-size: 16px;
+                    color: var(--color-primary);
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                }
+
+                .lesson-item-text-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    min-width: 0;
+                }
+
+                .lesson-item-title {
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: var(--color-heading);
+                    line-height: 1.3;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                }
+
+                .lesson-item-time {
+                    font-size: 11px;
+                    color: var(--color-body);
+                    line-height: 1;
+                }
+            }
+
+            .lesson-item-right {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-shrink: 0;
+
+                .lesson-item-percent {
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: var(--color-primary);
+                    background: rgba(var(--color-primary-rgb, 82, 130, 255), 0.1);
+                    border-radius: 4px;
+                    padding: 2px 5px;
+                }
+
+                .rbt-check {
+                    i {
+                        font-size: 16px;
+                        color: var(--color-primary);
+                    }
+
+                    &.unread i {
+                        color: var(--color-border);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*--------------------------
+    Video – 16/9 aspect ratio (Point 6)
+-----------------------------*/
+.lesson-video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+
+    iframe,
+    video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
+}
+
+
+/*--------------------------
+    PDF viewer (Point 12)
+-----------------------------*/
+.lesson-content-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--color-border);
+    background: var(--color-extra2);
+    padding: 0 16px;
+
+    .lesson-content-tab-btn {
+        padding: 10px 18px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-body);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+
+        &.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        i {
+            font-size: 15px;
+        }
+    }
+}
+
+.lesson-pdf-viewer {
+    width: 100%;
+    height: 80vh;
+    background: #f5f5f5;
+
+    .lesson-pdf-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+}
+
+
+/*--------------------------
+    Chat & Summary Tabs (Points 9, 10)
+-----------------------------*/
+.lesson-bottom-tabs-wrapper {
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.lesson-bottom-tab-bar {
+    display: flex;
+    gap: 0;
+    background: var(--color-extra2);
+    border-bottom: 2px solid var(--color-border);
+    padding: 0 16px;
+
+    .lesson-bottom-tab-btn {
+        padding: 12px 20px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-body);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: color 0.2s;
+
+        &.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        i {
+            font-size: 16px;
+        }
+    }
+}
+
+.lesson-bottom-tab-content {
+    min-height: 240px;
+}
+
+/* Chat area */
+.lesson-chat-area {
+    display: flex;
+    flex-direction: column;
+    height: 320px;
+
+    .lesson-chat-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-extra2);
+
+        i {
+            font-size: 15px;
+            color: var(--color-body);
+            flex-shrink: 0;
+        }
+
+        .lesson-chat-filter-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            outline: none;
+            color: var(--color-heading);
+
+            &::placeholder {
+                color: var(--color-body);
+            }
+        }
+    }
+
+    .lesson-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+
+        .lesson-chat-empty {
+            text-align: center;
+            color: var(--color-body);
+            font-size: 13px;
+            margin-top: 30px;
+        }
+    }
+
+    .lesson-chat-input-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-extra2);
+
+        .lesson-chat-input {
+            flex: 1;
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+
+            &:focus {
+                border-color: var(--color-primary);
+            }
+        }
+
+        .lesson-chat-send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transition: opacity 0.2s;
+
+            &:hover {
+                opacity: 0.85;
+            }
+
+            i {
+                font-size: 16px;
+            }
+        }
+    }
+}
+
+/* Summary area */
+.lesson-summary-area {
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-body);
+}
+
+
+/*--------------------------
+    Quiz styles
+-----------------------------*/
 .quiz-result-enter {
     opacity: 0;
     visibility: hidden;
@@ -175,14 +749,6 @@
     transition: opacity 300ms, transform 300ms;
 }
 
-.rbt-lesson-rightsidebar {
-    &.lesson-video {
-        .inner {
-            padding: 0;
-        }
-    }
-}
-
 .quize-top-meta {
     display: flex;
     align-items: center;
@@ -199,6 +765,9 @@
 }
 
 
+/*--------------------------
+    File Upload
+-----------------------------*/
 .rbt-custom-file-upload {
     position: relative;
     display: flex;
@@ -245,62 +814,58 @@
 }
 
 
+/*--------------------------
+    Video Progress Bar Widget
+-----------------------------*/
+.lesson-video-progress-bar-wrapper {
+    padding: 10px 16px 12px;
+    background: var(--color-extra2);
+    border-top: 1px solid var(--color-border);
 
-/*----------------------
-    Lesson Top Bar  
--------------------------*/
-
-.lesson-top-bar {
-    background: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 20px;
-    padding-right: 10px;
-
-    h5 {
-        margin-bottom: 0;
-        color: #fff;
-        font-weight: 500;
+    .lesson-vp-bar-track {
+        height: 6px;
+        background: var(--color-border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 8px;
     }
 
-    .rbt-round-btn {
-        i {
-            color: #fff;
-        }
-
-        &:hover {
-            i {
-                color: var(--color-primary);
-            }
-        }
+    .lesson-vp-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--color-primary), #6a9cff);
+        border-radius: 3px;
+        transition: width 0.5s ease;
     }
 
-    .lesson-top-left {
+    .lesson-vp-stats {
         display: flex;
         align-items: center;
-
-        .rbt-lesson-toggle {
-            margin-right: 20px;
-
-            .sidebar-hide {
-                i {
-                    &::before {
-                        transition: 0.3s;
-                    }
-
-                    &::before {
-                        content: "\e912";
-                    }
-                }
-            }
-        }
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
     }
-}
 
+    .lesson-vp-stat {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: var(--color-body);
+        white-space: nowrap;
 
-.rbt-lesson-leftsidebar {
-    &.sibebar-none {
-        display: none;
+        i {
+            font-size: 13px;
+            color: var(--color-primary);
+        }
+
+        strong {
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        &.lesson-vp-total {
+            margin-left: auto;
+            opacity: 0.7;
+        }
     }
 }

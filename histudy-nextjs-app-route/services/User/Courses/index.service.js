@@ -61,5 +61,38 @@ export const UserCoursesServices = {
       throw error;
     }
   },
+  // POST /api/v1/lesson-progress
+  // body: { lesson_id: string (content_id), current_time: number (seconds float) }
+  TrackLessonProgress: async (lessonId, currentTimeSec) => {
+    try {
+      const payload = {
+        ...UserCourses.trackLessonProgress,
+        data: {
+          lesson_id: lessonId,
+          current_time: currentTimeSec,
+        },
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  // GET /api/v1/lesson-progress/{content_id}
+  GetLessonProgress: async (contentId) => {
+    try {
+      const payload = {
+        ...UserCourses.getLessonProgress,
+        url: `${UserCourses.getLessonProgress.url}/${contentId}`,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 
 };

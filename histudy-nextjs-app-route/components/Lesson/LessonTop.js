@@ -6,28 +6,26 @@ const LessonTop = ({ sidebar, setSidebar, courseTitle, courseSlug }) => {
     <>
       <div className="lesson-top-bar">
         <div className="lesson-top-left">
-          <div className="rbt-lesson-toggle">
-            <button
-              className={`lesson-toggle-active btn-round-white-opacity ${!sidebar ? "sidebar-hide" : ""
-                }`}
-              title="Toggle Sidebar"
-              onClick={setSidebar}
-            >
-              <i className="feather-arrow-left"></i>
-            </button>
-          </div>
-          <h5>{courseTitle || "Course Lesson"}</h5>
-        </div>
-        <div className="lesson-top-right">
-          <div className="rbt-btn-close">
-            <Link
-              href={courseSlug ? `/course-details/${courseSlug}` : "/course-details"}
-              title="Go Back to Course"
-              className="rbt-round-btn"
-            >
-              <i className="feather-x"></i>
-            </Link>
-          </div>
+          {/* Back button → goes to course details */}
+          <Link
+            href={courseSlug ? `/course-details/${courseSlug}` : "/course-details"}
+            className="lesson-back-btn"
+            title="Back to Course"
+          >
+            <i className="feather-arrow-left"></i>
+          </Link>
+
+          {/* Course name */}
+          <h5 className="lesson-top-title">{courseTitle || "Course Lesson"}</h5>
+
+          {/* Hamburger / sidebar toggle */}
+          <button
+            className={`lesson-hamburger-btn ${!sidebar ? "sidebar-hidden" : ""}`}
+            title="Toggle Sidebar"
+            onClick={setSidebar}
+          >
+            <i className="feather-menu"></i>
+          </button>
         </div>
       </div>
     </>

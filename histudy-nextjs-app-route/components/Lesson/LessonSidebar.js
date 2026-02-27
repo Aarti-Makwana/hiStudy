@@ -6,9 +6,20 @@ import Link from "next/link";
 
 import LessonData from "../../data/lesson.json";
 
+// Helper: convert hours/minutes to total minutes
+const toTotalMinutes = (h, m) => (h || 0) * 60 + (m || 0);
+
+// Helper: format total minutes to "Xh Ym"
+const formatMinutes = (totalMin) => {
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+};
+
 const LessonSidebar = ({ courseData, courseSlug }) => {
   const [activeTab, setActiveTab] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentContentId = searchParams.get("content_id");
@@ -40,121 +51,196 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
 
   const topics = courseData?.topics || [];
 
-  const filteredTopics = topics
-    .map((topic) => {
-      const filteredContents = topic.course_contents?.filter((content) =>
-        content.title.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      return { ...topic, course_contents: filteredContents };
-    })
-    .filter(
-      (topic) =>
-        topic.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        topic.course_contents.length > 0
+  // ── Progress calculations ──────────────────────────────────────
+  const totalContents = topics.reduce(
+    (acc, t) => acc + (t.course_contents?.length || 0),
+    0
+  );
+  const completedContents = topics.reduce(
+    (acc, t) => acc + (t.progres?.completed || 0),
+    0
+  );
+  const progressPercent =
+    totalContents > 0 ? Math.round((completedContents / totalContents) * 100) : 0;
+
+  const totalMinutesAll = topics.reduce((acc, t) => {
+    return (
+      acc +
+      (t.course_contents || []).reduce(
+        (a, c) => a + toTotalMinutes(c.hours, c.minutes),
+        0
+      )
     );
+  }, 0);
+
+  const watchedMinutes = topics.reduce((acc, t) => {
+    const completed = t.progres?.completed || 0;
+    const contents = t.course_contents || [];
+    return (
+      acc +
+      contents
+        .slice(0, completed)
+        .reduce((a, c) => a + toTotalMinutes(c.hours, c.minutes), 0)
+    );
+  }, 0);
+
+  const remainingMinutes = totalMinutesAll - watchedMinutes;
+
+  // ── Content icon helper ────────────────────────────────────────
+  const getIcon = (content) => {
+    const slug = content?.category?.slug;
+    if (slug === "quiz") return "feather-help-circle";
+    if (slug === "assignment") return "feather-file-text";
+    if (content?.icon === "document" || content?.url?.toLowerCase().includes(".pdf"))
+      return "feather-book-open";
+    return "feather-play-circle";
+  };
 
   return (
     <>
       <div className="rbt-course-feature-inner rbt-search-activation">
-        <div className="section-title">
-          <h4 className="rbt-title-style-3">Course Content</h4>
-        </div>
-        <div className="lesson-search-wrapper">
-          <div className="rbt-search-style-1">
-            <input
-              className="rbt-search-active"
-              type="text"
-              placeholder="Search Lesson"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-            />
-            <button className="search-btn disabled">
-              <i className="feather-search"></i>
-            </button>
+
+        {/* ── Progress tab (Point 3) ── */}
+        {courseSlug && totalContents > 0 && (
+          <div className="lesson-progress-tab">
+            <div className="lesson-progress-header">
+              <span className="lesson-progress-percent">{progressPercent}%</span>
+              <span className="lesson-progress-label">Complete</span>
+            </div>
+            <div className="lesson-progress-bar-track">
+              <div
+                className="lesson-progress-bar-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="lesson-progress-stats">
+              <div className="lesson-stat">
+                <i className="feather-clock"></i>
+                <span className="lesson-stat-label">Total</span>
+                <span className="lesson-stat-value">{formatMinutes(totalMinutesAll)}</span>
+              </div>
+              <div className="lesson-stat">
+                <i className="feather-check-circle"></i>
+                <span className="lesson-stat-label">Watched</span>
+                <span className="lesson-stat-value">{formatMinutes(watchedMinutes)}</span>
+              </div>
+              <div className="lesson-stat">
+                <i className="feather-loader"></i>
+                <span className="lesson-stat-label">Remaining</span>
+                <span className="lesson-stat-value">{formatMinutes(remainingMinutes)}</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <hr className="mt--10" />
+        )}
+
+        <hr className="mt--5 mb--5" />
+
+        {/* ── Accordion ── */}
         <div className="rbt-accordion-style rbt-accordion-02 for-right-content accordion">
           <div className="accordion" id="accordionExampleb2">
-            {filteredTopics.length > 0
-              ? filteredTopics.map((data, index) => (
-                <div className="accordion-item card" key={index}>
-                  <h2
-                    className="accordion-header card-header"
-                    id={`headingTwo${index + 1}`}
-                  >
-                    <button
-                      className={`accordion-button ${data.id === activeTab ? "" : "collapsed"
-                        }`}
-                      type="button"
-                      data-bs-toggle="collapse"
-                      aria-expanded={data.id === activeTab}
-                      data-bs-target={`#collapseTwo${index + 1}`}
-                      aria-controls={`collapseTwo${index + 1}`}
-                      onClick={() => setActiveTab(data.id)}
+            {topics.length > 0
+              ? topics.map((data, index) => {
+                // Per-topic stats (Point 4)
+                const topicTotalMin = (data.course_contents || []).reduce(
+                  (a, c) => a + toTotalMinutes(c.hours, c.minutes),
+                  0
+                );
+                const topicCount = data.course_contents?.length || 0;
+                const topicCompleted = data.progres?.completed || 0;
+
+                return (
+                  <div className="accordion-item card" key={index}>
+                    <h2
+                      className="accordion-header card-header"
+                      id={`headingTwo${index + 1}`}
                     >
-                      {data.name}
-                      <span className="rbt-badge-5 ml--10">
-                        {data.progres?.completed || 0}/{data.course_contents?.length || 0}
-                      </span>
-                    </button>
-                  </h2>
-                  <div
-                    id={`collapseTwo${index + 1}`}
-                    className={`accordion-collapse collapse ${data.id === activeTab ? "show" : ""
-                      }`}
-                    aria-labelledby={`headingTwo${index + 1}`}
-                  >
-                    <div className="accordion-body card-body">
-                      <ul className="rbt-course-main-content liststyle">
-                        {data.course_contents?.map((innerData, innerIndex) => (
-                          <li key={innerIndex}>
-                            <Link
-                              className={isActive(innerData.id) ? "active" : ""}
-                              href={`/lesson?course_slug=${courseSlug}&topic_id=${data.id}&content_id=${innerData.id}`}
-                              onClick={() => setActiveTab(data.id)}
-                            >
-                              <div className="course-content-left">
-                                <i
-                                  className={`feather-${innerData.category?.slug === "lesson"
-                                    ? "play-circle"
-                                    : innerData.category?.slug === "quiz"
-                                      ? "help-circle"
-                                      : "file-text"
-                                    }`}
-                                ></i>
-                                <span className="text">{innerData.title}</span>
-                              </div>
-                              <div className="course-content-right">
-                                {innerData.hours > 0 || innerData.minutes > 0 ? (
-                                  <span className="min-lable">
-                                    {innerData.hours > 0 ? `${innerData.hours}h ` : ""}{innerData.minutes} min
-                                  </span>
-                                ) : (
-                                  ""
-                                )}
-                                <span
-                                  className={`rbt-check ${isActive(innerData.id) ? "" : "unread"
-                                    }`}
+                      <button
+                        className={`accordion-button ${data.id === activeTab ? "" : "collapsed"
+                          }`}
+                        type="button"
+                        data-bs-toggle="collapse"
+                        aria-expanded={data.id === activeTab}
+                        data-bs-target={`#collapseTwo${index + 1}`}
+                        aria-controls={`collapseTwo${index + 1}`}
+                        onClick={() => setActiveTab(data.id)}
+                      >
+                        {/* Point 7: title truncates, badges get fixed space */}
+                        <span className="topic-title-text">{data.name}</span>
+                        <span className="topic-badges">
+                          {/* Point 4: time box */}
+                          {topicTotalMin > 0 && (
+                            <span className="topic-time-badge">
+                              {formatMinutes(topicTotalMin)}
+                            </span>
+                          )}
+                          {/* Point 4: count badge */}
+                          <span className="rbt-badge-5 ml--5">
+                            {topicCompleted}/{topicCount}
+                          </span>
+                        </span>
+                      </button>
+                    </h2>
+                    <div
+                      id={`collapseTwo${index + 1}`}
+                      className={`accordion-collapse collapse ${data.id === activeTab ? "show" : ""
+                        }`}
+                      aria-labelledby={`headingTwo${index + 1}`}
+                    >
+                      <div className="accordion-body card-body">
+                        <ul className="rbt-course-main-content liststyle">
+                          {data.course_contents?.map((innerData, innerIndex) => {
+                            const isUrl = !!(innerData.url && !innerData.url.toLowerCase().includes(".pdf"));
+                            const contentMin = toTotalMinutes(innerData.hours, innerData.minutes);
+
+                            return (
+                              <li key={innerIndex}>
+                                <Link
+                                  className={isActive(innerData.id) ? "active" : ""}
+                                  href={`/lesson?course_slug=${courseSlug}&topic_id=${data.id}&content_id=${innerData.id}`}
+                                  onClick={() => setActiveTab(data.id)}
                                 >
-                                  <i
-                                    className={`feather-${isActive(innerData.id) ? "check" : "circle"
-                                      }`}
-                                  ></i>
-                                </span>
-                              </div>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+                                  {/* Point 13: redesigned subheading row */}
+                                  <div className="lesson-item-left">
+                                    <i className={getIcon(innerData)}></i>
+                                    <div className="lesson-item-text-group">
+                                      <span className="lesson-item-title">
+                                        {innerData.title}
+                                      </span>
+                                      {contentMin > 0 && (
+                                        <span className="lesson-item-time">
+                                          {formatMinutes(contentMin)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="lesson-item-right">
+                                    {/* Point 13: % only for URL content */}
+                                    {isUrl && (
+                                      <span className="lesson-item-percent">
+                                        {isActive(innerData.id) ? "100%" : "0%"}
+                                      </span>
+                                    )}
+                                    <span
+                                      className={`rbt-check ${isActive(innerData.id) ? "" : "unread"
+                                        }`}
+                                    >
+                                      <i
+                                        className={`feather-${isActive(innerData.id) ? "check-circle" : "circle"
+                                          }`}
+                                      ></i>
+                                    </span>
+                                  </div>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-              : (topics.length > 0 && searchValue) ? (
-                <div className="text-center p--20">No lessons found.</div>
-              ) : courseSlug ? (
-                // If we have a courseSlug but no topics yet, it's loading or empty. Don't show static data.
+                );
+              })
+              : courseSlug ? (
                 <div className="text-center p--20">Loading content...</div>
               ) : LessonData.lesson.map((data, index) => (
                 <div className="accordion-item card" key={index}>
@@ -172,7 +258,7 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
                       aria-controls={`collapseTwo${index + 1}`}
                       onClick={() => setActiveTab(data.id)}
                     >
-                      {data.title}
+                      <span className="topic-title-text">{data.title}</span>
                     </button>
                   </h2>
                   <div
@@ -187,46 +273,42 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
                           <li key={innerIndex}>
                             <Link
                               className={
-                                pathname.startsWith(innerData.lssonLink)
-                                  ? "active"
-                                  : ""
+                                pathname.startsWith(innerData.lssonLink) ? "active" : ""
                               }
                               href={`${innerData.lssonLink}`}
                               onClick={() => setActiveTab(data.id)}
                             >
-                              <div className="course-content-left">
+                              <div className="lesson-item-left">
                                 {innerData.iconHelp ? (
                                   <i className="feather-help-circle"></i>
                                 ) : (
                                   <i
-                                    className={`feather-${innerData.iconFile
-                                      ? "file-text"
-                                      : "play-circle"
+                                    className={`feather-${innerData.iconFile ? "file-text" : "play-circle"
                                       }`}
                                   ></i>
                                 )}
-                                <span className="text">
-                                  {innerData.lessonName}
-                                </span>
-                              </div>
-                              <div className="course-content-right">
-                                {innerData.lable && innerData.time > 0 ? (
-                                  <span className="min-lable">
-                                    {innerData.time} min
+                                <div className="lesson-item-text-group">
+                                  <span className="lesson-item-title">
+                                    {innerData.lessonName}
                                   </span>
-                                ) : (
-                                  ""
-                                )}
+                                  {innerData.lable && innerData.time > 0 && (
+                                    <span className="lesson-item-time">
+                                      {innerData.time} min
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="lesson-item-right">
                                 <span
                                   className={`rbt-check ${pathname.startsWith(innerData.lssonLink)
-                                    ? ""
-                                    : "unread"
+                                      ? ""
+                                      : "unread"
                                     }`}
                                 >
                                   <i
                                     className={`feather-${pathname.startsWith(innerData.lssonLink)
-                                      ? "check"
-                                      : "circle"
+                                        ? "check-circle"
+                                        : "circle"
                                       }`}
                                   ></i>
                                 </span>
@@ -238,7 +320,8 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            }
           </div>
         </div>
       </div>
