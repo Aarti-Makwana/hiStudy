@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import LessonSidebar from "@/components/Lesson/LessonSidebar";
 import LessonPagination from "@/components/Lesson/LessonPagination";
-import LessonTop from "@/components/Lesson/LessonTop";
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 import Loader from "@/components/Common/Loader";
 import QuizHead from "@/components/Lesson/Quiz/QuizHead";
+import QuizPlayer from "@/components/Lesson/QuizPlayer";
 
 /** Check if a URL is a playable video (YouTube / Vimeo / raw file) */
 const isVideoUrl = (url) =>
@@ -49,8 +50,8 @@ const LessonPage = () => {
   // Point 9: Chat filter
   const [chatFilter, setChatFilter] = useState("");
 
-  // Point 12: PDF tab
-  const [activeContentTab, setActiveContentTab] = useState("video"); // "video" | "pdf"
+  // Point 12: PDF tab — now removed (content auto-rendered directly)
+  // const [activeContentTab, setActiveContentTab] = useState("video"); // removed
 
   /* ─── Fetch course structure ─────────────────────────────── */
   useEffect(() => {
@@ -146,7 +147,6 @@ const LessonPage = () => {
           if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
             const data = contentRes.value.data;
             setLessonContent(data);
-            setActiveContentTab("video");
 
             // pre-fill total duration from API data (hours + minutes + seconds)
             const totalSec =
@@ -189,12 +189,34 @@ const LessonPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic_id, content_id]);
 
-  /* ─── Render the main lesson asset (Point 6 – video fit) ─── */
+  /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
     const assetUrl =
       lessonContent?.file?.url || lessonContent?.url || lessonContent?.video_url;
 
+    // ── HTML / rich-text content (no URL, but has description/body/content) ──
+    const htmlBody =
+      lessonContent?.body || lessonContent?.content || lessonContent?.html_content;
+    if (!assetUrl && htmlBody) {
+      return (
+        <div
+          className="lesson-html-content"
+          dangerouslySetInnerHTML={{ __html: htmlBody }}
+        />
+      );
+    }
+
     if (!assetUrl) {
+      // Last fallback: try description as HTML
+      const desc = lessonContent?.description || lessonContent?.summary;
+      if (desc) {
+        return (
+          <div
+            className="lesson-html-content"
+            dangerouslySetInnerHTML={{ __html: desc }}
+          />
+        );
+      }
       return (
         <div className="rbt-shadow-box text-center p--50">
           <h5>No content available for this lesson.</h5>
@@ -202,12 +224,8 @@ const LessonPage = () => {
       );
     }
 
-    // PDF
-    if (
-      lessonContent?.icon === "document" ||
-      isPdfUrl(assetUrl)
-    ) {
-      // Handled via tab
+    // PDF — render viewer directly (no tab switcher needed)
+    if (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) {
       return (
         <div className="lesson-pdf-viewer">
           <iframe
@@ -219,7 +237,7 @@ const LessonPage = () => {
       );
     }
 
-    // Vimeo (Point 6 – aspect-ratio)
+    // Vimeo
     if (assetUrl.includes("vimeo.com")) {
       const vimeoId = assetUrl.split("/").pop();
       return (
@@ -234,7 +252,7 @@ const LessonPage = () => {
       );
     }
 
-    // YouTube (Point 6 – aspect-ratio)
+    // YouTube
     if (assetUrl.includes("youtube.com") || assetUrl.includes("youtu.be")) {
       let youtubeId = "";
       if (assetUrl.includes("v=")) {
@@ -255,7 +273,7 @@ const LessonPage = () => {
       );
     }
 
-    // Raw / HTML5 Video — attach ref + events for progress tracking
+    // Raw / HTML5 Video
     return (
       <div className="lesson-video-wrapper">
         <video
@@ -268,7 +286,6 @@ const LessonPage = () => {
               ...prev,
               totalDurationSec: prev.totalDurationSec > 0 ? prev.totalDurationSec : dur,
             }));
-            // restore saved position
             if (lastPostedTimeRef.current > 0) {
               e.target.currentTime = lastPostedTimeRef.current;
             }
@@ -294,13 +311,17 @@ const LessonPage = () => {
   /* ─── Derived flags ──────────────────────────────────────── */
   const assetUrl =
     lessonContent?.file?.url || lessonContent?.url || lessonContent?.video_url;
+  // Chat & Summary ONLY for video URLs
   const showChatSummary = !!(assetUrl && isVideoUrl(assetUrl));
-  const showPdfTab = !!(
-    lessonContent?.icon === "document" || isPdfUrl(assetUrl)
-  );
   const isQuiz =
     lessonContent?.category?.slug === "quiz" ||
     (lessonContent?.course_quizzes && lessonContent.course_quizzes.length > 0);
+
+  // Chat disabled check
+  const chatVal = courseData?.chat ?? "";
+  const isChatDisabled =
+    String(chatVal).toLowerCase() === "no" ||
+    String(chatVal).toLowerCase() === "disabled";
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
@@ -321,16 +342,26 @@ const LessonPage = () => {
             <LessonSidebar courseData={courseData} courseSlug={course_slug} />
           </div>
 
-          {/* ── RIGHT CONTENT (Point 8: independent scroll) ── */}
-          <div className="rbt-lesson-rightsidebar overflow-hidden lesson-video">
+          {/* ── RIGHT CONTENT ── */}
+          <div className="rbt-lesson-rightsidebar overflow-hidden lesson-video" style={{ position: "relative" }}>
 
-            {/* Top bar (Points 1, 5, 11) */}
-            <LessonTop
-              sidebar={sidebar}
-              setSidebar={() => setSidebar(!sidebar)}
-              courseTitle={courseData?.title}
-              courseSlug={course_slug}
-            />
+            {/* ── Floating controls (back arrow left, hamburger right of it) ── */}
+            <div className="lesson-float-controls">
+              <Link
+                href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
+                className="lesson-float-btn"
+                title="Back to Course"
+              >
+                <i className="feather-arrow-left"></i>
+              </Link>
+              <button
+                className="lesson-float-btn"
+                title="Toggle Sidebar"
+                onClick={() => setSidebar(!sidebar)}
+              >
+                <i className="feather-menu"></i>
+              </button>
+            </div>
 
             {loading ? (
               <div className="lesson-right-scroll">
@@ -340,101 +371,14 @@ const LessonPage = () => {
               <div className="lesson-right-scroll">
                 <div className="lesson-main-content">
 
-                  {/* ─── QUIZ ───────────────────────────── */}
-                  {isQuiz ? (
-                    <form id="quiz-form" className="quiz-form-wrapper p--30">
-                      <div className="question">
-                        <QuizHead
-                          questionNo={1}
-                          totalQuestion={lessonContent?.course_quizzes?.length || 0}
-                          attemp={1}
-                        />
-                        {lessonContent?.course_quizzes?.map((quiz, qIndex) => (
-                          <div key={quiz.id} className="rbt-single-quiz mb--40">
-                            <div className="d-flex align-items-start">
-                              <h4 className="mb--0 mr--15">{qIndex + 1}.</h4>
-                              <div
-                                className="question-title-content"
-                                dangerouslySetInnerHTML={{ __html: quiz.question }}
-                              />
-                            </div>
-                            <div className="row g-3 mt--10">
-                              {quiz.options?.map((option) => (
-                                <div className="col-lg-6" key={option.id}>
-                                  {quiz.type === "multiple" ? (
-                                    <p className="rbt-checkbox-wrapper">
-                                      <input
-                                        id={`option-${option.id}`}
-                                        name={`quiz-${quiz.id}`}
-                                        type="checkbox"
-                                      />
-                                      <label htmlFor={`option-${option.id}`}>
-                                        {option.option_text}
-                                      </label>
-                                    </p>
-                                  ) : (
-                                    <div className="rbt-form-check">
-                                      <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name={`quiz-${quiz.id}`}
-                                        id={`option-${option.id}`}
-                                      />
-                                      <label
-                                        className="form-check-label"
-                                        htmlFor={`option-${option.id}`}
-                                      >
-                                        {option.option_text}
-                                      </label>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                        {lessonContent?.course_quizzes?.length > 0 && (
-                          <div className="rbt-quiz-btn-wrapper mt--30">
-                            <button className="rbt-btn btn-gradient btn-sm" type="button">
-                              Submit Quiz
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </form>
-                  ) : (
+                  {/* ─── QUIZ ─────────────────────────────────────────── */}
+                  {isQuiz ? (() => {
+                    const quizzes = lessonContent?.course_quizzes || [];
+                    return <QuizPlayer quizzes={quizzes} />;
+                  })() : (
                     <>
-                      {/* ─── PDF / Video tab switcher (Point 12) ─── */}
-                      {showPdfTab && (
-                        <div className="lesson-content-tabs">
-                          <button
-                            className={`lesson-content-tab-btn ${activeContentTab === "video" ? "active" : ""}`}
-                            onClick={() => setActiveContentTab("video")}
-                          >
-                            <i className="feather-play-circle"></i> Video
-                          </button>
-                          <button
-                            className={`lesson-content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
-                            onClick={() => setActiveContentTab("pdf")}
-                          >
-                            <i className="feather-file-text"></i> PDF
-                          </button>
-                        </div>
-                      )}
-
-                      {/* ─── Main asset ─── */}
-                      {activeContentTab === "pdf" && showPdfTab
-                        ? (
-                          <div className="lesson-pdf-viewer">
-                            <iframe
-                              src={`https://docs.google.com/viewer?url=${encodeURIComponent(assetUrl)}&embedded=true`}
-                              className="lesson-pdf-iframe"
-                              title="Document Preview"
-                            ></iframe>
-                          </div>
-                        )
-                        : renderLessonAsset()
-                      }
+                      {/* ─── Main asset (PDF/HTML/Video all auto-detected) ─── */}
+                      {renderLessonAsset()}
 
                       {/* ─── Video Progress Bar (shown for video URLs) ─── */}
                       {showChatSummary && videoProgress.totalDurationSec > 0 && (
@@ -487,30 +431,40 @@ const LessonPage = () => {
                           <div className="lesson-bottom-tab-content">
                             {activeBottomTab === "chat" && (
                               <div className="lesson-chat-area">
-                                {/* Chat filter (Point 9) */}
-                                <div className="lesson-chat-filter-bar">
-                                  <i className="feather-filter"></i>
-                                  <input
-                                    type="text"
-                                    placeholder="Filter messages..."
-                                    value={chatFilter}
-                                    onChange={(e) => setChatFilter(e.target.value)}
-                                    className="lesson-chat-filter-input"
-                                  />
-                                </div>
-                                <div className="lesson-chat-messages">
-                                  <p className="lesson-chat-empty">No messages yet. Start the conversation!</p>
-                                </div>
-                                <div className="lesson-chat-input-bar">
-                                  <input
-                                    type="text"
-                                    placeholder="Type a message..."
-                                    className="lesson-chat-input"
-                                  />
-                                  <button className="lesson-chat-send-btn">
-                                    <i className="feather-send"></i>
-                                  </button>
-                                </div>
+                                {isChatDisabled ? (
+                                  /* ── Chat disabled by backend ── */
+                                  <div className="lesson-chat-disabled">
+                                    <i className="feather-lock"></i>
+                                    <p>The Chat for this Course has been disabled. Kindly contact Support.</p>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Chat filter (Point 9) */}
+                                    <div className="lesson-chat-filter-bar">
+                                      <i className="feather-filter"></i>
+                                      <input
+                                        type="text"
+                                        placeholder="Filter messages..."
+                                        value={chatFilter}
+                                        onChange={(e) => setChatFilter(e.target.value)}
+                                        className="lesson-chat-filter-input"
+                                      />
+                                    </div>
+                                    <div className="lesson-chat-messages">
+                                      <p className="lesson-chat-empty">No messages yet. Start the conversation!</p>
+                                    </div>
+                                    <div className="lesson-chat-input-bar">
+                                      <input
+                                        type="text"
+                                        placeholder="Type a message..."
+                                        className="lesson-chat-input"
+                                      />
+                                      <button className="lesson-chat-send-btn">
+                                        <i className="feather-send"></i>
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             )}
 
@@ -530,47 +484,15 @@ const LessonPage = () => {
                         </div>
                       )}
 
-                      {/* Description for non-video content (PDF / no URL) */}
-                      {!showChatSummary && (
-                        <div className="section-title mt--30 p--30">
-                          {lessonContent?.topic?.name && (
-                            <span className="subtitle-5 mb--10 d-block">
-                              {lessonContent.topic.name}
-                            </span>
-                          )}
-                          <h4 className="title">{lessonContent?.title || "About Lesson"}</h4>
-                          <div className="rbt-course-meta mb--20">
-                            {lessonContent?.duration && (
-                              <div className="course-meta">
-                                <i className="feather-clock"></i>
-                                <span>{lessonContent.duration}</span>
-                              </div>
-                            )}
-                            {lessonContent?.category?.name && (
-                              <div className="course-meta">
-                                <i className="feather-layers"></i>
-                                <span>{lessonContent.category.name}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html:
-                                lessonContent?.description ||
-                                lessonContent?.summary ||
-                                "No description available for this lesson.",
-                            }}
-                          />
-                        </div>
-                      )}
+
                     </>
                   )}
                 </div>
-
-                {/* ── Pagination (Point 15: keep as-is) ── */}
-                <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
               </div>
             )}
+
+            {/* ── Pagination: outside scroll so it's always visible ── */}
+            <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
           </div>
         </div>
       </div>
