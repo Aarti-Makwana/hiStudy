@@ -185,6 +185,9 @@ const LessonPage = () => {
 
     return () => {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      if (videoRef.current && content_id) {
+        postProgress(content_id, videoRef.current.currentTime);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic_id, content_id]);
@@ -290,6 +293,15 @@ const LessonPage = () => {
               e.target.currentTime = lastPostedTimeRef.current;
             }
           }}
+          onPlay={() => {
+            if (!progressTimerRef.current) {
+              progressTimerRef.current = setInterval(() => {
+                if (videoRef.current && !videoRef.current.paused) {
+                  postProgress(content_id, videoRef.current.currentTime);
+                }
+              }, 5000); // Posts every 5 seconds while playing
+            }
+          }}
           onTimeUpdate={(e) => {
             const cur = e.target.currentTime;
             const dur = e.target.duration || videoProgress.totalDurationSec || 1;
@@ -339,7 +351,11 @@ const LessonPage = () => {
 
           {/* ── LEFT SIDEBAR (Point 8: independent scroll) ── */}
           <div className={`rbt-lesson-leftsidebar ${sidebar ? "" : "sidebar-hide"}`}>
-            <LessonSidebar courseData={courseData} courseSlug={course_slug} />
+            <LessonSidebar
+              courseData={courseData}
+              courseSlug={course_slug}
+              currentVideoProgress={videoProgress?.percent}
+            />
           </div>
 
           {/* ── RIGHT CONTENT ── */}

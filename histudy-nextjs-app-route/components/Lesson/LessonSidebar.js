@@ -110,7 +110,7 @@ const PlayPauseBtn = ({ isPlaying }) => (
   </span>
 );
 
-const LessonSidebar = ({ courseData, courseSlug }) => {
+const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress }) => {
   const [activeTab, setActiveTab] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -225,7 +225,10 @@ const LessonSidebar = ({ courseData, courseSlug }) => {
                         const active = isActive(innerData.id);
                         const isVideo = isVideoContent(innerData);
                         const contentMin = toTotalMinutes(innerData.hours, innerData.minutes);
-                        const itemPercent = active ? 100 : 0;
+                        const apiPercent = innerData.progres?.percent || innerData.progress?.percent || 0;
+                        const itemPercent = active
+                          ? (typeof currentVideoProgress !== "undefined" ? currentVideoProgress : apiPercent)
+                          : apiPercent;
 
                         return (
                           <Link
