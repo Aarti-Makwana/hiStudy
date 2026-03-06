@@ -59,6 +59,9 @@ const LessonPage = () => {
   const [nextLesson, setNextLesson] = useState(null);
   const [sidebar, setSidebar] = useState(true);
 
+  // ── Map of content_id → completion_percentage from API ──────
+  const [lessonProgressMap, setLessonProgressMap] = useState({});
+
   // ── Progress tracking state ──────────────────────────────────
   const [videoProgress, setVideoProgress] = useState({
     currentTimeSec: 0,   // seconds watched so far
@@ -88,6 +91,31 @@ const LessonPage = () => {
           const res = await UserCoursesServices.UserGetCourse(course_slug);
           if (res && res.status === "success") {
             setCourseData(res.data);
+
+            // Fetch progress for all video items from API
+            const allVideoIds = [];
+            res.data.topics?.forEach((topic) => {
+              topic.course_contents?.forEach((content) => {
+                if (content.icon === "video") {
+                  allVideoIds.push(content.id);
+                }
+              });
+            });
+
+            if (allVideoIds.length > 0) {
+              const progressResults = await Promise.allSettled(
+                allVideoIds.map((id) => UserCoursesServices.GetLessonProgress(id))
+              );
+              const progressMap = {};
+              progressResults.forEach((result, idx) => {
+                if (result.status === "fulfilled" && result.value?.status === "success") {
+                  const pctStr = result.value.data?.completion_percentage || "0%";
+                  progressMap[allVideoIds[idx]] = parseFloat(pctStr) || 0;
+                }
+              });
+              console.log("[LessonPage] Fetched progress map from API:", progressMap);
+              setLessonProgressMap(progressMap);
+            }
           }
         } catch (error) {
           console.error("Error fetching course details:", error);
@@ -559,6 +587,7 @@ const LessonPage = () => {
               courseData={courseData}
               courseSlug={course_slug}
               currentVideoProgress={videoProgress?.percent}
+              lessonProgressMap={lessonProgressMap}
             />
           </div>
 

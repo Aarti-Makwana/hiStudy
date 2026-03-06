@@ -1295,22 +1295,17 @@ a.sidebar-item:hover .sidebar-playpause {
     align-items: center;
 }
 
-/* Mini progress ring */
+/* Mini progress ring (gradient) */
 .sidebar-item-ring {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
 }
 
-.sidebar-item-ring-tick {
-    font-size: 11px;
-    fill: #a5b4fc;
+.sidebar-item-ring-pct {
+    font-size: 8px;
+    fill: rgba(255, 255, 255, 0.85);
     font-weight: 700;
-}
-
-.sidebar-item-ring-num {
-    font-size: 7px;
-    fill: rgba(255, 255, 255, 0.6);
-    font-weight: 600;
 }
 
 /* Non-video icon badge */

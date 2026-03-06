@@ -55,32 +55,47 @@ const CircleProgress = ({ percent }) => {
   );
 };
 
-// ── Mini progress ring for each lesson item ───────────────────
-const ItemRing = ({ percent, done }) => {
+// ── Mini circular progress ring with gradient (for each lesson item) ──
+const ItemRing = ({ percent }) => {
   const r = 13;
   const circ = 2 * Math.PI * r;
-  const offset = circ * (1 - (percent || 0) / 100);
-  const color = done ? "#7c8fff" : percent > 0 ? "#f59e0b" : "rgba(255,255,255,0.2)";
+  const p = Math.min(100, Math.max(0, Math.round(percent || 0)));
+  const offset = circ * (1 - p / 100);
+  const gradId = `ring-grad-${Math.random().toString(36).slice(2, 8)}`;
 
   return (
-    <svg viewBox="0 0 32 32" className="sidebar-item-ring">
-      <circle cx="16" cy="16" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
-      <circle
-        cx="16" cy="16" r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        transform="rotate(-90 16 16)"
-        style={{ transition: "stroke-dashoffset 0.4s ease" }}
-      />
-      {done ? (
-        <text x="16" y="17" textAnchor="middle" dominantBaseline="middle" className="sidebar-item-ring-tick">✓</text>
-      ) : percent > 0 ? (
-        <text x="16" y="17" textAnchor="middle" dominantBaseline="middle" className="sidebar-item-ring-num">{percent}%</text>
-      ) : null}
+    <svg viewBox="0 0 36 36" className="sidebar-item-ring">
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+      </defs>
+      {/* Background track */}
+      <circle cx="18" cy="18" r={r} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="3" />
+      {/* Filled arc with gradient */}
+      {p > 0 && (
+        <circle
+          cx="18" cy="18" r={r}
+          fill="none"
+          stroke={`url(#${gradId})`}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          transform="rotate(-90 18 18)"
+          style={{ transition: "stroke-dashoffset 0.5s ease" }}
+        />
+      )}
+      {/* Percentage label */}
+      <text
+        x="18" y="18.5"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="sidebar-item-ring-pct"
+      >
+        {p}%
+      </text>
     </svg>
   );
 };
@@ -103,7 +118,7 @@ const PlayPauseBtn = ({ isPlaying }) => (
   </span>
 );
 
-const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress }) => {
+const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonProgressMap = {} }) => {
   const [activeTab, setActiveTab] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -221,8 +236,8 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress }) => {
                         const active = isActive(innerData.id);
                         const isVideo = isVideoContent(innerData);
                         const contentMin = toTotalMinutes(innerData.hours, innerData.minutes);
-                        const apiPercent = innerData.progres?.percent || innerData.progress?.percent || 0;
-                        const itemPercent = active
+                        const apiPercent = lessonProgressMap[innerData.id] ?? innerData.progres?.percent ?? innerData.progress?.percent ?? 0;
+                        const itemPercent = (active && isVideo)
                           ? (typeof currentVideoProgress !== "undefined" ? currentVideoProgress : apiPercent)
                           : apiPercent;
 
@@ -251,10 +266,10 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress }) => {
                               )}
                             </div>
 
-                            {/* Right: % ring (video) or icon */}
+                            {/* Right: progress ring (video only) or icon badge */}
                             <div className="sidebar-item-right">
                               {isVideo ? (
-                                <ItemRing percent={itemPercent} done={active} />
+                                <ItemRing percent={itemPercent} />
                               ) : (
                                 <span className="sidebar-item-icon-badge">
                                   <i className={getItemIcon(innerData)}></i>
