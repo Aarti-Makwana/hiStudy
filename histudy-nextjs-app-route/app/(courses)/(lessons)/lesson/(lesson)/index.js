@@ -22,6 +22,30 @@ const isVideoUrl = (url) =>
 const isPdfUrl = (url) =>
   url && (url.toLowerCase().includes(".pdf"));
 
+/* ─── Load YouTube IFrame API script once ───────────────────── */
+let ytApiReady = false;
+let ytApiPromise = null;
+const loadYouTubeApi = () => {
+  if (ytApiReady) return Promise.resolve();
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    if (typeof window !== "undefined" && window.YT && window.YT.Player) {
+      ytApiReady = true;
+      resolve();
+      return;
+    }
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScript = document.getElementsByTagName("script")[0];
+    firstScript.parentNode.insertBefore(tag, firstScript);
+    window.onYouTubeIframeAPIReady = () => {
+      ytApiReady = true;
+      resolve();
+    };
+  });
+  return ytApiPromise;
+};
+
 const LessonPage = () => {
   const searchParams = useSearchParams();
   const course_slug = searchParams.get("course_slug");
@@ -43,15 +67,18 @@ const LessonPage = () => {
   });
   const videoRef = useRef(null);         // for native <video> element
   const progressTimerRef = useRef(null); // interval for periodic POST
-  const lastPostedTimeRef = useRef(0);  // avoid duplicate POSTs
+  const lastPostedTimeRef = useRef(0);   // avoid duplicate POSTs
+
+  // ── YouTube / Vimeo player refs ──────────────────────────────
+  const ytPlayerRef = useRef(null);       // YT.Player instance
+  const vimeoPlayerRef = useRef(null);    // Vimeo Player instance
+  const ytTimerRef = useRef(null);        // YT polling interval
+  const iframeIdRef = useRef("lesson-iframe-" + Date.now());
 
   // Point 9: Chat / Summary tabs
   const [activeBottomTab, setActiveBottomTab] = useState("summary");
   // Point 9: Chat filter
   const [chatFilter, setChatFilter] = useState("");
-
-  // Point 12: PDF tab — now removed (content auto-rendered directly)
-  // const [activeContentTab, setActiveContentTab] = useState("video"); // removed
 
   /* ─── Fetch course structure ─────────────────────────────── */
   useEffect(() => {
@@ -106,7 +133,7 @@ const LessonPage = () => {
     }
   }, [courseData, content_id, course_slug]);
 
-  /* ─── Helpers: seconds ↔ h/m/s ─────────────────────────────── */
+  /* ─── Helpers: seconds → h/m/s ─────────────────────────────── */
   const secToHMS = (totalSec) => {
     const s = Math.floor(totalSec);
     const h = Math.floor(s / 3600);
@@ -122,18 +149,65 @@ const LessonPage = () => {
     if (!lessonId || currentTimeSec === lastPostedTimeRef.current) return;
     try {
       lastPostedTimeRef.current = currentTimeSec;
+      console.log(`[LessonPage] Sending progress → lesson_id: ${lessonId}, current_time: ${currentTimeSec}s`);
       await UserCoursesServices.TrackLessonProgress(lessonId, currentTimeSec);
-    } catch (_) {
-      // silent fail — don't interrupt playback
+    } catch (err) {
+      console.error("[LessonPage] postProgress error:", err);
+    }
+  }, []);
+
+  /* ─── Helper: get current time from any active player ────── */
+  const getCurrentPlayerTime = useCallback(() => {
+    // Native video
+    if (videoRef.current && !videoRef.current.paused) {
+      return videoRef.current.currentTime;
+    }
+    if (videoRef.current) {
+      return videoRef.current.currentTime;
+    }
+    // YouTube — getCurrentTime is synchronous
+    if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === "function") {
+      return ytPlayerRef.current.getCurrentTime();
+    }
+    // Vimeo time is tracked in state
+    return videoProgress.currentTimeSec;
+  }, [videoProgress.currentTimeSec]);
+
+  /* ─── Cleanup helper: destroy YT/Vimeo players ──────────── */
+  const destroyPlayers = useCallback(() => {
+    if (ytTimerRef.current) {
+      clearInterval(ytTimerRef.current);
+      ytTimerRef.current = null;
+    }
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+    if (ytPlayerRef.current) {
+      try { ytPlayerRef.current.destroy(); } catch (_) { }
+      ytPlayerRef.current = null;
+    }
+    if (vimeoPlayerRef.current) {
+      try { vimeoPlayerRef.current.destroy(); } catch (_) { }
+      vimeoPlayerRef.current = null;
     }
   }, []);
 
   /* ─── Fetch lesson content + load saved progress ───────────── */
   useEffect(() => {
-    // clear old progress interval when content changes
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    // ── ON CONTENT CHANGE: send progress of previous video first ──
+    const prevTime = getCurrentPlayerTime();
+    const prevContentId = lastPostedTimeRef._contentId;
+    if (prevContentId && prevTime > 0) {
+      console.log(`[LessonPage] Video switched! Sending previous video (${prevContentId}) progress: ${prevTime}s`);
+      UserCoursesServices.TrackLessonProgress(prevContentId, prevTime).catch(() => { });
+    }
+
+    // ── Cleanup old players ──
+    destroyPlayers();
     setVideoProgress({ currentTimeSec: 0, totalDurationSec: 0, percent: 0 });
     lastPostedTimeRef.current = 0;
+    lastPostedTimeRef._contentId = content_id; // track which content we're on
 
     const fetchLessonContent = async () => {
       if (topic_id && content_id) {
@@ -158,7 +232,6 @@ const LessonPage = () => {
 
           if (progressRes.status === "fulfilled" && progressRes.value?.status === "success") {
             const prog = progressRes.value.data;
-            // API returns: { current_time, total_duration, percent, ... }
             const savedTime = prog?.current_time || 0;
             const savedTotal = prog?.total_duration || 0;
             const savedPercent = prog?.percent || 0;
@@ -184,13 +257,126 @@ const LessonPage = () => {
     fetchLessonContent();
 
     return () => {
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      // Send final progress on unmount / content switch
       if (videoRef.current && content_id) {
         postProgress(content_id, videoRef.current.currentTime);
       }
+      destroyPlayers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic_id, content_id]);
+
+  /* ─── Init Vimeo Player after iframe renders ───────────────── */
+  const initVimeoPlayer = useCallback((iframeEl) => {
+    if (!iframeEl) return;
+    import("@vimeo/player").then((mod) => {
+      const VimeoPlayer = mod.default;
+      const player = new VimeoPlayer(iframeEl);
+      vimeoPlayerRef.current = player;
+
+      player.getDuration().then((dur) => {
+        setVideoProgress((prev) => ({
+          ...prev,
+          totalDurationSec: dur > 0 ? dur : prev.totalDurationSec,
+        }));
+      });
+
+      // Seek to saved position
+      if (lastPostedTimeRef.current > 0) {
+        player.setCurrentTime(lastPostedTimeRef.current);
+      }
+
+      player.on("timeupdate", (data) => {
+        const cur = data.seconds;
+        const dur = data.duration || 1;
+        const pct = Math.min(100, Math.round((cur / dur) * 100));
+        setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: pct });
+      });
+
+      player.on("pause", (data) => {
+        console.log(`[LessonPage][Vimeo] Paused at ${data.seconds}s`);
+        postProgress(content_id, data.seconds);
+      });
+
+      player.on("ended", (data) => {
+        console.log(`[LessonPage][Vimeo] Ended at ${data.seconds}s`);
+        postProgress(content_id, data.duration || data.seconds);
+      });
+
+      player.on("play", () => {
+        console.log("[LessonPage][Vimeo] Playing");
+      });
+    });
+  }, [content_id, postProgress]);
+
+  /* ─── Init YouTube Player after iframe renders ─────────────── */
+  const initYouTubePlayer = useCallback((iframeEl) => {
+    if (!iframeEl) return;
+    loadYouTubeApi().then(() => {
+      const player = new window.YT.Player(iframeEl, {
+        events: {
+          onReady: (evt) => {
+            const dur = evt.target.getDuration();
+            if (dur > 0) {
+              setVideoProgress((prev) => ({
+                ...prev,
+                totalDurationSec: dur,
+              }));
+            }
+            // Seek to saved position
+            if (lastPostedTimeRef.current > 0) {
+              evt.target.seekTo(lastPostedTimeRef.current, true);
+            }
+          },
+          onStateChange: (evt) => {
+            const state = evt.data;
+            const cur = evt.target.getCurrentTime();
+            const dur = evt.target.getDuration() || 1;
+            const pct = Math.min(100, Math.round((cur / dur) * 100));
+
+            // PLAYING
+            if (state === window.YT.PlayerState.PLAYING) {
+              console.log("[LessonPage][YouTube] Playing");
+              // Start polling for time updates
+              if (!ytTimerRef.current) {
+                ytTimerRef.current = setInterval(() => {
+                  if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === "function") {
+                    const c = ytPlayerRef.current.getCurrentTime();
+                    const d = ytPlayerRef.current.getDuration() || 1;
+                    const p = Math.min(100, Math.round((c / d) * 100));
+                    setVideoProgress({ currentTimeSec: c, totalDurationSec: d, percent: p });
+                  }
+                }, 1000);
+              }
+            }
+
+            // PAUSED
+            if (state === window.YT.PlayerState.PAUSED) {
+              console.log(`[LessonPage][YouTube] Paused at ${cur}s`);
+              setVideoProgress((prev) => ({ ...prev, currentTimeSec: cur, percent: pct }));
+              postProgress(content_id, cur);
+              if (ytTimerRef.current) {
+                clearInterval(ytTimerRef.current);
+                ytTimerRef.current = null;
+              }
+            }
+
+            // ENDED
+            if (state === window.YT.PlayerState.ENDED) {
+              console.log(`[LessonPage][YouTube] Ended at ${dur}s`);
+              setVideoProgress({ currentTimeSec: dur, totalDurationSec: dur, percent: 100 });
+              postProgress(content_id, dur);
+              if (ytTimerRef.current) {
+                clearInterval(ytTimerRef.current);
+                ytTimerRef.current = null;
+              }
+            }
+          },
+        },
+      });
+      ytPlayerRef.current = player;
+    });
+  }, [content_id, postProgress]);
 
   /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
@@ -227,7 +413,7 @@ const LessonPage = () => {
       );
     }
 
-    // PDF — render viewer directly (no tab switcher needed)
+    // PDF — render viewer directly
     if (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) {
       return (
         <div className="lesson-pdf-viewer">
@@ -246,10 +432,16 @@ const LessonPage = () => {
       return (
         <div className="lesson-video-wrapper">
           <iframe
+            id={iframeIdRef.current}
             src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0`}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             title="Vimeo Video"
+            ref={(el) => {
+              if (el && !vimeoPlayerRef.current) {
+                initVimeoPlayer(el);
+              }
+            }}
           ></iframe>
         </div>
       );
@@ -268,9 +460,15 @@ const LessonPage = () => {
       return (
         <div className="lesson-video-wrapper">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}`}
+            id={iframeIdRef.current}
+            src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1`}
             allowFullScreen
             title="YouTube Video"
+            ref={(el) => {
+              if (el && !ytPlayerRef.current) {
+                initYouTubePlayer(el);
+              }
+            }}
           ></iframe>
         </div>
       );
@@ -294,6 +492,7 @@ const LessonPage = () => {
             }
           }}
           onPlay={() => {
+            console.log("[LessonPage][Native] Playing");
             if (!progressTimerRef.current) {
               progressTimerRef.current = setInterval(() => {
                 if (videoRef.current && !videoRef.current.paused) {
@@ -309,9 +508,11 @@ const LessonPage = () => {
             setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: pct });
           }}
           onPause={(e) => {
+            console.log(`[LessonPage][Native] Paused at ${e.target.currentTime}s`);
             postProgress(content_id, e.target.currentTime);
           }}
           onEnded={(e) => {
+            console.log(`[LessonPage][Native] Ended at ${e.target.duration}s`);
             postProgress(content_id, e.target.duration || e.target.currentTime);
           }}
         >
@@ -323,8 +524,11 @@ const LessonPage = () => {
   /* ─── Derived flags ──────────────────────────────────────── */
   const assetUrl =
     lessonContent?.file?.url || lessonContent?.url || lessonContent?.video_url;
-  // Chat & Summary ONLY for video URLs
-  const showChatSummary = !!(assetUrl && isVideoUrl(assetUrl));
+  // Show progress bar for any video (also check icon field)
+  const isVideoContent = !!(
+    (assetUrl && isVideoUrl(assetUrl)) || lessonContent?.icon === "video"
+  );
+  const showChatSummary = isVideoContent;
   const isQuiz =
     lessonContent?.category?.slug === "quiz" ||
     (lessonContent?.course_quizzes && lessonContent.course_quizzes.length > 0);
@@ -338,7 +542,7 @@ const LessonPage = () => {
   /* ─── Render ─────────────────────────────────────────────── */
   return (
     <>
-      {/* Point 14: overlay backdrop (mobile + toggled open on overlay) */}
+      {/* overlay backdrop (mobile + toggled open on overlay) */}
       {sidebar && (
         <div
           className="lesson-sidebar-overlay"
@@ -349,7 +553,7 @@ const LessonPage = () => {
       <div className="rbt-lesson-area bg-color-white">
         <div className={`rbt-lesson-content-wrapper ${sidebar ? "" : "sidebar-hide"}`}>
 
-          {/* ── LEFT SIDEBAR (Point 8: independent scroll) ── */}
+          {/* ── LEFT SIDEBAR ── */}
           <div className={`rbt-lesson-leftsidebar ${sidebar ? "" : "sidebar-hide"}`}>
             <LessonSidebar
               courseData={courseData}
@@ -361,7 +565,7 @@ const LessonPage = () => {
           {/* ── RIGHT CONTENT ── */}
           <div className="rbt-lesson-rightsidebar overflow-hidden lesson-video" style={{ position: "relative" }}>
 
-            {/* ── Floating controls (back arrow left, hamburger right of it) ── */}
+            {/* ── Floating controls ── */}
             <div className="lesson-float-controls">
               <Link
                 href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
@@ -396,8 +600,8 @@ const LessonPage = () => {
                       {/* ─── Main asset (PDF/HTML/Video all auto-detected) ─── */}
                       {renderLessonAsset()}
 
-                      {/* ─── Video Progress Bar (shown for video URLs) ─── */}
-                      {showChatSummary && videoProgress.totalDurationSec > 0 && (
+                      {/* ─── Video Progress Bar + Percentage ─── */}
+                      {isVideoContent && videoProgress.totalDurationSec > 0 && (
                         <div className="lesson-video-progress-bar-wrapper">
                           <div className="lesson-vp-bar-track">
                             <div
@@ -406,7 +610,7 @@ const LessonPage = () => {
                             />
                           </div>
                           <div className="lesson-vp-stats">
-                            <span className="lesson-vp-stat">
+                            <span className="lesson-vp-stat lesson-vp-percent-badge">
                               <i className="feather-check-circle"></i>
                               <strong>{videoProgress.percent}%</strong> watched
                             </span>
@@ -426,7 +630,7 @@ const LessonPage = () => {
                         </div>
                       )}
 
-                      {/* ─── Chat / Summary tabs (Points 9, 10) ─── */}
+                      {/* ─── Chat / Summary tabs ─── */}
                       {showChatSummary && (
                         <div className="lesson-bottom-tabs-wrapper">
                           <div className="lesson-bottom-tab-bar">
@@ -455,7 +659,7 @@ const LessonPage = () => {
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Chat filter (Point 9) */}
+                                    {/* Chat filter */}
                                     <div className="lesson-chat-filter-bar">
                                       <i className="feather-filter"></i>
                                       <input

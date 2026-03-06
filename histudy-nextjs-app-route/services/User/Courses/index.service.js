@@ -65,16 +65,20 @@ export const UserCoursesServices = {
   // body: { lesson_id: string (content_id), current_time: number (seconds float) }
   TrackLessonProgress: async (lessonId, currentTimeSec) => {
     try {
+      const bodyData = {
+        lesson_id: lessonId,
+        current_time: currentTimeSec,
+      };
+      console.log("[TrackProgress] POST request →", bodyData);
       const payload = {
         ...UserCourses.trackLessonProgress,
-        data: {
-          lesson_id: lessonId,
-          current_time: currentTimeSec,
-        },
+        bodyData,
       };
       const res = await APIrequest(payload);
+      console.log("[TrackProgress] POST response ←", res);
       return res;
     } catch (error) {
+      console.error("[TrackProgress] POST error:", error);
       logger(error);
       throw error;
     }

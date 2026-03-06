@@ -18,16 +18,9 @@ const formatMinutes = (totalMin) => {
   return `${m}m`;
 };
 
-// Helper: is this item a playable video?
+// Helper: is this item a playable video? (uses API `icon` field)
 const isVideoContent = (item) => {
-  const url = item?.url || item?.file?.url || item?.video_url || "";
-  return !!(
-    url &&
-    (url.includes("youtube.com") ||
-      url.includes("youtu.be") ||
-      url.includes("vimeo.com") ||
-      /\.(mp4|webm|ogg)$/i.test(url))
-  );
+  return item?.icon === "video";
 };
 
 // ── Horizontal Circular Progress (for sidebar top) ───────────
@@ -151,17 +144,20 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress }) => {
 
   const remainingMinutes = totalMinutesAll - watchedMinutes;
 
-  // Icon purely from API `icon` field — no URL guessing
+  // Icon purely from API `icon` field
   const getItemIcon = (content) => {
-    const icon = content?.icon; // from API: "quiz", "document", "video", null, etc.
+    const icon = content?.icon; // from API: "quiz", "editor", "video", etc.
     if (icon === "quiz") return "feather-help-circle";
     if (icon === "document") return "feather-book-open";
     if (icon === "video") return "feather-play-circle";
+    if (icon === "editor") return "feather-edit";
     // fallback: check category slug
     const slug = content?.category?.slug;
     if (slug === "quiz") return "feather-help-circle";
     if (slug === "assignment") return "feather-file-text";
-    // null / unknown → question mark
+    if (slug === "practice-problem") return "feather-code";
+    if (slug === "project") return "feather-folder";
+    // null / unknown → generic circle
     return "feather-circle";
   };
 
