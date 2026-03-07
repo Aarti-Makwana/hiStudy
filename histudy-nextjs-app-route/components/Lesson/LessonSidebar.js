@@ -60,21 +60,32 @@ const ItemRing = ({ percent }) => {
   const r = 13;
   const circ = 2 * Math.PI * r;
   const p = Math.min(100, Math.max(0, Math.round(percent || 0)));
-  const offset = circ * (1 - p / 100);
+  const isComplete = p >= 95;
+  const displayP = isComplete ? 100 : p; // fill ring fully when ≥ 95%
+  const offset = circ * (1 - displayP / 100);
   const gradId = `ring-grad-${Math.random().toString(36).slice(2, 8)}`;
 
   return (
-    <svg viewBox="0 0 36 36" className="sidebar-item-ring">
+    <svg viewBox="0 0 36 36" className={`sidebar-item-ring ${isComplete ? "complete" : ""}`}>
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#6366f1" />
+          {isComplete ? (
+            <>
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </>
+          ) : (
+            <>
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </>
+          )}
         </linearGradient>
       </defs>
       {/* Background track */}
       <circle cx="18" cy="18" r={r} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="3" />
       {/* Filled arc with gradient */}
-      {p > 0 && (
+      {displayP > 0 && (
         <circle
           cx="18" cy="18" r={r}
           fill="none"
@@ -87,15 +98,26 @@ const ItemRing = ({ percent }) => {
           style={{ transition: "stroke-dashoffset 0.5s ease" }}
         />
       )}
-      {/* Percentage label */}
-      <text
-        x="18" y="18.5"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        className="sidebar-item-ring-pct"
-      >
-        {p}%
-      </text>
+      {/* Checkmark for ≥ 95%, otherwise percentage label */}
+      {isComplete ? (
+        <path
+          d="M12.5 18.5l3 3 8-8"
+          fill="none"
+          stroke="#22c55e"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <text
+          x="18" y="18.5"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="sidebar-item-ring-pct"
+        >
+          {p}%
+        </text>
+      )}
     </svg>
   );
 };
@@ -266,16 +288,12 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
                               )}
                             </div>
 
-                            {/* Right: progress ring (video only) or icon badge */}
-                            <div className="sidebar-item-right">
-                              {isVideo ? (
+                            {/* Right: progress ring for video items only */}
+                            {isVideo && (
+                              <div className="sidebar-item-right">
                                 <ItemRing percent={itemPercent} />
-                              ) : (
-                                <span className="sidebar-item-icon-badge">
-                                  <i className={getItemIcon(innerData)}></i>
-                                </span>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </Link>
                         );
                       })}

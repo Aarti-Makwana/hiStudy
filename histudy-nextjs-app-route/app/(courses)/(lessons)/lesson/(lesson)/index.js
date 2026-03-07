@@ -125,6 +125,16 @@ const LessonPage = () => {
     fetchCourseDetails();
   }, [course_slug]);
 
+  /* ─── Sync current video progress into lessonProgressMap (real-time) ── */
+  useEffect(() => {
+    if (content_id && videoProgress.percent > 0) {
+      setLessonProgressMap((prev) => {
+        if (prev[content_id] === videoProgress.percent) return prev;
+        return { ...prev, [content_id]: videoProgress.percent };
+      });
+    }
+  }, [content_id, videoProgress.percent]);
+
   /* ─── Prev / Next navigation ─────────────────────────────── */
   useEffect(() => {
     if (courseData && content_id) {
@@ -592,24 +602,27 @@ const LessonPage = () => {
           </div>
 
           {/* ── RIGHT CONTENT ── */}
-          <div className="rbt-lesson-rightsidebar overflow-hidden lesson-video" style={{ position: "relative" }}>
+          <div className="rbt-lesson-rightsidebar overflow-hidden lesson-video">
 
-            {/* ── Floating controls ── */}
-            <div className="lesson-float-controls">
+            {/* ── Top navigation strip ── */}
+            <div className="lesson-top-strip">
               <Link
                 href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
-                className="lesson-float-btn"
+                className="lesson-strip-btn"
                 title="Back to Course"
               >
                 <i className="feather-arrow-left"></i>
               </Link>
               <button
-                className="lesson-float-btn"
+                className="lesson-strip-btn"
                 title="Toggle Sidebar"
                 onClick={() => setSidebar(!sidebar)}
               >
                 <i className="feather-menu"></i>
               </button>
+              <span className="lesson-strip-title">
+                {lessonContent?.title || "Lesson"}
+              </span>
             </div>
 
             {loading ? (
@@ -737,11 +750,12 @@ const LessonPage = () => {
                     </>
                   )}
                 </div>
+
+                {/* ── Spacer + Pagination: inside scroll so it appears at bottom ── */}
+                <div className="lesson-pagination-spacer" />
+                <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
               </div>
             )}
-
-            {/* ── Pagination: outside scroll so it's always visible ── */}
-            <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
           </div>
         </div>
       </div>
