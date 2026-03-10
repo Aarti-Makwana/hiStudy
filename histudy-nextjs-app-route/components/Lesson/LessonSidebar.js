@@ -6,16 +6,17 @@ import Link from "next/link";
 
 import LessonData from "../../data/lesson.json";
 
-// Helper: convert hours/minutes to total minutes
-const toTotalMinutes = (h, m) => (h || 0) * 60 + (m || 0);
+// Helper: convert hours/minutes/seconds to total seconds
+const toTotalSeconds = (h, m, s) => (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
 
-// Helper: format total minutes to "Xh Ym"
-const formatMinutes = (totalMin) => {
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  return `${m}m`;
+// Helper: format total seconds to "Xh Ym Zs"
+const formatTime = (totalSec) => {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = Math.floor(totalSec % 60);
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
 };
 
 // Helper: is this item a playable video? (uses API `icon` field)
@@ -76,8 +77,8 @@ const ItemRing = ({ percent }) => {
             </>
           ) : (
             <>
-              <stop offset="0%" stopColor="#7c3aed" />
-              <stop offset="100%" stopColor="#6366f1" />
+              <stop offset="0%" stopColor="#642ec3" />
+              <stop offset="100%" stopColor="#7b54dc" />
             </>
           )}
         </linearGradient>
@@ -170,16 +171,16 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
   const completedContents = topics.reduce((acc, t) => acc + (t.progres?.completed || 0), 0);
   const progressPercent = totalContents > 0 ? Math.round((completedContents / totalContents) * 100) : 0;
 
-  const totalMinutesAll = topics.reduce((acc, t) =>
-    acc + (t.course_contents || []).reduce((a, c) => a + toTotalMinutes(c.hours, c.minutes), 0), 0);
+  const totalSecondsAll = topics.reduce((acc, t) =>
+    acc + (t.course_contents || []).reduce((a, c) => a + toTotalSeconds(c.hours, c.minutes, c.seconds), 0), 0);
 
-  const watchedMinutes = topics.reduce((acc, t) => {
+  const watchedSeconds = topics.reduce((acc, t) => {
     const completed = t.progres?.completed || 0;
     return acc + (t.course_contents || []).slice(0, completed)
-      .reduce((a, c) => a + toTotalMinutes(c.hours, c.minutes), 0);
+      .reduce((a, c) => a + toTotalSeconds(c.hours, c.minutes, c.seconds), 0);
   }, 0);
 
-  const remainingMinutes = totalMinutesAll - watchedMinutes;
+  const remainingSeconds = totalSecondsAll - watchedSeconds;
 
   // Icon purely from API `icon` field
   const getItemIcon = (content) => {
@@ -212,15 +213,15 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
             <div className="sidebar-progress-stats">
               <div className="sidebar-stat">
                 <span className="sidebar-stat-label">Total</span>
-                <span className="sidebar-stat-val">{formatMinutes(totalMinutesAll)}</span>
+                <span className="sidebar-stat-val">{formatTime(totalSecondsAll)}</span>
               </div>
               <div className="sidebar-stat">
                 <span className="sidebar-stat-label">Played</span>
-                <span className="sidebar-stat-val">{formatMinutes(watchedMinutes)}</span>
+                <span className="sidebar-stat-val">{formatTime(watchedSeconds)}</span>
               </div>
               <div className="sidebar-stat">
                 <span className="sidebar-stat-label">Remaining</span>
-                <span className="sidebar-stat-val">{formatMinutes(remainingMinutes)}</span>
+                <span className="sidebar-stat-val">{formatTime(remainingSeconds)}</span>
               </div>
             </div>
           </div>
@@ -232,8 +233,8 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
 
           {topics.length > 0
             ? topics.map((data, index) => {
-              const topicTotalMin = (data.course_contents || [])
-                .reduce((a, c) => a + toTotalMinutes(c.hours, c.minutes), 0);
+              const topicTotalSec = (data.course_contents || [])
+                .reduce((a, c) => a + toTotalSeconds(c.hours, c.minutes, c.seconds), 0);
               const isTopicOpen = data.id === activeTab;
 
               return (
@@ -245,8 +246,8 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
                   >
                     <span className="sidebar-topic-num">{index + 1}.</span>
                     <span className="sidebar-topic-name">{data.name}</span>
-                    {topicTotalMin > 0 && (
-                      <span className="sidebar-topic-duration">{formatMinutes(topicTotalMin)}</span>
+                    {topicTotalSec > 0 && (
+                      <span className="sidebar-topic-duration">{formatTime(topicTotalSec)}</span>
                     )}
                     <i className={`feather-chevron-${isTopicOpen ? "up" : "down"} sidebar-topic-chevron`}></i>
                   </button>
@@ -257,7 +258,7 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
                       {data.course_contents?.map((innerData, innerIndex) => {
                         const active = isActive(innerData.id);
                         const isVideo = isVideoContent(innerData);
-                        const contentMin = toTotalMinutes(innerData.hours, innerData.minutes);
+                        const contentSec = toTotalSeconds(innerData.hours, innerData.minutes, innerData.seconds);
                         const apiPercent = lessonProgressMap[innerData.id] ?? innerData.progres?.percent ?? innerData.progress?.percent ?? 0;
                         const itemPercent = (active && isVideo)
                           ? (typeof currentVideoProgress !== "undefined" ? currentVideoProgress : apiPercent)
@@ -283,8 +284,8 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
                             <div className="sidebar-item-body">
                               <span className="sidebar-item-num">{index + 1}.{innerIndex + 1}</span>
                               <span className="sidebar-item-title">{innerData.title}</span>
-                              {contentMin > 0 && (
-                                <span className="sidebar-item-dur">{formatMinutes(contentMin)}</span>
+                              {contentSec > 0 && (
+                                <span className="sidebar-item-dur">{formatTime(contentSec)}</span>
                               )}
                             </div>
 

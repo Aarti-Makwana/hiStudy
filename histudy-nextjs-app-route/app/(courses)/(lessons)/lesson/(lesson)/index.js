@@ -82,6 +82,11 @@ const LessonPage = () => {
   const [activeBottomTab, setActiveBottomTab] = useState("summary");
   // Point 9: Chat filter
   const [chatFilter, setChatFilter] = useState("");
+  // Sequential reveal for pagination
+  const [showPagination, setShowPagination] = useState(false);
+  const sentinelRef = useRef(null);
+  // PDF / Content tabs
+  const [activeContentTab, setActiveContentTab] = useState("content");
 
   /* ─── Fetch course structure ─────────────────────────────── */
   useEffect(() => {
@@ -241,9 +246,10 @@ const LessonPage = () => {
       UserCoursesServices.TrackLessonProgress(prevContentId, prevTime).catch(() => { });
     }
 
-    // ── Cleanup old players ──
     destroyPlayers();
     setVideoProgress({ currentTimeSec: 0, totalDurationSec: 0, percent: 0 });
+    setShowPagination(false); // Reset pagination on new content
+    setActiveContentTab("content"); // Reset content tab
     lastPostedTimeRef.current = 0;
     lastPostedTimeRef._contentId = content_id; // track which content we're on
 
@@ -303,6 +309,29 @@ const LessonPage = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic_id, content_id]);
+
+  /* ─── IntersectionObserver for Pagination Reveal ───────────── */
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowPagination(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const sentinel = sentinelRef.current;
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [lessonContent]); // re-run when content changes
 
   /* ─── Init Vimeo Player after iframe renders ───────────────── */
   const initVimeoPlayer = useCallback((iframeEl) => {
@@ -423,8 +452,51 @@ const LessonPage = () => {
 
     // ── HTML / rich-text content (no URL, but has description/body/content) ──
     const htmlBody =
-      lessonContent?.body || lessonContent?.content || lessonContent?.html_content;
-    if (!assetUrl && htmlBody) {
+      lessonContent?.body || lessonContent?.content || lessonContent?.html_content || lessonContent?.description || lessonContent?.summary;
+
+    const pdfUrl = (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) ? assetUrl : null;
+
+    // ── Tabbed View: HTML + PDF ──
+    if (htmlBody && pdfUrl) {
+      return (
+        <div className="lesson-tabbed-container">
+          <div className="lesson-content-tabs">
+            <button
+              className={`content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
+              onClick={() => setActiveContentTab("content")}
+            >
+              <i className="feather-file-text"></i> Description
+            </button>
+            <button
+              className={`content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
+              onClick={() => setActiveContentTab("pdf")}
+            >
+              <i className="feather-file"></i> Document
+            </button>
+          </div>
+
+          <div className="lesson-tab-content">
+            {activeContentTab === "content" ? (
+              <div
+                className="lesson-html-content"
+                dangerouslySetInnerHTML={{ __html: htmlBody }}
+              />
+            ) : (
+              <div className="lesson-pdf-viewer">
+                <iframe
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                  className="lesson-pdf-iframe"
+                  title="Document Preview"
+                ></iframe>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Single View Fallbacks ──
+    if (htmlBody && !assetUrl) {
       return (
         <div
           className="lesson-html-content"
@@ -433,33 +505,22 @@ const LessonPage = () => {
       );
     }
 
-    if (!assetUrl) {
-      // Last fallback: try description as HTML
-      const desc = lessonContent?.description || lessonContent?.summary;
-      if (desc) {
-        return (
-          <div
-            className="lesson-html-content"
-            dangerouslySetInnerHTML={{ __html: desc }}
-          />
-        );
-      }
+    if (pdfUrl) {
       return (
-        <div className="rbt-shadow-box text-center p--50">
-          <h5>No content available for this lesson.</h5>
+        <div className="lesson-pdf-viewer">
+          <iframe
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+            className="lesson-pdf-iframe"
+            title="Document Preview"
+          ></iframe>
         </div>
       );
     }
 
-    // PDF — render viewer directly
-    if (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) {
+    if (!assetUrl) {
       return (
-        <div className="lesson-pdf-viewer">
-          <iframe
-            src={`https://docs.google.com/viewer?url=${encodeURIComponent(assetUrl)}&embedded=true`}
-            className="lesson-pdf-iframe"
-            title="Document Preview"
-          ></iframe>
+        <div className="rbt-shadow-box text-center p--50">
+          <h5>No media available for this lesson.</h5>
         </div>
       );
     }
@@ -588,7 +649,7 @@ const LessonPage = () => {
         />
       )}
 
-      <div className="rbt-lesson-area bg-color-white">
+      <div className="rbt-lesson-area lesson-player-dark bg-color-darker">
         <div className={`rbt-lesson-content-wrapper ${sidebar ? "" : "sidebar-hide"}`}>
 
           {/* ── LEFT SIDEBAR ── */}
@@ -751,9 +812,11 @@ const LessonPage = () => {
                   )}
                 </div>
 
-                {/* ── Spacer + Pagination: inside scroll so it appears at bottom ── */}
-                <div className="lesson-pagination-spacer" />
-                <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
+                {/* ── Sentinel + Pagination: Reveal logic ── */}
+                <div ref={sentinelRef} className="lesson-pagination-sentinel" />
+                <div className={`lesson-pagination-reveal ${showPagination ? "visible" : ""}`}>
+                  <LessonPagination urlPrev={prevLesson} urlNext={nextLesson} />
+                </div>
               </div>
             )}
           </div>

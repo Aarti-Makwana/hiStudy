@@ -4,7 +4,7 @@ import React from "react";
 const LessonPagination = ({ urlPrev, urlNext }) => {
   return (
     <>
-      <div className="bg-color-extra2 ptb--15 overflow-hidden">
+      <div className="lesson-pagination-dark ptb--15 overflow-hidden">
         <div className="rbt-button-group">
           {urlPrev && (
             <Link
