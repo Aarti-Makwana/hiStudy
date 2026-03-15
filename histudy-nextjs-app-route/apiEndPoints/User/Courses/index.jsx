@@ -51,7 +51,7 @@ const UserCourses = {
   },
 
   saveSubmission: {
-    url: "/api/v1/submission-contents",
+    url: "/api/v1/save-submission",
     method: "POST",
   },
 };

@@ -222,7 +222,17 @@ const LessonPage = () => {
     try {
       lastPostedTimeRef.current = currentTimeSec;
       console.log(`[LessonPage] Sending progress → lesson_id: ${lessonId}, current_time: ${currentTimeSec}s`);
-      await UserCoursesServices.TrackLessonProgress(lessonId, currentTimeSec);
+      const res = await UserCoursesServices.TrackLessonProgress(lessonId, currentTimeSec);
+      
+      // Update local progress map for sidebar checkmarks / rings
+      if (res && res.status === "success") {
+        const pctStr = res.data?.completion_percentage || "0%";
+        const pct = parseFloat(pctStr) || 0;
+        setLessonProgressMap((prev) => ({
+          ...prev,
+          [lessonId]: pct,
+        }));
+      }
     } catch (err) {
       console.error("[LessonPage] postProgress error:", err);
     }
@@ -291,34 +301,49 @@ const LessonPage = () => {
             UserCoursesServices.GetLessonProgress(content_id),
           ]);
 
-          if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
-            const data = contentRes.value.data;
-            setLessonContent(data);
-
-            // pre-fill total duration from API data (hours + minutes + seconds)
-            const totalSec =
-              (data.hours || 0) * 3600 +
-              (data.minutes || 0) * 60 +
-              (data.seconds || 0);
-            setVideoProgress((prev) => ({ ...prev, totalDurationSec: totalSec }));
-          }
+          let savedTime = 0;
+          let savedTotal = 0;
+          let savedPercent = 0;
 
           if (progressRes.status === "fulfilled" && progressRes.value?.status === "success") {
             const prog = progressRes.value.data;
-            const savedTime = prog?.current_time || 0;
-            const savedTotal = prog?.total_duration || 0;
-            const savedPercent = prog?.percent || 0;
+            // API fields: last_position_seconds, completion_percentage, lesson.duration_seconds
+            savedTime = prog?.last_position_seconds || 0;
+            savedTotal = prog?.lesson?.duration_seconds || prog?.total_duration || 0;
+            const rawPercent = prog?.completion_percentage || "0";
+            savedPercent = parseFloat(rawPercent.replace("%", "")) || 0;
+
+            console.log(`[LessonPage] Loaded progress from API: ${savedTime}s / ${savedTotal}s (${savedPercent}%)`);
+            
+            // Logic: If video is already completed, start from 0 for re-watching
+            if (prog?.is_completed || savedPercent >= 98) {
+              console.log("[LessonPage] Lesson is completed. Resetting seek time to 0 for re-watch.");
+              savedTime = 0;
+            }
+
+            // Set ref BEFORE content state to ensure initial seek works
+            lastPostedTimeRef.current = savedTime;
             setVideoProgress({
               currentTimeSec: savedTime,
               totalDurationSec: savedTotal,
               percent: savedPercent,
             });
-            lastPostedTimeRef.current = savedTime;
+          }
 
-            // seek native video to saved position once it loads
-            if (videoRef.current && savedTime > 0) {
-              videoRef.current.currentTime = savedTime;
+          if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
+            const data = contentRes.value.data;
+            setLessonContent(data);
+
+            // If API total duration is missing, fall back to content data
+            if (savedTotal === 0) {
+              const contentSec = (data.hours || 0) * 3600 + (data.minutes || 0) * 60 + (data.seconds || 0);
+              setVideoProgress((prev) => ({ ...prev, totalDurationSec: contentSec }));
             }
+          }
+
+          // Force seek for native video if ready (though onLoadedMetadata handles this too)
+          if (videoRef.current && savedTime > 0) {
+            videoRef.current.currentTime = savedTime;
           }
         } catch (error) {
           console.error("Error fetching lesson content:", error);
@@ -680,163 +705,135 @@ const LessonPage = () => {
 
   /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
-    const assetUrl =
-      lessonContent?.file?.url || lessonContent?.url || lessonContent?.video_url;
+    // 1. Detect Assets
+    const videoUrl = lessonContent?.url || lessonContent?.video_url || "";
+    const pdfUrl = lessonContent?.file?.url || "";
+    const htmlBody = lessonContent?.body || lessonContent?.content || lessonContent?.html_content || lessonContent?.description || lessonContent?.summary || "";
 
-    // ── HTML / rich-text content (no URL, but has description/body/content) ──
-    const htmlBody =
-      lessonContent?.body || lessonContent?.content || lessonContent?.html_content || lessonContent?.description || lessonContent?.summary;
+    const hasVideo = isVideoUrl(videoUrl);
+    const hasPdf = !!pdfUrl || (lessonContent?.icon === "document" && !!videoUrl && !hasVideo); // fallback if it's pdf-only but in url slot
+    const finalPdfUrl = hasPdf ? (pdfUrl || videoUrl) : null;
+    const hasHtml = htmlBody.trim().length > 0;
 
-    const pdfUrl = (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) ? assetUrl : null;
+    // 2. Tab Selection Logic
+    // If we have (Video OR HTML) AND a PDF, show tabs
+    const showTabs = (hasVideo || hasHtml) && hasPdf;
 
+    // Helper: render single component
+    const renderVideo = () => {
+      if (videoUrl.includes("vimeo.com")) {
+        const vimeoId = videoUrl.split("/").pop();
+        return (
+          <div className="lesson-video-wrapper">
+            <iframe
+              id={iframeIdRef.current}
+              src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0`}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title="Vimeo Video"
+              ref={(el) => { if (el && !vimeoPlayerRef.current) initVimeoPlayer(el); }}
+            ></iframe>
+          </div>
+        );
+      }
+      if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+        let youtubeId = "";
+        if (videoUrl.includes("v=")) youtubeId = videoUrl.split("v=")[1].split("&")[0];
+        else if (videoUrl.includes("youtu.be/")) youtubeId = videoUrl.split("youtu.be/")[1].split("?")[0];
+        else youtubeId = videoUrl.split("/").pop();
+
+        return (
+          <div className="lesson-video-wrapper">
+            <iframe
+              id={iframeIdRef.current}
+              src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1`}
+              allowFullScreen
+              title="YouTube Video"
+              ref={(el) => { if (el && !ytPlayerRef.current) initYouTubePlayer(el); }}
+            ></iframe>
+          </div>
+        );
+      }
+      // Raw Video
+      return (
+        <div className="lesson-video-wrapper">
+          <video
+            ref={videoRef}
+            controls
+            src={videoUrl}
+            onLoadedMetadata={(e) => {
+              const dur = e.target.duration || 0;
+              setVideoProgress((prev) => ({ ...prev, totalDurationSec: prev.totalDurationSec > 0 ? prev.totalDurationSec : dur }));
+              if (lastPostedTimeRef.current > 0) e.target.currentTime = lastPostedTimeRef.current;
+            }}
+            onPlay={() => {
+              if (!progressTimerRef.current) {
+                progressTimerRef.current = setInterval(() => {
+                  if (videoRef.current && !videoRef.current.paused) postProgress(content_id, videoRef.current.currentTime);
+                }, 5000);
+              }
+            }}
+            onTimeUpdate={(e) => {
+              const cur = e.target.currentTime;
+              const dur = e.target.duration || 1;
+              setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: Math.round((cur / dur) * 100) });
+            }}
+            onPause={(e) => postProgress(content_id, e.target.currentTime)}
+            onEnded={(e) => postProgress(content_id, e.target.duration || e.target.currentTime)}
+          />
+        </div>
+      );
+    };
+
+    const renderPdf = () => (
+      <div className="lesson-pdf-viewer">
+        <iframe
+          src={`https://docs.google.com/viewer?url=${encodeURIComponent(finalPdfUrl)}&embedded=true`}
+          className="lesson-pdf-iframe"
+          title="Document Preview"
+        ></iframe>
+      </div>
+    );
+
+    const renderHtml = () => (
+      <div className="lesson-html-content" dangerouslySetInnerHTML={{ __html: htmlBody }} />
+    );
+
+    // 3. Assemble Content Node
     let contentNode = null;
-
-    // ── Tabbed View: HTML + PDF ──
-    if (htmlBody && pdfUrl) {
+    if (showTabs) {
       contentNode = (
         <div className="lesson-tabbed-container">
           <div className="lesson-content-tabs">
             <button
-              className={`content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
+              className={`lesson-content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
               onClick={() => setActiveContentTab("content")}
             >
-              <i className="feather-file-text"></i> Description
+              <i className={hasVideo ? "feather-play-circle" : "feather-file-text"}></i>
+              {hasVideo ? "Lesson Video" : "Lesson Description"}
             </button>
             <button
-              className={`content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
+              className={`lesson-content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
               onClick={() => setActiveContentTab("pdf")}
             >
               <i className="feather-file"></i> Document
             </button>
           </div>
-
           <div className="lesson-tab-content">
-            {activeContentTab === "content" ? (
-              <div
-                className="lesson-html-content"
-                dangerouslySetInnerHTML={{ __html: htmlBody }}
-              />
-            ) : (
-              <div className="lesson-pdf-viewer">
-                <iframe
-                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
-                  className="lesson-pdf-iframe"
-                  title="Document Preview"
-                ></iframe>
-              </div>
-            )}
+            {activeContentTab === "content" ? (hasVideo ? renderVideo() : renderHtml()) : renderPdf()}
           </div>
         </div>
       );
-    } else if (htmlBody && !assetUrl) {
-      contentNode = (
-        <div
-          className="lesson-html-content"
-          dangerouslySetInnerHTML={{ __html: htmlBody }}
-        />
-      );
-    } else if (pdfUrl) {
-      contentNode = (
-        <div className="lesson-pdf-viewer">
-          <iframe
-            src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
-            className="lesson-pdf-iframe"
-            title="Document Preview"
-          ></iframe>
-        </div>
-      );
-    } else if (!assetUrl) {
+    } else if (hasVideo) {
+      contentNode = renderVideo();
+    } else if (hasPdf) {
+      contentNode = renderPdf();
+    } else if (hasHtml) {
+      contentNode = renderHtml();
+    } else {
       contentNode = (
         <div className="rbt-shadow-box text-center p--50">
           <h5>No media available for this lesson.</h5>
-        </div>
-      );
-    } else if (assetUrl.includes("vimeo.com")) {
-      const vimeoId = assetUrl.split("/").pop();
-      contentNode = (
-        <div className="lesson-video-wrapper">
-          <iframe
-            id={iframeIdRef.current}
-            src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0`}
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            title="Vimeo Video"
-            ref={(el) => {
-              if (el && !vimeoPlayerRef.current) {
-                initVimeoPlayer(el);
-              }
-            }}
-          ></iframe>
-        </div>
-      );
-    } else if (assetUrl.includes("youtube.com") || assetUrl.includes("youtu.be")) {
-      let youtubeId = "";
-      if (assetUrl.includes("v=")) {
-        youtubeId = assetUrl.split("v=")[1].split("&")[0];
-      } else if (assetUrl.includes("youtu.be/")) {
-        youtubeId = assetUrl.split("youtu.be/")[1].split("?")[0];
-      } else {
-        youtubeId = assetUrl.split("/").pop();
-      }
-      contentNode = (
-        <div className="lesson-video-wrapper">
-          <iframe
-            id={iframeIdRef.current}
-            src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1`}
-            allowFullScreen
-            title="YouTube Video"
-            ref={(el) => {
-              if (el && !ytPlayerRef.current) {
-                initYouTubePlayer(el);
-              }
-            }}
-          ></iframe>
-        </div>
-      );
-    } else {
-      // Raw / HTML5 Video
-      contentNode = (
-        <div className="lesson-video-wrapper">
-          <video
-            ref={videoRef}
-            controls
-            src={assetUrl}
-            onLoadedMetadata={(e) => {
-              const dur = e.target.duration || 0;
-              setVideoProgress((prev) => ({
-                ...prev,
-                totalDurationSec: prev.totalDurationSec > 0 ? prev.totalDurationSec : dur,
-              }));
-              if (lastPostedTimeRef.current > 0) {
-                e.target.currentTime = lastPostedTimeRef.current;
-              }
-            }}
-            onPlay={() => {
-              console.log("[LessonPage][Native] Playing");
-              if (!progressTimerRef.current) {
-                progressTimerRef.current = setInterval(() => {
-                  if (videoRef.current && !videoRef.current.paused) {
-                    postProgress(content_id, videoRef.current.currentTime);
-                  }
-                }, 5000); // Posts every 5 seconds while playing
-              }
-            }}
-            onTimeUpdate={(e) => {
-              const cur = e.target.currentTime;
-              const dur = e.target.duration || videoProgress.totalDurationSec || 1;
-              const pct = Math.min(100, Math.round((cur / dur) * 100));
-              setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: pct });
-            }}
-            onPause={(e) => {
-              console.log(`[LessonPage][Native] Paused at ${e.target.currentTime}s`);
-              postProgress(content_id, e.target.currentTime);
-            }}
-            onEnded={(e) => {
-              console.log(`[LessonPage][Native] Ended at ${e.target.duration}s`);
-              postProgress(content_id, e.target.duration || e.target.currentTime);
-            }}
-          >
-          </video>
         </div>
       );
     }
@@ -850,11 +847,10 @@ const LessonPage = () => {
   };
 
   /* ─── Derived flags ──────────────────────────────────────── */
-  const assetUrl =
-    lessonContent?.file?.url || lessonContent?.url || lessonContent?.video_url;
+  const videoUrlForFlag = lessonContent?.url || lessonContent?.video_url;
   // Show progress bar for any video (also check icon field)
   const isVideoContent = !!(
-    (assetUrl && isVideoUrl(assetUrl)) || lessonContent?.icon === "video"
+    (videoUrlForFlag && isVideoUrl(videoUrlForFlag)) || lessonContent?.icon === "video"
   );
   const showChatSummary = isVideoContent;
   const isQuiz =
