@@ -29,6 +29,31 @@ const UserCourses = {
     url: "/api/v1/lesson-progress",
     method: "GET",
   },
+  
+  saveCommentReply: {
+    url: "/api/v1/course-content/save-comment-reply",
+    method: "POST",
+  },
+  
+  getAllCommentReply: {
+    url: "/api/v1/course-content/getall-comment-reply",
+    method: "GET",
+  },
+
+  getQuizAttempts: {
+    url: "/api/v1/quiz-attempts",
+    method: "GET",
+  },
+
+  getSubmissionContents: {
+    url: "/api/v1/submission-contents",
+    method: "GET",
+  },
+
+  saveSubmission: {
+    url: "/api/v1/submission-contents",
+    method: "POST",
+  },
 };
 
 export default UserCourses;

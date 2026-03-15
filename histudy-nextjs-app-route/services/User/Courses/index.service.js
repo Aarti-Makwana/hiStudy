@@ -99,4 +99,73 @@ export const UserCoursesServices = {
     }
   },
 
+  saveCommentReply: async (bodyData) => {
+    try {
+      const payload = {
+        ...UserCourses.saveCommentReply,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  getAllCommentReply: async (content_id) => {
+    try {
+      const payload = {
+        ...UserCourses.getAllCommentReply,
+        url: `${UserCourses.getAllCommentReply.url}?content_id=${content_id}`,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  GetQuizAttempts: async (courseId) => {
+    try {
+      const payload = {
+        ...UserCourses.getQuizAttempts,
+        url: `${UserCourses.getQuizAttempts.url}/${courseId}`,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  GetSubmissionContents: async (courseId) => {
+    try {
+      const payload = {
+        ...UserCourses.getSubmissionContents,
+        url: `${UserCourses.getSubmissionContents.url}/${courseId}`,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
+
+  SaveSubmission: async (bodyData) => {
+    try {
+      const payload = {
+        ...UserCourses.saveSubmission,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

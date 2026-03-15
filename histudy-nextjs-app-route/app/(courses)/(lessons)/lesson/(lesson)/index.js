@@ -9,6 +9,7 @@ import { UserCoursesServices } from "@/services/User/Courses/index.service";
 import Loader from "@/components/Common/Loader";
 import QuizHead from "@/components/Lesson/Quiz/QuizHead";
 import QuizPlayer from "@/components/Lesson/QuizPlayer";
+import toast from "react-hot-toast";
 
 /** Check if a URL is a playable video (YouTube / Vimeo / raw file) */
 const isVideoUrl = (url) =>
@@ -88,6 +89,20 @@ const LessonPage = () => {
   // PDF / Content tabs
   const [activeContentTab, setActiveContentTab] = useState("content");
 
+  // Chat/Comments state
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null); // comment_id of the comment being replied to
+  const [replyText, setReplyText] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+
+  // Assignment / Quiz Attempt status state
+  const [courseQuizAttempts, setCourseQuizAttempts] = useState([]);
+  const [submissionContents, setSubmissionContents] = useState([]);
+  const [assignmentText, setAssignmentText] = useState("");
+  const [assignmentFile, setAssignmentFile] = useState(null);
+  const [submittingAssignment, setSubmittingAssignment] = useState(false);
+
   /* ─── Fetch course structure ─────────────────────────────── */
   useEffect(() => {
     const fetchCourseDetails = async () => {
@@ -120,6 +135,20 @@ const LessonPage = () => {
               });
               console.log("[LessonPage] Fetched progress map from API:", progressMap);
               setLessonProgressMap(progressMap);
+            }
+
+            // Fetch Quiz Attempts and Submission Contents
+            const courseId = res.data.id;
+            if (courseId) {
+              const quizAttemptsRes = await UserCoursesServices.GetQuizAttempts(courseId);
+              if (quizAttemptsRes?.status === "success") {
+                setCourseQuizAttempts(quizAttemptsRes.data?.quizzes || []);
+              }
+
+              const submissionRes = await UserCoursesServices.GetSubmissionContents(courseId);
+              if (submissionRes?.status === "success") {
+                setSubmissionContents(submissionRes.data?.contents || []);
+              }
             }
           }
         } catch (error) {
@@ -310,6 +339,107 @@ const LessonPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic_id, content_id]);
 
+  /* ─── Chat / Comments Logic ────────────────────────────────── */
+  const fetchComments = useCallback(async () => {
+    if (!content_id) return;
+    try {
+      const res = await UserCoursesServices.getAllCommentReply(content_id);
+      if (res && res.status === "success") {
+        setComments(res.data || []);
+      }
+    } catch (err) {
+      console.error("[LessonPage] Error fetching comments:", err);
+    }
+  }, [content_id]);
+
+  useEffect(() => {
+    if (activeBottomTab === "chat") {
+      fetchComments();
+    }
+  }, [activeBottomTab, fetchComments]);
+
+  const handleSaveComment = async () => {
+    if (!newComment.trim() || !content_id || postingComment) return;
+    setPostingComment(true);
+    try {
+      const res = await UserCoursesServices.saveCommentReply({
+        content_id: content_id,
+        comment: newComment,
+        comment_id: null,
+      });
+      if (res && res.status === "success") {
+        setNewComment("");
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("[LessonPage] Error saving comment:", err);
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handleSaveReply = async (commentId) => {
+    if (!replyText.trim() || !content_id || postingComment) return;
+    setPostingComment(true);
+    try {
+      const res = await UserCoursesServices.saveCommentReply({
+        content_id: content_id,
+        comment: replyText,
+        comment_id: commentId,
+      });
+      if (res && res.status === "success") {
+        setReplyText("");
+        setReplyingTo(null);
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("[LessonPage] Error saving reply:", err);
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  /* ─── Handle Assignment Submission ───────────────────────── */
+  const handleAssignmentSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!assignmentText.trim() && !assignmentFile) {
+      toast.error("Please provide some text or a file for your assignment.");
+      return;
+    }
+
+    setSubmittingAssignment(true);
+    try {
+      const formData = new FormData();
+      formData.append("content_id", content_id);
+      formData.append("body", assignmentText);
+      if (assignmentFile) {
+        formData.append("file", assignmentFile);
+      }
+
+      const res = await UserCoursesServices.SaveSubmission(formData);
+      if (res.status === "success") {
+        setAssignmentText("");
+        setAssignmentFile(null);
+        toast.success("Assignment submitted successfully!");
+        
+        // Refresh submission contents
+        if (courseData?.id) {
+          const submissionRes = await UserCoursesServices.GetSubmissionContents(courseData.id);
+          if (submissionRes?.status === "success") {
+            setSubmissionContents(submissionRes.data?.contents || []);
+          }
+        }
+      } else {
+        toast.error(res.message || "Submission failed.");
+      }
+    } catch (error) {
+      console.error("Error submitting assignment:", error);
+      toast.error("An error occurred during submission.");
+    } finally {
+      setSubmittingAssignment(false);
+    }
+  };
+
   /* ─── IntersectionObserver for Pagination Reveal ───────────── */
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -445,6 +575,109 @@ const LessonPage = () => {
     });
   }, [content_id, postProgress]);
 
+  /* ─── Render Assignment UI ───────────────────────────────── */
+  const renderAssignmentUI = () => {
+    const categoryName = lessonContent?.category?.name || "";
+    const categorySlug = lessonContent?.category?.slug || "";
+    const isAssignment = categorySlug === "assignment" || categoryName.toLowerCase() === "assignment";
+    const isProject = categorySlug === "project" || categoryName.toLowerCase() === "project";
+
+    if (!isAssignment && !isProject) return null;
+
+    const submission = submissionContents.find(s => String(s.id) === String(content_id));
+    const latestSubmission = submission?.latest_submission;
+
+    return (
+      <div className="lesson-assignment-submission-container mt--40">
+        <div className="section-title">
+          <h4 className="mb--20">Assignment Submission</h4>
+        </div>
+
+        {latestSubmission ? (
+          <div className="bg-color-white rbt-shadow-box p--30">
+            <div className="submission-status-item mb--20 d-flex align-items-center gap-3">
+              <span className="h6 mb--0">Status:</span>
+              <span className={`status-badge ${latestSubmission.is_approved ? "approved" : "pending"}`} 
+                    style={{ 
+                      padding: "4px 12px", 
+                      borderRadius: "4px", 
+                      fontSize: "14px",
+                      backgroundColor: latestSubmission.is_approved ? "rgba(34, 197, 94, 0.1)" : "rgba(245, 158, 11, 0.1)",
+                      color: latestSubmission.is_approved ? "#22c55e" : "#f59e0b",
+                      border: `1px solid ${latestSubmission.is_approved ? "#22c55e" : "#f59e0b"}`
+                    }}>
+                <i className={`feather-${latestSubmission.is_approved ? "check-circle" : "clock"} mr--5`}></i>
+                {latestSubmission.is_approved ? "Approved" : "Pending Approval"}
+              </span>
+            </div>
+            {latestSubmission.feedback && (
+              <div className="submission-feedback mt--20 p--15 bg-color-light rounded shadow-sm">
+                <h6 className="mb--5 text-primary">Feedback from Instructor:</h6>
+                <p className="mb--0 text-dark">{latestSubmission.feedback}</p>
+              </div>
+            )}
+            <div className="mt--20 text-secondary small">
+              <p className="mb--0">Submitted on: {new Date(latestSubmission.submitted_at).toLocaleString()}</p>
+              <p className="mb--0">Attempt: {latestSubmission.attempt}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-color-white rbt-shadow-box p--30">
+            <form onSubmit={handleAssignmentSubmit}>
+              <div className="assignment-answer-form mb--20">
+                <textarea
+                  rows="6"
+                  placeholder="Add your assignment content here..."
+                  className="w-100 p--15 rounded border"
+                  value={assignmentText}
+                  onChange={(e) => setAssignmentText(e.target.value)}
+                  style={{ backgroundColor: "#f9f9f9" }}
+                ></textarea>
+              </div>
+
+              <div className="mt--30">
+                <label className="mb--10 d-block font-weight-bold h6">Upload files (optional)</label>
+                <div className="custom-file-upload-wrapper p--20 border-dashed rounded text-center bg-color-light">
+                  <input
+                    type="file"
+                    id="assignment-file"
+                    className="d-none"
+                    onChange={(e) => setAssignmentFile(e.target.files[0])}
+                  />
+                  <label htmlFor="assignment-file" className="cursor-pointer mb--0 d-block">
+                    <i className="feather-upload-cloud h3 d-block mb--10 text-primary"></i>
+                    <span className="d-block">{assignmentFile ? assignmentFile.name : "Click to upload or drag and drop"}</span>
+                    {!assignmentFile && <small className="text-secondary">(Images, PDFs, or ZIP files recommended)</small>}
+                  </label>
+                </div>
+              </div>
+
+              <div className="submit-btn mt--35">
+                <button
+                  type="submit"
+                  className="rbt-btn btn-gradient hover-icon-reverse w-100"
+                  disabled={submittingAssignment}
+                >
+                  <span className="icon-reverse-wrapper">
+                    <span className="btn-text">
+                      {submittingAssignment ? "Submitting..." : "Submit Assignment"}
+                    </span>
+                    <span className="btn-icon">
+                      <i className="feather-arrow-right"></i>
+                    </span>
+                    <span className="btn-icon">
+                      <i className="feather-arrow-right"></i>
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
     const assetUrl =
@@ -456,9 +689,11 @@ const LessonPage = () => {
 
     const pdfUrl = (lessonContent?.icon === "document" || isPdfUrl(assetUrl)) ? assetUrl : null;
 
+    let contentNode = null;
+
     // ── Tabbed View: HTML + PDF ──
     if (htmlBody && pdfUrl) {
-      return (
+      contentNode = (
         <div className="lesson-tabbed-container">
           <div className="lesson-content-tabs">
             <button
@@ -493,20 +728,15 @@ const LessonPage = () => {
           </div>
         </div>
       );
-    }
-
-    // ── Single View Fallbacks ──
-    if (htmlBody && !assetUrl) {
-      return (
+    } else if (htmlBody && !assetUrl) {
+      contentNode = (
         <div
           className="lesson-html-content"
           dangerouslySetInnerHTML={{ __html: htmlBody }}
         />
       );
-    }
-
-    if (pdfUrl) {
-      return (
+    } else if (pdfUrl) {
+      contentNode = (
         <div className="lesson-pdf-viewer">
           <iframe
             src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
@@ -515,20 +745,15 @@ const LessonPage = () => {
           ></iframe>
         </div>
       );
-    }
-
-    if (!assetUrl) {
-      return (
+    } else if (!assetUrl) {
+      contentNode = (
         <div className="rbt-shadow-box text-center p--50">
           <h5>No media available for this lesson.</h5>
         </div>
       );
-    }
-
-    // Vimeo
-    if (assetUrl.includes("vimeo.com")) {
+    } else if (assetUrl.includes("vimeo.com")) {
       const vimeoId = assetUrl.split("/").pop();
-      return (
+      contentNode = (
         <div className="lesson-video-wrapper">
           <iframe
             id={iframeIdRef.current}
@@ -544,10 +769,7 @@ const LessonPage = () => {
           ></iframe>
         </div>
       );
-    }
-
-    // YouTube
-    if (assetUrl.includes("youtube.com") || assetUrl.includes("youtu.be")) {
+    } else if (assetUrl.includes("youtube.com") || assetUrl.includes("youtu.be")) {
       let youtubeId = "";
       if (assetUrl.includes("v=")) {
         youtubeId = assetUrl.split("v=")[1].split("&")[0];
@@ -556,7 +778,7 @@ const LessonPage = () => {
       } else {
         youtubeId = assetUrl.split("/").pop();
       }
-      return (
+      contentNode = (
         <div className="lesson-video-wrapper">
           <iframe
             id={iframeIdRef.current}
@@ -571,52 +793,59 @@ const LessonPage = () => {
           ></iframe>
         </div>
       );
+    } else {
+      // Raw / HTML5 Video
+      contentNode = (
+        <div className="lesson-video-wrapper">
+          <video
+            ref={videoRef}
+            controls
+            src={assetUrl}
+            onLoadedMetadata={(e) => {
+              const dur = e.target.duration || 0;
+              setVideoProgress((prev) => ({
+                ...prev,
+                totalDurationSec: prev.totalDurationSec > 0 ? prev.totalDurationSec : dur,
+              }));
+              if (lastPostedTimeRef.current > 0) {
+                e.target.currentTime = lastPostedTimeRef.current;
+              }
+            }}
+            onPlay={() => {
+              console.log("[LessonPage][Native] Playing");
+              if (!progressTimerRef.current) {
+                progressTimerRef.current = setInterval(() => {
+                  if (videoRef.current && !videoRef.current.paused) {
+                    postProgress(content_id, videoRef.current.currentTime);
+                  }
+                }, 5000); // Posts every 5 seconds while playing
+              }
+            }}
+            onTimeUpdate={(e) => {
+              const cur = e.target.currentTime;
+              const dur = e.target.duration || videoProgress.totalDurationSec || 1;
+              const pct = Math.min(100, Math.round((cur / dur) * 100));
+              setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: pct });
+            }}
+            onPause={(e) => {
+              console.log(`[LessonPage][Native] Paused at ${e.target.currentTime}s`);
+              postProgress(content_id, e.target.currentTime);
+            }}
+            onEnded={(e) => {
+              console.log(`[LessonPage][Native] Ended at ${e.target.duration}s`);
+              postProgress(content_id, e.target.duration || e.target.currentTime);
+            }}
+          >
+          </video>
+        </div>
+      );
     }
 
-    // Raw / HTML5 Video
     return (
-      <div className="lesson-video-wrapper">
-        <video
-          ref={videoRef}
-          controls
-          src={assetUrl}
-          onLoadedMetadata={(e) => {
-            const dur = e.target.duration || 0;
-            setVideoProgress((prev) => ({
-              ...prev,
-              totalDurationSec: prev.totalDurationSec > 0 ? prev.totalDurationSec : dur,
-            }));
-            if (lastPostedTimeRef.current > 0) {
-              e.target.currentTime = lastPostedTimeRef.current;
-            }
-          }}
-          onPlay={() => {
-            console.log("[LessonPage][Native] Playing");
-            if (!progressTimerRef.current) {
-              progressTimerRef.current = setInterval(() => {
-                if (videoRef.current && !videoRef.current.paused) {
-                  postProgress(content_id, videoRef.current.currentTime);
-                }
-              }, 5000); // Posts every 5 seconds while playing
-            }
-          }}
-          onTimeUpdate={(e) => {
-            const cur = e.target.currentTime;
-            const dur = e.target.duration || videoProgress.totalDurationSec || 1;
-            const pct = Math.min(100, Math.round((cur / dur) * 100));
-            setVideoProgress({ currentTimeSec: cur, totalDurationSec: dur, percent: pct });
-          }}
-          onPause={(e) => {
-            console.log(`[LessonPage][Native] Paused at ${e.target.currentTime}s`);
-            postProgress(content_id, e.target.currentTime);
-          }}
-          onEnded={(e) => {
-            console.log(`[LessonPage][Native] Ended at ${e.target.duration}s`);
-            postProgress(content_id, e.target.duration || e.target.currentTime);
-          }}
-        >
-        </video>
-      </div>
+      <>
+        {contentNode}
+        {renderAssignmentUI()}
+      </>
     );
   };
 
@@ -659,6 +888,8 @@ const LessonPage = () => {
               courseSlug={course_slug}
               currentVideoProgress={videoProgress?.percent}
               lessonProgressMap={lessonProgressMap}
+              quizAttempts={courseQuizAttempts}
+              submissionContents={submissionContents}
             />
           </div>
 
@@ -774,15 +1005,85 @@ const LessonPage = () => {
                                       />
                                     </div>
                                     <div className="lesson-chat-messages">
-                                      <p className="lesson-chat-empty">No messages yet. Start the conversation!</p>
+                                      {!Array.isArray(comments) || comments.length === 0 ? (
+                                        <p className="lesson-chat-empty">No messages yet. Start the conversation!</p>
+                                      ) : (
+                                        <div className="chat-list">
+                                          {comments
+                                            .filter(c => c && typeof c.comment === 'string' && (!chatFilter || c.comment.toLowerCase().includes(chatFilter.toLowerCase())))
+                                            .map((c) => (
+                                              <div key={c.id} className="chat-item-wrapper">
+                                                <div className="chat-msg">
+                                                  <div className="chat-msg-header">
+                                                    <span className="chat-user-name">{c.user?.name || "User"}</span>
+                                                    <span className="chat-time">{new Date(c.created_at).toLocaleDateString()}</span>
+                                                  </div>
+                                                  <p className="chat-msg-text">{c.comment}</p>
+                                                  <button
+                                                    className="chat-reply-btn"
+                                                    onClick={() => {
+                                                      setReplyingTo(replyingTo === c.id ? null : c.id);
+                                                      setReplyText("");
+                                                    }}
+                                                  >
+                                                    {replyingTo === c.id ? "Cancel" : "Reply"}
+                                                  </button>
+                                                </div>
+
+                                                {/* Replies list */}
+                                                {c.replies && c.replies.length > 0 && (
+                                                  <div className="chat-replies">
+                                                    {c.replies.map((r) => (
+                                                      <div key={r.id} className="chat-reply-item">
+                                                        <div className="chat-msg-header">
+                                                          <span className="chat-user-name">{r.user?.name || "User"}</span>
+                                                          <span className="chat-time">{new Date(r.created_at).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <p className="chat-msg-text">{r.comment}</p>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
+
+                                                {/* Reply Input */}
+                                                {replyingTo === c.id && (
+                                                  <div className="chat-reply-input-wrapper">
+                                                    <input
+                                                      type="text"
+                                                      placeholder="Write a reply..."
+                                                      className="chat-reply-input"
+                                                      value={replyText}
+                                                      onChange={(e) => setReplyText(e.target.value)}
+                                                      onKeyDown={(e) => e.key === "Enter" && handleSaveReply(c.id)}
+                                                    />
+                                                    <button
+                                                      className="chat-reply-send-btn"
+                                                      onClick={() => handleSaveReply(c.id)}
+                                                      disabled={postingComment || !replyText.trim()}
+                                                    >
+                                                      <i className="feather-send"></i>
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="lesson-chat-input-bar">
                                       <input
                                         type="text"
                                         placeholder="Type a message..."
                                         className="lesson-chat-input"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleSaveComment()}
                                       />
-                                      <button className="lesson-chat-send-btn">
+                                      <button
+                                        className="lesson-chat-send-btn"
+                                        onClick={handleSaveComment}
+                                        disabled={postingComment || !newComment.trim()}
+                                      >
                                         <i className="feather-send"></i>
                                       </button>
                                     </div>

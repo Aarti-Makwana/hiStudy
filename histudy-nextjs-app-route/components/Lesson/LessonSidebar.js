@@ -141,7 +141,7 @@ const PlayPauseBtn = ({ isPlaying }) => (
   </span>
 );
 
-const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonProgressMap = {} }) => {
+const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonProgressMap = {}, quizAttempts = [], submissionContents = [] }) => {
   const [activeTab, setActiveTab] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -168,19 +168,25 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
   const topics = courseData?.topics || [];
 
   const totalContents = topics.reduce((acc, t) => acc + (t.course_contents?.length || 0), 0);
-  const completedContents = topics.reduce((acc, t) => acc + (t.progres?.completed || 0), 0);
-  const progressPercent = totalContents > 0 ? Math.round((completedContents / totalContents) * 100) : 0;
-
   const totalSecondsAll = topics.reduce((acc, t) =>
     acc + (t.course_contents || []).reduce((a, c) => a + toTotalSeconds(c.hours, c.minutes, c.seconds), 0), 0);
 
   const watchedSeconds = topics.reduce((acc, t) => {
-    const completed = t.progres?.completed || 0;
-    return acc + (t.course_contents || []).slice(0, completed)
-      .reduce((a, c) => a + toTotalSeconds(c.hours, c.minutes, c.seconds), 0);
+    return acc + (t.course_contents || []).reduce((a, c) => {
+      const duration = toTotalSeconds(c.hours, c.minutes, c.seconds);
+      if (duration === 0) return a;
+      const active = currentContentId === String(c.id);
+      const isVideo = isVideoContent(c);
+      const apiPercent = lessonProgressMap[c.id] ?? c.progres?.percent ?? c.progress?.percent ?? 0;
+      const itemPercent = (active && isVideo)
+        ? (typeof currentVideoProgress !== "undefined" ? currentVideoProgress : apiPercent)
+        : apiPercent;
+      return a + (duration * (itemPercent / 100));
+    }, 0);
   }, 0);
 
-  const remainingSeconds = totalSecondsAll - watchedSeconds;
+  const remainingSeconds = Math.max(0, totalSecondsAll - watchedSeconds);
+  const progressPercent = totalSecondsAll > 0 ? Math.round((watchedSeconds / totalSecondsAll) * 100) : 0;
 
   // Icon purely from API `icon` field
   const getItemIcon = (content) => {
@@ -197,6 +203,27 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
     if (slug === "project") return "feather-folder";
     // null / unknown → generic circle
     return "feather-circle";
+  };
+
+  const isItemComplete = (item) => {
+    // Video: check percentage
+    if (isVideoContent(item)) {
+      const p = lessonProgressMap[item.id] ?? item.progres?.percent ?? 0;
+      return p >= 95;
+    }
+    // Quiz: check quizAttempts
+    const icon = item?.icon;
+    const catSlug = item?.category?.slug;
+    if (icon === "quiz" || catSlug === "quiz") {
+      const quiz = quizAttempts.find(q => String(q.id) === String(item.id));
+      return (quiz?.quiz_attempts_count || 0) > 0;
+    }
+    // Assignment/Project: check submissionContents
+    if (catSlug === "assignment" || catSlug === "project" || icon === "editor") {
+      const sub = submissionContents.find(s => String(s.id) === String(item.id));
+      return !!sub?.latest_submission;
+    }
+    return false;
   };
 
   return (
@@ -275,8 +302,8 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
                             {isVideo ? (
                               <PlayPauseBtn isPlaying={active} />
                             ) : (
-                              <span className={`sidebar-type-badge ${active ? "active" : ""}`}>
-                                <i className={getItemIcon(innerData)}></i>
+                              <span className={`sidebar-type-badge ${active ? "active" : ""} ${isItemComplete(innerData) ? "complete" : ""}`}>
+                                <i className={isItemComplete(innerData) ? "feather-check-circle text-success" : getItemIcon(innerData)}></i>
                               </span>
                             )}
 
