@@ -24,35 +24,35 @@ const isVideoContent = (item) => {
   return item?.icon === "video";
 };
 
-// ── Horizontal Circular Progress (for sidebar top) ───────────
+// ── Premium Circular Progress (for sidebar top) ───────────
 const CircleProgress = ({ percent }) => {
   const r = 34;
   const circ = 2 * Math.PI * r;
   const offset = circ * (1 - (percent || 0) / 100);
-  const hue = Math.round((percent || 0) * 1.2);
-  const strokeColor = `hsl(${hue}, 80%, 55%)`;
+  const hue = 260; // Purple hue
+  const strokeColor = `hsl(${hue}, 70%, 65%)`;
 
   return (
-    <svg viewBox="0 0 88 88" className="sidebar-cp-svg">
-      <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="7" />
-      <circle
-        cx="44" cy="44" r={r}
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth="7"
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        transform="rotate(-90 44 44)"
-        style={{ transition: "stroke-dashoffset 0.6s ease" }}
-      />
-      <text x="44" y="40" textAnchor="middle" dominantBaseline="middle" className="sidebar-cp-pct">
-        {percent}%
-      </text>
-      <text x="44" y="55" textAnchor="middle" dominantBaseline="middle" className="sidebar-cp-label">
-        Complete
-      </text>
-    </svg>
+    <div className="sidebar-progress-circle-wrap">
+      <svg viewBox="0 0 88 88" className="sidebar-cp-svg">
+        <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+        <circle
+          cx="44" cy="44" r={r}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          transform="rotate(-90 44 44)"
+          style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)" }}
+        />
+        <text x="44" y="46" textAnchor="middle" dominantBaseline="middle" className="sidebar-cp-pct">
+          {percent}%
+        </text>
+      </svg>
+      <span className="sidebar-progress-label">Your progress</span>
+    </div>
   );
 };
 
@@ -230,25 +230,24 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
     <>
       <div className="sidebar-dark-wrapper">
 
-        {/* ── Progress: circle LEFT + stats RIGHT ── */}
+        {/* ── Progress Card: circle LEFT | divider | stats RIGHT ── */}
         {courseSlug && totalContents > 0 && (
-          <div className="sidebar-progress-row">
-            <div className="sidebar-progress-circle">
+          <div className="sidebar-progress-card">
+            <div className="sidebar-progress-left">
               <CircleProgress percent={progressPercent} />
-              <span className="sidebar-progress-text">Your progress</span>
             </div>
+            
+            <div className="sidebar-progress-divider" />
+
             <div className="sidebar-progress-stats">
               <div className="sidebar-stat">
-                <span className="sidebar-stat-label">Total</span>
-                <span className="sidebar-stat-val">{formatTime(totalSecondsAll)}</span>
+                <span className="sidebar-stat-label text-white">Total: <span className="text-primary">{formatTime(totalSecondsAll)}</span></span>
               </div>
               <div className="sidebar-stat">
-                <span className="sidebar-stat-label">Played</span>
-                <span className="sidebar-stat-val">{formatTime(watchedSeconds)}</span>
+                <span className="sidebar-stat-label text-white">Played: <span className="text-secondary">{formatTime(watchedSeconds)}</span></span>
               </div>
               <div className="sidebar-stat">
-                <span className="sidebar-stat-label">Remaining</span>
-                <span className="sidebar-stat-val">{formatTime(remainingSeconds)}</span>
+                <span className="sidebar-stat-label text-white">Remaining: <span className="text-accent">{formatTime(remainingSeconds)}</span></span>
               </div>
             </div>
           </div>

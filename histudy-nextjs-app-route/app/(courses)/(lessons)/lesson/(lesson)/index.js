@@ -102,6 +102,29 @@ const LessonPage = () => {
   const [assignmentText, setAssignmentText] = useState("");
   const [assignmentFile, setAssignmentFile] = useState(null);
   const [submittingAssignment, setSubmittingAssignment] = useState(false);
+  const submissionRef = useRef(null);
+
+  // ── Asset detection flags (Shared across header and renderer) ──
+  const videoUrl = lessonContent?.url || lessonContent?.video_url || "";
+  const pdfUrl = lessonContent?.file?.url || "";
+  const htmlBody = lessonContent?.body || lessonContent?.content || lessonContent?.html_content || lessonContent?.description || lessonContent?.summary || "";
+
+  const hasVideo = isVideoUrl(videoUrl);
+  const hasPdf = !!pdfUrl || (lessonContent?.icon === "document" && !!videoUrl && !hasVideo);
+  const finalPdfUrl = hasPdf ? (pdfUrl || videoUrl) : null;
+  const hasHtml = htmlBody.trim().length > 0;
+  const showTabs = (hasVideo || hasHtml) && hasPdf;
+
+  const categoryName = lessonContent?.category?.name || "";
+  const categorySlug = lessonContent?.category?.slug || "";
+  const isAssignment = categorySlug === "assignment" || categoryName.toLowerCase() === "assignment";
+  const isProject = categorySlug === "project" || categoryName.toLowerCase() === "project";
+
+  const scrollToSubmission = () => {
+    if (submissionRef.current) {
+      submissionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   /* ─── Fetch course structure ─────────────────────────────── */
   useEffect(() => {
@@ -602,18 +625,13 @@ const LessonPage = () => {
 
   /* ─── Render Assignment UI ───────────────────────────────── */
   const renderAssignmentUI = () => {
-    const categoryName = lessonContent?.category?.name || "";
-    const categorySlug = lessonContent?.category?.slug || "";
-    const isAssignment = categorySlug === "assignment" || categoryName.toLowerCase() === "assignment";
-    const isProject = categorySlug === "project" || categoryName.toLowerCase() === "project";
-
     if (!isAssignment && !isProject) return null;
 
     const submission = submissionContents.find(s => String(s.id) === String(content_id));
     const latestSubmission = submission?.latest_submission;
 
     return (
-      <div className="lesson-assignment-submission-container mt--40">
+      <div ref={submissionRef} className="lesson-assignment-submission-container mt--40">
         <div className="section-title">
           <h4 className="mb--20">Assignment Submission</h4>
         </div>
@@ -705,20 +723,6 @@ const LessonPage = () => {
 
   /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
-    // 1. Detect Assets
-    const videoUrl = lessonContent?.url || lessonContent?.video_url || "";
-    const pdfUrl = lessonContent?.file?.url || "";
-    const htmlBody = lessonContent?.body || lessonContent?.content || lessonContent?.html_content || lessonContent?.description || lessonContent?.summary || "";
-
-    const hasVideo = isVideoUrl(videoUrl);
-    const hasPdf = !!pdfUrl || (lessonContent?.icon === "document" && !!videoUrl && !hasVideo); // fallback if it's pdf-only but in url slot
-    const finalPdfUrl = hasPdf ? (pdfUrl || videoUrl) : null;
-    const hasHtml = htmlBody.trim().length > 0;
-
-    // 2. Tab Selection Logic
-    // If we have (Video OR HTML) AND a PDF, show tabs
-    const showTabs = (hasVideo || hasHtml) && hasPdf;
-
     // Helper: render single component
     const renderVideo = () => {
       if (videoUrl.includes("vimeo.com")) {
@@ -799,35 +803,13 @@ const LessonPage = () => {
       <div className="lesson-html-content" dangerouslySetInnerHTML={{ __html: htmlBody }} />
     );
 
-    // 3. Assemble Content Node
     let contentNode = null;
-    if (showTabs) {
-      contentNode = (
-        <div className="lesson-tabbed-container">
-          <div className="lesson-content-tabs">
-            <button
-              className={`lesson-content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
-              onClick={() => setActiveContentTab("content")}
-            >
-              <i className={hasVideo ? "feather-play-circle" : "feather-file-text"}></i>
-              {hasVideo ? "Lesson Video" : "Lesson Description"}
-            </button>
-            <button
-              className={`lesson-content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
-              onClick={() => setActiveContentTab("pdf")}
-            >
-              <i className="feather-file"></i> Document
-            </button>
-          </div>
-          <div className="lesson-tab-content">
-            {activeContentTab === "content" ? (hasVideo ? renderVideo() : renderHtml()) : renderPdf()}
-          </div>
-        </div>
-      );
+    if (activeContentTab === "pdf" && hasPdf) {
+      contentNode = renderPdf();
     } else if (hasVideo) {
       contentNode = renderVideo();
     } else if (hasPdf) {
-      contentNode = renderPdf();
+      contentNode = renderPdf(); // if only pdf and no tabs
     } else if (hasHtml) {
       contentNode = renderHtml();
     } else {
@@ -857,11 +839,31 @@ const LessonPage = () => {
     lessonContent?.category?.slug === "quiz" ||
     (lessonContent?.course_quizzes && lessonContent.course_quizzes.length > 0);
 
-  // Chat disabled check
   const chatVal = courseData?.chat ?? "";
   const isChatDisabled =
     String(chatVal).toLowerCase() === "no" ||
     String(chatVal).toLowerCase() === "disabled";
+
+  // ── Overall course progress for header indicator ──
+  const calculateOverallProgress = () => {
+    if (!courseData?.topics) return 0;
+    let totalSeconds = 0;
+    let watchedSeconds = 0;
+
+    courseData.topics.forEach((topic) => {
+      topic.course_contents?.forEach((content) => {
+        const dur = (content.hours || 0) * 3600 + (content.minutes || 0) * 60 + (content.seconds || 0);
+        if (dur > 0) {
+          totalSeconds += dur;
+          const apiPct = lessonProgressMap[content.id] ?? 0;
+          watchedSeconds += dur * (apiPct / 100);
+        }
+      });
+    });
+    return totalSeconds > 0 ? Math.round((watchedSeconds / totalSeconds) * 100) : 0;
+  };
+
+  const coursePct = calculateOverallProgress();
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
@@ -894,23 +896,79 @@ const LessonPage = () => {
 
             {/* ── Top navigation strip ── */}
             <div className="lesson-top-strip">
-              <Link
-                href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
-                className="lesson-strip-btn"
-                title="Back to Course"
-              >
-                <i className="feather-arrow-left"></i>
-              </Link>
-              <button
-                className="lesson-strip-btn"
-                title="Toggle Sidebar"
-                onClick={() => setSidebar(!sidebar)}
-              >
-                <i className="feather-menu"></i>
-              </button>
+              <div className="lesson-header-left">
+                <Link
+                  href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
+                  className="lesson-strip-btn"
+                  title="Back to Course"
+                >
+                  <i className="feather-arrow-left"></i>
+                </Link>
+
+                {/* Compact progress indicator (Image 1/2) */}
+                <div className="header-progress-indicator" title={`Course Progress: ${coursePct}%`}>
+                  <svg viewBox="0 0 36 36" className="header-progress-svg">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                    <circle 
+                      cx="18" cy="18" r="16" 
+                      fill="none" 
+                      stroke="#8e8efb" 
+                      strokeWidth="3" 
+                      strokeDasharray="100.5" 
+                      strokeDashoffset={100.5 - coursePct} 
+                      strokeLinecap="round" 
+                      transform="rotate(-90 18 18)"
+                      style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                    />
+                    <text x="18" y="20" textAnchor="middle" dominantBaseline="middle" className="header-progress-pct">
+                      {coursePct}%
+                    </text>
+                  </svg>
+                </div>
+
+                <button
+                  className="lesson-strip-btn"
+                  title="Toggle Sidebar"
+                  onClick={() => setSidebar(!sidebar)}
+                >
+                  <i className="feather-menu"></i>
+                </button>
+              </div>
               <span className="lesson-strip-title">
                 {lessonContent?.title || "Lesson"}
               </span>
+
+              {/* ─── Relocated Tabs ─── */}
+              {showTabs && (
+                <div className="lesson-content-tabs ml--auto">
+                  <button
+                    className={`lesson-content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
+                    onClick={() => setActiveContentTab("content")}
+                  >
+                    <i className={hasVideo ? "feather-play-circle" : "feather-file-text"}></i>
+                    {hasVideo ? "Lesson" : "Description"}
+                  </button>
+                  <button
+                    className={`lesson-content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
+                    onClick={() => setActiveContentTab("pdf")}
+                  >
+                    <i className="feather-file"></i> Document
+                  </button>
+                </div>
+              )}
+
+              {/* ─── Submission Button (Assignment/Project focus) ─── */}
+              {(isAssignment || isProject) && (
+                <div className={`lesson-content-tabs ${!showTabs ? 'ml--auto' : ''}`}>
+                  <button 
+                    className="lesson-content-tab-btn active" 
+                    onClick={scrollToSubmission}
+                    style={{ borderRadius: '8px', marginLeft: showTabs ? '10px' : '0' }}
+                  >
+                    <i className="feather-external-link"></i> Submission
+                  </button>
+                </div>
+              )}
             </div>
 
             {loading ? (
@@ -930,8 +988,8 @@ const LessonPage = () => {
                       {/* ─── Main asset (PDF/HTML/Video all auto-detected) ─── */}
                       {renderLessonAsset()}
 
-                      {/* ─── Video Progress Bar + Percentage ─── */}
-                      {isVideoContent && videoProgress.totalDurationSec > 0 && (
+                      {/* ─── Video Progress Bar (Hidden in PDF mode) ─── */}
+                      {activeContentTab !== "pdf" && isVideoContent && videoProgress.totalDurationSec > 0 && (
                         <div className="lesson-video-progress-bar-wrapper">
                           <div className="lesson-vp-bar-track">
                             <div
@@ -960,8 +1018,8 @@ const LessonPage = () => {
                         </div>
                       )}
 
-                      {/* ─── Chat / Summary tabs ─── */}
-                      {showChatSummary && (
+                      {/* ─── Chat / Summary tabs (Hidden in PDF mode) ─── */}
+                      {activeContentTab !== "pdf" && showChatSummary && (
                         <div className="lesson-bottom-tabs-wrapper">
                           <div className="lesson-bottom-tab-bar">
                             <button
