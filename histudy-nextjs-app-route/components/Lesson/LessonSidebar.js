@@ -236,7 +236,7 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
             <div className="sidebar-progress-left">
               <CircleProgress percent={progressPercent} />
             </div>
-            
+
             <div className="sidebar-progress-divider" />
 
             <div className="sidebar-progress-stats">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import LessonSidebar from "@/components/Lesson/LessonSidebar";
 import LessonPagination from "@/components/Lesson/LessonPagination";
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
+import { UserAuthServices } from "@/services/User/Auth/index.service";
 import Loader from "@/components/Common/Loader";
 import QuizHead from "@/components/Lesson/Quiz/QuizHead";
 import QuizPlayer from "@/components/Lesson/QuizPlayer";
@@ -102,6 +103,7 @@ const LessonPage = () => {
   const [assignmentText, setAssignmentText] = useState("");
   const [assignmentFile, setAssignmentFile] = useState(null);
   const [submittingAssignment, setSubmittingAssignment] = useState(false);
+  const [enrollmentId, setEnrollmentId] = useState("");
   const submissionRef = useRef(null);
 
   // ── Asset detection flags (Shared across header and renderer) ──
@@ -182,6 +184,28 @@ const LessonPage = () => {
     fetchCourseDetails();
   }, [course_slug]);
 
+  /* ─── Fetch enrollment_id from profile API ────────────────── */
+  useEffect(() => {
+    const fetchEnrollmentId = async () => {
+      if (!courseData?.id) return;
+      try {
+        const res = await UserAuthServices.getUserDataService();
+        if (res?.status === "success") {
+          const enrollment = (res.data?.active_enrollments || []).find(
+            (en) => String(en.course_id) === String(courseData.id)
+          );
+          if (enrollment?.enrollment_id) {
+            setEnrollmentId(enrollment.enrollment_id);
+            console.log("[LessonPage] Found enrollment_id:", enrollment.enrollment_id);
+          }
+        }
+      } catch (err) {
+        console.error("[LessonPage] Error fetching enrollment_id:", err);
+      }
+    };
+    fetchEnrollmentId();
+  }, [courseData?.id]);
+
   /* ─── Sync current video progress into lessonProgressMap (real-time) ── */
   useEffect(() => {
     if (content_id && videoProgress.percent > 0) {
@@ -246,7 +270,7 @@ const LessonPage = () => {
       lastPostedTimeRef.current = currentTimeSec;
       console.log(`[LessonPage] Sending progress → lesson_id: ${lessonId}, current_time: ${currentTimeSec}s`);
       const res = await UserCoursesServices.TrackLessonProgress(lessonId, currentTimeSec);
-      
+
       // Update local progress map for sidebar checkmarks / rings
       if (res && res.status === "success") {
         const pctStr = res.data?.completion_percentage || "0%";
@@ -337,7 +361,7 @@ const LessonPage = () => {
             savedPercent = parseFloat(rawPercent.replace("%", "")) || 0;
 
             console.log(`[LessonPage] Loaded progress from API: ${savedTime}s / ${savedTotal}s (${savedPercent}%)`);
-            
+
             // Logic: If video is already completed, start from 0 for re-watching
             if (prog?.is_completed || savedPercent >= 98) {
               console.log("[LessonPage] Lesson is completed. Resetting seek time to 0 for re-watch.");
@@ -393,7 +417,9 @@ const LessonPage = () => {
     try {
       const res = await UserCoursesServices.getAllCommentReply(content_id);
       if (res && res.status === "success") {
-        setComments(res.data || []);
+        // Correctly extract comments array based on provided JSON structure
+        const commentsData = Array.isArray(res.data) ? res.data : (res.data?.comments || []);
+        setComments(commentsData);
       }
     } catch (err) {
       console.error("[LessonPage] Error fetching comments:", err);
@@ -457,8 +483,15 @@ const LessonPage = () => {
 
     setSubmittingAssignment(true);
     try {
+      if (!enrollmentId) {
+        toast.error("Enrollment ID not found. Please try again.");
+        setSubmittingAssignment(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("content_id", content_id);
+      formData.append("enrollment_id", enrollmentId);
       formData.append("body", assignmentText);
       if (assignmentFile) {
         formData.append("file", assignmentFile);
@@ -469,7 +502,7 @@ const LessonPage = () => {
         setAssignmentText("");
         setAssignmentFile(null);
         toast.success("Assignment submitted successfully!");
-        
+
         // Refresh submission contents
         if (courseData?.id) {
           const submissionRes = await UserCoursesServices.GetSubmissionContents(courseData.id);
@@ -640,15 +673,15 @@ const LessonPage = () => {
           <div className="bg-color-white rbt-shadow-box p--30">
             <div className="submission-status-item mb--20 d-flex align-items-center gap-3">
               <span className="h6 mb--0">Status:</span>
-              <span className={`status-badge ${latestSubmission.is_approved ? "approved" : "pending"}`} 
-                    style={{ 
-                      padding: "4px 12px", 
-                      borderRadius: "4px", 
-                      fontSize: "14px",
-                      backgroundColor: latestSubmission.is_approved ? "rgba(34, 197, 94, 0.1)" : "rgba(245, 158, 11, 0.1)",
-                      color: latestSubmission.is_approved ? "#22c55e" : "#f59e0b",
-                      border: `1px solid ${latestSubmission.is_approved ? "#22c55e" : "#f59e0b"}`
-                    }}>
+              <span className={`status-badge ${latestSubmission.is_approved ? "approved" : "pending"}`}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  backgroundColor: latestSubmission.is_approved ? "rgba(34, 197, 94, 0.1)" : "rgba(245, 158, 11, 0.1)",
+                  color: latestSubmission.is_approved ? "#22c55e" : "#f59e0b",
+                  border: `1px solid ${latestSubmission.is_approved ? "#22c55e" : "#f59e0b"}`
+                }}>
                 <i className={`feather-${latestSubmission.is_approved ? "check-circle" : "clock"} mr--5`}></i>
                 {latestSubmission.is_approved ? "Approved" : "Pending Approval"}
               </span>
@@ -909,14 +942,14 @@ const LessonPage = () => {
                 <div className="header-progress-indicator" title={`Course Progress: ${coursePct}%`}>
                   <svg viewBox="0 0 36 36" className="header-progress-svg">
                     <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-                    <circle 
-                      cx="18" cy="18" r="16" 
-                      fill="none" 
-                      stroke="#8e8efb" 
-                      strokeWidth="3" 
-                      strokeDasharray="100.5" 
-                      strokeDashoffset={100.5 - coursePct} 
-                      strokeLinecap="round" 
+                    <circle
+                      cx="18" cy="18" r="16"
+                      fill="none"
+                      stroke="#8e8efb"
+                      strokeWidth="3"
+                      strokeDasharray="100.5"
+                      strokeDashoffset={100.5 - coursePct}
+                      strokeLinecap="round"
                       transform="rotate(-90 18 18)"
                       style={{ transition: 'stroke-dashoffset 0.8s ease' }}
                     />
@@ -949,10 +982,10 @@ const LessonPage = () => {
                     {hasVideo ? "Lesson" : "Description"}
                   </button>
                   <button
-                    className={`lesson-content-tab-btn ${activeContentTab === "pdf" ? "active" : ""}`}
-                    onClick={() => setActiveContentTab("pdf")}
+                    className="lesson-content-tab-btn"
+                    onClick={() => window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(finalPdfUrl)}`, '_blank')}
                   >
-                    <i className="feather-file"></i> Document
+                    <i className="feather-external-link"></i> Open PDF
                   </button>
                 </div>
               )}
@@ -960,8 +993,8 @@ const LessonPage = () => {
               {/* ─── Submission Button (Assignment/Project focus) ─── */}
               {(isAssignment || isProject) && (
                 <div className={`lesson-content-tabs ${!showTabs ? 'ml--auto' : ''}`}>
-                  <button 
-                    className="lesson-content-tab-btn active" 
+                  <button
+                    className="lesson-content-tab-btn active"
                     onClick={scrollToSubmission}
                     style={{ borderRadius: '8px', marginLeft: showTabs ? '10px' : '0' }}
                   >
@@ -1064,24 +1097,36 @@ const LessonPage = () => {
                                       ) : (
                                         <div className="chat-list">
                                           {comments
-                                            .filter(c => c && typeof c.comment === 'string' && (!chatFilter || c.comment.toLowerCase().includes(chatFilter.toLowerCase())))
+                                            .filter(c => c && (typeof c.comment === 'string' || typeof c.content === 'string') && (!chatFilter || (c.comment || c.content).toLowerCase().includes(chatFilter.toLowerCase())))
                                             .map((c) => (
-                                              <div key={c.id} className="chat-item-wrapper">
+                                              <div key={c.id} className="chat-item-wrapper premium-chat-item">
                                                 <div className="chat-msg">
-                                                  <div className="chat-msg-header">
-                                                    <span className="chat-user-name">{c.user?.name || "User"}</span>
-                                                    <span className="chat-time">{new Date(c.created_at).toLocaleDateString()}</span>
+                                                  <div className="chat-user-avatar">
+                                                    {c.authable?.profile?.file?.url || c.user?.profile?.file?.url || c.user?.avatar ? (
+                                                      <img src={c.authable?.profile?.file?.url || c.user?.profile?.file?.url || c.user?.avatar} alt={c.authable?.name || c.user?.name || "User"} />
+                                                    ) : (
+                                                      <div className="avatar-placeholder">{(c.authable?.name || c.user?.name || "U")[0]}</div>
+                                                    )}
                                                   </div>
-                                                  <p className="chat-msg-text">{c.comment}</p>
-                                                  <button
-                                                    className="chat-reply-btn"
-                                                    onClick={() => {
-                                                      setReplyingTo(replyingTo === c.id ? null : c.id);
-                                                      setReplyText("");
-                                                    }}
-                                                  >
-                                                    {replyingTo === c.id ? "Cancel" : "Reply"}
-                                                  </button>
+                                                  <div className="chat-msg-content">
+                                                    <div className="chat-msg-header">
+                                                      <span className="chat-user-name">{c.authable?.name || c.user?.name || "User"}</span>
+                                                      <span className="chat-time">{new Date(c.created_at).toLocaleString()}</span>
+                                                    </div>
+                                                    <p className="chat-msg-text">{c.comment || c.content}</p>
+                                                    <div className="chat-actions">
+                                                      <button
+                                                        className="chat-reply-btn"
+                                                        onClick={() => {
+                                                          setReplyingTo(replyingTo === c.id ? null : c.id);
+                                                          setReplyText("");
+                                                        }}
+                                                      >
+                                                        <i className="feather-corner-up-left mr--5"></i>
+                                                        {replyingTo === c.id ? "Cancel Reply" : "Reply"}
+                                                      </button>
+                                                    </div>
+                                                  </div>
                                                 </div>
 
                                                 {/* Replies list */}
@@ -1089,11 +1134,20 @@ const LessonPage = () => {
                                                   <div className="chat-replies">
                                                     {c.replies.map((r) => (
                                                       <div key={r.id} className="chat-reply-item">
-                                                        <div className="chat-msg-header">
-                                                          <span className="chat-user-name">{r.user?.name || "User"}</span>
-                                                          <span className="chat-time">{new Date(r.created_at).toLocaleDateString()}</span>
+                                                        <div className="chat-user-avatar mini">
+                                                          {r.authable?.profile?.file?.url || r.user?.profile?.file?.url || r.user?.avatar ? (
+                                                            <img src={r.authable?.profile?.file?.url || r.user?.profile?.file?.url || r.user?.avatar} alt={r.authable?.name || r.user?.name || "User"} />
+                                                          ) : (
+                                                            <div className="avatar-placeholder">{(r.authable?.name || r.user?.name || "U")[0]}</div>
+                                                          )}
                                                         </div>
-                                                        <p className="chat-msg-text">{r.comment}</p>
+                                                        <div className="chat-msg-content">
+                                                          <div className="chat-msg-header">
+                                                            <span className="chat-user-name">{r.authable?.name || r.user?.name || "User"}</span>
+                                                            <span className="chat-time">{new Date(r.created_at).toLocaleString()}</span>
+                                                          </div>
+                                                          <p className="chat-msg-text">{r.comment || r.content}</p>
+                                                        </div>
                                                       </div>
                                                     ))}
                                                   </div>
@@ -1101,22 +1155,25 @@ const LessonPage = () => {
 
                                                 {/* Reply Input */}
                                                 {replyingTo === c.id && (
-                                                  <div className="chat-reply-input-wrapper">
-                                                    <input
-                                                      type="text"
-                                                      placeholder="Write a reply..."
-                                                      className="chat-reply-input"
-                                                      value={replyText}
-                                                      onChange={(e) => setReplyText(e.target.value)}
-                                                      onKeyDown={(e) => e.key === "Enter" && handleSaveReply(c.id)}
-                                                    />
-                                                    <button
-                                                      className="chat-reply-send-btn"
-                                                      onClick={() => handleSaveReply(c.id)}
-                                                      disabled={postingComment || !replyText.trim()}
-                                                    >
-                                                      <i className="feather-send"></i>
-                                                    </button>
+                                                  <div className="chat-reply-input-wrapper-premium">
+                                                    <div className="input-group">
+                                                      <input
+                                                        type="text"
+                                                        placeholder="Write a reply..."
+                                                        className="chat-reply-input"
+                                                        value={replyText}
+                                                        onChange={(e) => setReplyText(e.target.value)}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleSaveReply(c.id)}
+                                                        autoFocus
+                                                      />
+                                                      <button
+                                                        className="chat-reply-send-btn"
+                                                        onClick={() => handleSaveReply(c.id)}
+                                                        disabled={postingComment || !replyText.trim()}
+                                                      >
+                                                        <i className="feather-send"></i>
+                                                      </button>
+                                                    </div>
                                                   </div>
                                                 )}
                                               </div>

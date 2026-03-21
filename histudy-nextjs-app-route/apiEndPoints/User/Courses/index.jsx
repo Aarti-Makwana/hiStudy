@@ -29,12 +29,12 @@ const UserCourses = {
     url: "/api/v1/lesson-progress",
     method: "GET",
   },
-  
+
   saveCommentReply: {
     url: "/api/v1/course-content/save-comment-reply",
     method: "POST",
   },
-  
+
   getAllCommentReply: {
     url: "/api/v1/course-content/getall-comment-reply",
     method: "GET",
@@ -51,7 +51,7 @@ const UserCourses = {
   },
 
   saveSubmission: {
-    url: "/api/v1/save-submission",
+    url: "/api/v1/submission",
     method: "POST",
   },
 };
