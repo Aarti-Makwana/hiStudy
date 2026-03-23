@@ -639,6 +639,19 @@
         border: none;
         display: block;
     }
+
+    .video-email-watermark {
+        position: absolute;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+        font-weight: 500;
+        pointer-events: none;
+        z-index: 20;
+        user-select: none;
+        white-space: nowrap;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        mix-blend-mode: difference;
+    }
 }
 
 
@@ -2618,4 +2631,143 @@ a.sidebar-item:hover .sidebar-playpause {
 
 .sidebar-type-badge.complete i {
     color: #22c55e !important;
+}
+
+/*--------------------------
+    Quiz Confirmation Modal
+-----------------------------*/
+.qp-confirm-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.qp-confirm-modal {
+    background: #1c1c2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: scaleUp 0.3s ease;
+
+    .qp-confirm-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(var(--color-warning-rgb, 245, 158, 11), 0.15);
+        color: #f59e0b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 20px;
+    }
+
+    .qp-confirm-title {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .qp-confirm-desc {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 15px;
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .qp-confirm-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .qp-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+        }
+
+        .qp-btn-submit {
+            background: var(--color-primary);
+            color: #fff;
+
+            &:hover {
+                filter: brightness(1.1);
+            }
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { 
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/*-----------------------------------
+   Global Layout Scroll Fix
+-------------------------------------*/
+body:has(.rbt-lesson-area) {
+    /* Prevent the outer window from scrolling out of bounds behind the 100vh app view */
+    overflow: hidden !important;
+}
+
+/*-----------------------------------
+   Premium Custom Scrollbars
+-------------------------------------*/
+.rbt-lesson-area {
+    // Target all scrollable components universally in the lesson UI
+    *::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 10px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: rgba(107, 115, 133, 0.3);
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background: rgba(107, 115, 133, 0.6);
+        }
+    }
 }

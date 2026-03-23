@@ -106,6 +106,22 @@ const LessonPage = () => {
   const [enrollmentId, setEnrollmentId] = useState("");
   const submissionRef = useRef(null);
 
+  // ── Email Watermark State ─────────────────────────────────────
+  const [userEmail, setUserEmail] = useState("");
+  const [watermarkPos, setWatermarkPos] = useState({ top: 10, left: 10 });
+
+  // Update watermark position every 5 seconds
+  useEffect(() => {
+    if (!userEmail) return;
+    const interval = setInterval(() => {
+      setWatermarkPos({
+        top: Math.floor(Math.random() * 80) + 5, // 5% to 85%
+        left: Math.floor(Math.random() * 80) + 5, // 5% to 85%
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [userEmail]);
+
   // ── Asset detection flags (Shared across header and renderer) ──
   const videoUrl = lessonContent?.url || lessonContent?.video_url || "";
   const pdfUrl = lessonContent?.file?.url || "";
@@ -184,13 +200,16 @@ const LessonPage = () => {
     fetchCourseDetails();
   }, [course_slug]);
 
-  /* ─── Fetch enrollment_id from profile API ────────────────── */
+  /* ─── Fetch enrollment_id and email from profile API ────────────────── */
   useEffect(() => {
     const fetchEnrollmentId = async () => {
       if (!courseData?.id) return;
       try {
         const res = await UserAuthServices.getUserDataService();
         if (res?.status === "success") {
+          if (res.data?.email) {
+            setUserEmail(res.data.email);
+          }
           const enrollment = (res.data?.active_enrollments || []).find(
             (en) => String(en.course_id) === String(courseData.id)
           );
@@ -754,8 +773,22 @@ const LessonPage = () => {
 
   /* ─── Render the main lesson asset ─── */
   const renderLessonAsset = () => {
-    // Helper: render single component
     const renderVideo = () => {
+      const renderWatermark = () => {
+        if (!userEmail) return null;
+        return (
+          <div
+            className="video-email-watermark fade-in"
+            style={{
+              top: `${watermarkPos.top}%`,
+              left: `${watermarkPos.left}%`,
+            }}
+          >
+            {userEmail}
+          </div>
+        );
+      };
+
       if (videoUrl.includes("vimeo.com")) {
         const vimeoId = videoUrl.split("/").pop();
         return (
@@ -768,6 +801,7 @@ const LessonPage = () => {
               title="Vimeo Video"
               ref={(el) => { if (el && !vimeoPlayerRef.current) initVimeoPlayer(el); }}
             ></iframe>
+            {renderWatermark()}
           </div>
         );
       }
@@ -786,6 +820,7 @@ const LessonPage = () => {
               title="YouTube Video"
               ref={(el) => { if (el && !ytPlayerRef.current) initYouTubePlayer(el); }}
             ></iframe>
+            {renderWatermark()}
           </div>
         );
       }
@@ -816,6 +851,7 @@ const LessonPage = () => {
             onPause={(e) => postProgress(content_id, e.target.currentTime)}
             onEnded={(e) => postProgress(content_id, e.target.duration || e.target.currentTime)}
           />
+          {renderWatermark()}
         </div>
       );
     };

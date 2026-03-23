@@ -8,6 +8,7 @@ const QuizPlayer = ({ quizzes = [] }) => {
     const [selected, setSelected] = useState({});   // { quizId: optionId }
     const [submitted, setSubmitted] = useState(false);
     const [showAnswer, setShowAnswer] = useState({});  // { quizId: true }
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     if (!quizzes.length)
         return <div className="qp-empty"><i className="feather-help-circle"></i><p>No questions available.</p></div>;
@@ -30,8 +31,14 @@ const QuizPlayer = ({ quizzes = [] }) => {
 
     const handleSubmit = () => {
         if (answered < total) {
-            if (!confirm(`You have answered ${answered}/${total} questions. Submit anyway?`)) return;
+            setShowConfirmModal(true);
+            return;
         }
+        setSubmitted(true);
+    };
+
+    const confirmSubmit = () => {
+        setShowConfirmModal(false);
         setSubmitted(true);
     };
 
@@ -40,6 +47,7 @@ const QuizPlayer = ({ quizzes = [] }) => {
         setSubmitted(false);
         setShowAnswer({});
         setCurrent(0);
+        setShowConfirmModal(false);
     };
 
     const getOptionClass = (optId) => {
@@ -130,6 +138,31 @@ const QuizPlayer = ({ quizzes = [] }) => {
 
     /* ── Active quiz ── */
     return (
+        <>
+        {/* Confirmation Modal */}
+        {showConfirmModal && (
+            <div className="qp-confirm-modal-backdrop">
+                <div className="qp-confirm-modal">
+                    <div className="qp-confirm-icon">
+                        <i className="feather-alert-triangle"></i>
+                    </div>
+                    <h4 className="qp-confirm-title">Incomplete Quiz</h4>
+                    <p className="qp-confirm-desc">
+                        You have answered <strong>{answered}</strong> out of <strong>{total}</strong> questions. 
+                        Are you sure you want to submit? Unanswered questions will be marked incorrect.
+                    </p>
+                    <div className="qp-confirm-actions">
+                        <button className="qp-btn-cancel" onClick={() => setShowConfirmModal(false)}>
+                            Cancel
+                        </button>
+                        <button className="qp-btn-submit" onClick={confirmSubmit}>
+                            <i className="feather-send mr--5"></i> Submit Anyway
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className="qp-wrapper">
             {/* Header */}
             <div className="qp-header">
@@ -210,6 +243,7 @@ const QuizPlayer = ({ quizzes = [] }) => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

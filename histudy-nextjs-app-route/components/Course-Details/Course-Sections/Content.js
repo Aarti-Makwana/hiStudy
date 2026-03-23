@@ -41,13 +41,14 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                       {item.listItem.map((list, subIndex) => (
                         <li key={subIndex}>
                           <Link href={`/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`}>
-                            <div className="course-content-left">
-                              {list.playIcon ? (
-                                <i className="feather-play-circle"></i>
-                              ) : (
-                                <i className="feather-file-text"></i>
-                              )}
-                              <span className="text">{list.text}</span>
+                            <div className="course-content-left align-items-start">
+                              <i className={list.icon || "feather-circle"} style={{ marginTop: list.summary ? "4px" : "0" }}></i>
+                              <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
+                                <span className="text">{list.text}</span>
+                                {list.summary && (
+                                  <span className="course-content-summary">{list.summary}</span>
+                                )}
+                              </div>
                             </div>
                             {list.status ? (
                               <div className="course-content-right">

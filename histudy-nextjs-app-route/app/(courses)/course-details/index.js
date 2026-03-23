@@ -20,6 +20,34 @@ import Loader from "@/components/Common/Loader";
 
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 
+// Helper: format total seconds to "Xh Ym Zs"
+const formatTime = (h, m, s) => {
+  const totalSec = (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = Math.floor(totalSec % 60);
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+};
+
+// Icon purely from API `icon` field
+const getItemIcon = (content) => {
+  const icon = content?.icon; // from API: "quiz", "editor", "video", etc.
+  if (icon === "quiz") return "feather-help-circle";
+  if (icon === "document") return "feather-book-open";
+  if (icon === "video") return "feather-play-circle";
+  if (icon === "editor") return "feather-edit";
+  // fallback: check category slug
+  const slug = content?.category?.slug;
+  if (slug === "quiz") return "feather-help-circle";
+  if (slug === "assignment") return "feather-file-text";
+  if (slug === "practice-problem") return "feather-code";
+  if (slug === "project") return "feather-folder";
+  // null / unknown → generic circle
+  return "feather-circle";
+};
+
 const SingleCourse = ({ getParams }) => {
   const router = useRouter();
   const courseId = getParams.courseId;
@@ -95,10 +123,12 @@ const SingleCourse = ({ getParams }) => {
                     listItem: topic.course_contents?.map(content => ({
                       text: content.title,
                       playIcon: content.icon === "play" || content.category?.slug === "lesson",
-                      time: `${content.hours}h ${content.minutes}m`,
+                      time: formatTime(content.hours, content.minutes, content.seconds),
                       status: !content.is_lock,
                       topicId: topic.id,
-                      contentId: content.id
+                      contentId: content.id,
+                      icon: getItemIcon(content),
+                      summary: content.summary
                     })) || []
                   })) || []
                 }
