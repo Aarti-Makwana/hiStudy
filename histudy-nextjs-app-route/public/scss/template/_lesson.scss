@@ -734,14 +734,14 @@
 }
 
 .lesson-bottom-tab-content {
-    min-height: 240px;
+    min-height: 0;
 }
 
 /* Chat area */
 .lesson-chat-area {
     display: flex;
     flex-direction: column;
-    height: 320px;
+    min-height: 300px;
 
     .lesson-chat-filter-bar {
         display: flex;
@@ -776,6 +776,7 @@
         overflow-y: auto;
         padding: 20px;
         scroll-behavior: smooth;
+        max-height: calc(100vh - 200px);
 
         .lesson-chat-empty {
             text-align: center;
@@ -1356,7 +1357,29 @@
     color: #e2e2f0;
 }
 
-/* â”€â”€ Progress row (horizontal: circle left, stats right) â”€â”€ */
+/* ── Sidebar Header Bar (matches lesson-top-strip) ── */
+.sidebar-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #1c1c2e;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.sidebar-course-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e2e2f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Progress row (horizontal: circle left, stats right) ── */
 /* Premium Progress Card (Image 3) */
 .sidebar-progress-card {
     display: flex;

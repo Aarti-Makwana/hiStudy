@@ -230,6 +230,18 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
     <>
       <div className="sidebar-dark-wrapper">
 
+        {/* ── Sidebar Header: Back Arrow + Course Name ── */}
+        <div className="sidebar-header-bar">
+          <Link
+            href={courseSlug ? `/course-details/${courseSlug}` : "/course-details"}
+            className="lesson-strip-btn"
+            title="Back to Course"
+          >
+            <i className="feather-arrow-left"></i>
+          </Link>
+          <span className="sidebar-course-name">{courseData?.title || courseData?.name || "Course"}</span>
+        </div>
+
         {/* ── Progress Card: circle LEFT | divider | stats RIGHT ── */}
         {courseSlug && totalContents > 0 && (
           <div className="sidebar-progress-card">

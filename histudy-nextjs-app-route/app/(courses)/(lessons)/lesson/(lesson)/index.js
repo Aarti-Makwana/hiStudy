@@ -81,7 +81,7 @@ const LessonPage = () => {
   const iframeIdRef = useRef("lesson-iframe-" + Date.now());
 
   // Point 9: Chat / Summary tabs
-  const [activeBottomTab, setActiveBottomTab] = useState("summary");
+  const [activeBottomTab, setActiveBottomTab] = useState("chat");
   // Point 9: Chat filter
   const [chatFilter, setChatFilter] = useState("");
   // Sequential reveal for pagination
@@ -194,9 +194,9 @@ const LessonPage = () => {
           const enrollment = (res.data?.active_enrollments || []).find(
             (en) => String(en.course_id) === String(courseData.id)
           );
-          if (enrollment?.enrollment_id) {
-            setEnrollmentId(enrollment.enrollment_id);
-            console.log("[LessonPage] Found enrollment_id:", enrollment.enrollment_id);
+          if (enrollment?.id) {
+            setEnrollmentId(enrollment.id);
+            console.log("[LessonPage] Found enrollment_id (UUID):", enrollment.id);
           }
         }
       } catch (err) {
@@ -427,10 +427,8 @@ const LessonPage = () => {
   }, [content_id]);
 
   useEffect(() => {
-    if (activeBottomTab === "chat") {
-      fetchComments();
-    }
-  }, [activeBottomTab, fetchComments]);
+    fetchComments();
+  }, [fetchComments]);
 
   const handleSaveComment = async () => {
     if (!newComment.trim() || !content_id || postingComment) return;
@@ -930,34 +928,15 @@ const LessonPage = () => {
             {/* ── Top navigation strip ── */}
             <div className="lesson-top-strip">
               <div className="lesson-header-left">
-                <Link
+                {/* <Link
                   href={course_slug ? `/course-details/${course_slug}` : "/course-details"}
                   className="lesson-strip-btn"
                   title="Back to Course"
                 >
                   <i className="feather-arrow-left"></i>
-                </Link>
+                </Link> */}
 
-                {/* Compact progress indicator (Image 1/2) */}
-                <div className="header-progress-indicator" title={`Course Progress: ${coursePct}%`}>
-                  <svg viewBox="0 0 36 36" className="header-progress-svg">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-                    <circle
-                      cx="18" cy="18" r="16"
-                      fill="none"
-                      stroke="#8e8efb"
-                      strokeWidth="3"
-                      strokeDasharray="100.5"
-                      strokeDashoffset={100.5 - coursePct}
-                      strokeLinecap="round"
-                      transform="rotate(-90 18 18)"
-                      style={{ transition: 'stroke-dashoffset 0.8s ease' }}
-                    />
-                    <text x="18" y="20" textAnchor="middle" dominantBaseline="middle" className="header-progress-pct">
-                      {coursePct}%
-                    </text>
-                  </svg>
-                </div>
+                  
 
                 <button
                   className="lesson-strip-btn"
@@ -1021,35 +1000,7 @@ const LessonPage = () => {
                       {/* ─── Main asset (PDF/HTML/Video all auto-detected) ─── */}
                       {renderLessonAsset()}
 
-                      {/* ─── Video Progress Bar (Hidden in PDF mode) ─── */}
-                      {activeContentTab !== "pdf" && isVideoContent && videoProgress.totalDurationSec > 0 && (
-                        <div className="lesson-video-progress-bar-wrapper">
-                          <div className="lesson-vp-bar-track">
-                            <div
-                              className="lesson-vp-bar-fill"
-                              style={{ width: `${videoProgress.percent}%` }}
-                            />
-                          </div>
-                          <div className="lesson-vp-stats">
-                            <span className="lesson-vp-stat lesson-vp-percent-badge">
-                              <i className="feather-check-circle"></i>
-                              <strong>{videoProgress.percent}%</strong> watched
-                            </span>
-                            <span className="lesson-vp-stat">
-                              <i className="feather-clock"></i>
-                              {secToHMS(videoProgress.currentTimeSec)} watched
-                            </span>
-                            <span className="lesson-vp-stat">
-                              <i className="feather-loader"></i>
-                              {secToHMS(Math.max(0, videoProgress.totalDurationSec - videoProgress.currentTimeSec))} remaining
-                            </span>
-                            <span className="lesson-vp-stat lesson-vp-total">
-                              <i className="feather-film"></i>
-                              Total: {secToHMS(videoProgress.totalDurationSec)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+
 
                       {/* ─── Chat / Summary tabs (Hidden in PDF mode) ─── */}
                       {activeContentTab !== "pdf" && showChatSummary && (
