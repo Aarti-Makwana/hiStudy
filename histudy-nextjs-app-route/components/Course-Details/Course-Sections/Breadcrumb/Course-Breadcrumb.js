@@ -24,19 +24,25 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
 
           <div className="d-flex align-items-center mb--20 flex-wrap rbt-course-details-feature">
             <div className="feature-sin best-seller-badge">
-              <span className="rbt-badge-2">
-                <span className="image">
-                  {getMatchCourse.awardImg && (
-                    <Image
-                      src={getMatchCourse.awardImg}
-                      width={30}
-                      height={30}
-                      alt="Best Seller Icon"
-                    />
-                  )}
+              {getMatchCourse.isBestseller ? (
+                <span className="rbt-badge-2 bestseller">
+                  <span className="image">
+                    {getMatchCourse.awardImg && (
+                      <Image
+                        src={getMatchCourse.awardImg}
+                        width={30}
+                        height={30}
+                        alt="Best Seller Icon"
+                      />
+                    )}
+                  </span>
+                  Bestseller
                 </span>
-                {getMatchCourse.sellsType}
-              </span>
+              ) : (
+                <span className="rbt-badge-2">
+                  {getMatchCourse.sellsType}
+                </span>
+              )}
             </div>
 
             <div className="feature-sin rating">
@@ -87,13 +93,13 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
               <Link className="px-1" href={`/profile/${getMatchCourse.id}`}>
                 {getMatchCourse.userName}
               </Link>
-              In <Link href="#">{getMatchCourse.userCategory}</Link>
+              In <Link href="#">{getMatchCourse.category}</Link>
             </div>
           </div>
 
           <ul className="rbt-meta">
             <li>
-              <i className="feather-calendar"></i>Last updated
+              <i className="feather-calendar"></i>Last updated{" "}
               {getMatchCourse.date}
             </li>
             <li>

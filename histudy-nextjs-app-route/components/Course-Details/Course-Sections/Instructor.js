@@ -23,46 +23,59 @@ const Instructor = ({ checkMatchCourses }) => {
             </div>
             <div className="media-body">
               <div className="author-info">
-                <h5 className="title">
-                  <Link
-                    className="hover-flip-item-wrapper"
-                    href={`#`}
-                  >
-                    {teacher.name}
-                  </Link>
-                </h5>
-                <span className="b3 subtitle">{teacher.type}</span>
-                <ul className="rbt-meta mb--20 mt--10">
-                  <li>
-                    <i className="fa fa-star color-warning"></i>
-                    {teacher.ratingNumber} Reviews
-                    <span className="rbt-badge-5 ml--5">
-                      {teacher.star} Rating
-                    </span>
-                  </li>
-                  <li>
-                    <i className="feather-users"></i> {teacher.studentNumber}
-                    Students
-                  </li>
-                  <li>
-                    <Link href="#">
-                      <i className="feather-video"></i> {teacher.course} Courses
+                <div className="author-name-wrap d-flex align-items-center gap-2 mb--5">
+                  <h5 className="title mb-0">
+                    <Link className="hover-flip-item-wrapper" href={`#`}>
+                      {teacher.name}
                     </Link>
-                  </li>
-                </ul>
+                  </h5>
+                  <Link href={teacher.linkedinUrl} className="linkedin-icon-link">
+                    <i className="feather-linkedin branding-linkedin"></i>
+                  </Link>
+                </div>
+
+                <span className="b3 subtitle instructor-subtitle">
+                  JAVA, DSA in JAVA
+                </span>
+
+                <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 mt--15 mb--15">
+                  {teacher.companies && teacher.companies.length > 0 &&
+                    teacher.companies.map((company, cIndex) => (
+                      <div key={cIndex} className="company-item d-flex align-items-center gap-2">
+                        {company.logo?.url && (
+                          <div className="company-logo">
+                            <Image
+                              src={company.logo.url}
+                              width={24}
+                              height={24}
+                              alt={company.name}
+                              style={{ objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
+                        <span className="company-name b3">
+                          {company.name}
+                        </span>
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
               <div className="content">
-                <div className="description" dangerouslySetInnerHTML={{ __html: teacher.desc }}></div>
+                <div 
+                  className="description instructor-bio-text" 
+                  dangerouslySetInnerHTML={{ __html: teacher.desc }}
+                ></div>
 
-                <ul className="social-icon social-default icon-naked justify-content-start">
-                  {teacher.social.map((social, index) => (
-                    <li key={index}>
-                      <Link href={social.link}>
-                        <i className={`feather-${social.icon === 'linkedin' ? 'linkedin' : social.icon}`}></i>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <div className="instructor-actions">
+                  <Link 
+                    href={teacher.linkedinUrl} 
+                    className="rbt-btn btn-gradient hover-icon-reverse linkedin-btn-custom"
+                  >
+                    <span className="btn-text">LinkedIn</span>
+                    <span className="btn-icon"><i className="feather-linkedin"></i></span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

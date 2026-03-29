@@ -88,9 +88,12 @@ const SingleCourse = ({ getParams }) => {
               studentNumber: apiData.enrolled_users_count || 0,
               lesson: apiData.number_of_lectures,
               duration: apiData.duration,
-              language: apiData.language,
+              language: apiData.language ? apiData.language.charAt(0).toUpperCase() + apiData.language.slice(1) : "English",
               date: new Date(apiData.updated_at || Date.now()).toLocaleDateString(),
+              isBestseller: apiData.is_bestseller || false,
               courseAward: apiData.is_certificate_enabled ? "Certificate" : "No Certificate",
+              hasMoneyBackGuarantee: apiData.has_money_back_guarantee || false,
+              days: 10, // Placeholder or calculated from API if available
 
               // Rating Distribution
               ratingDistribution: [
@@ -105,6 +108,7 @@ const SingleCourse = ({ getParams }) => {
               userName: apiData.instructor?.name || "Unknown Instructor",
               userImg: apiData.instructor?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
               userCategory: apiData.instructor?.short_description || "Instructor",
+              instructorCompanies: apiData.instructor?.companies || [],
 
               // Complex structures adapted
               courseOverview: [
@@ -141,6 +145,7 @@ const SingleCourse = ({ getParams }) => {
                     desc: apiData.instructor.short_description,
                     img: apiData.instructor.file?.url || "/images/client/avatar-02.png",
                     type: "Instructor",
+                    companies: apiData.instructor.companies || [],
                     ratingNumber: apiData.instructor.rating_count || 0,
                     star: apiData.instructor.instructor_rating || 0,
                     studentNumber: apiData.instructor.students_taught || 0,
@@ -148,14 +153,21 @@ const SingleCourse = ({ getParams }) => {
                     social: apiData.instructor.socialMedia?.map(social => ({
                       icon: social.platform,
                       link: social.url
-                    })) || []
+                    })) || [],
+                    linkedinUrl: apiData.instructor.socialMedia?.find(s => s.platform === 'linkedin')?.url || "#"
                   }] : []
                 }
               ],
               courseRequirement: [
                 {
-                  title: "Requirements",
-                  detailsList: [] // API doesn't have explicit requirements list yet
+                  title: "Prerequisites",
+                  detailsList: apiData.prerequisites ? (Array.isArray(apiData.prerequisites) ? apiData.prerequisites : [apiData.prerequisites]) : []
+                }
+              ],
+              courseBenefits: [
+                {
+                  title: "Benefits",
+                  detailsList: apiData.benefits ? (Array.isArray(apiData.benefits) ? apiData.benefits : [apiData.benefits]) : []
                 }
               ],
               featuredReview: [

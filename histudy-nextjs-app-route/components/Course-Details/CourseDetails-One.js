@@ -51,6 +51,15 @@ const CourseDetailsOne = ({ checkMatchCourses, courseSlug }) => {
                     checkMatchCourses={data}
                   />
                 ))}
+              {checkMatchCourses &&
+                checkMatchCourses.courseBenefits &&
+                checkMatchCourses.courseBenefits.map((data, index) => (
+                  <Requirements
+                    {...data}
+                    key={index}
+                    checkMatchCourses={data}
+                  />
+                ))}
             </div>
           </div>
           <div

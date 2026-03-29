@@ -178,7 +178,7 @@ const Viedo = ({ checkMatchCourses }) => {
           </Link>
         </div>
         <span className="subtitle">
-          <i className="feather-rotate-ccw"></i> {checkMatchCourses.money_back ? `${checkMatchCourses.money_back_duration || '30'}-Day Money-Back Guarantee` : 'Secure Payment Guarantee'}
+          <i className="feather-rotate-ccw"></i> {checkMatchCourses.hasMoneyBackGuarantee ? `${checkMatchCourses.money_back_duration || '30'}-Day Money-Back Guarantee` : 'Secure Payment Guarantee'}
         </span>
         <div
           className={`rbt-widget-details has-show-more ${toggle ? "active" : ""
