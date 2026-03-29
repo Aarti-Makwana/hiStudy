@@ -632,3 +632,220 @@
         font-size: 12px;
     }
 }
+
+/// Udemy-style Curriculum Redesign
+.udemy-curriculum {
+    .rbt-accordion-style.rbt-accordion-02 {
+        .accordion-item {
+            border: 1px solid var(--color-border);
+            margin-bottom: -1px; 
+            background: #fff;
+            border-radius: 0 !important;
+
+            &:first-child {
+                border-top-left-radius: 6px !important;
+                border-top-right-radius: 6px !important;
+            }
+            &:last-child {
+                border-bottom-left-radius: 6px !important;
+                border-bottom-right-radius: 6px !important;
+                margin-bottom: 0;
+            }
+
+            .accordion-header {
+                padding: 0 !important;
+                border-bottom: 0 none !important;
+            }
+
+            .accordion-button {
+                background-color: #f7f9fa !important;
+                padding: 16px 20px !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: var(--color-heading) !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+
+                &::after {
+                    display: none;
+                }
+
+                &::before {
+                    display: none; // Hide default feather icon
+                }
+
+                .accordion-title-left {
+                    display: flex;
+                    align-items: center;
+                    font-weight: 700;
+                    font-size: 16px;
+                    color: var(--color-heading);
+                    
+                    i {
+                        transition: transform 0.3s;
+                        font-size: 14px;
+                        color: var(--color-heading);
+                    }
+                }
+
+                &.collapsed {
+                    .accordion-title-left i {
+                        transform: rotate(-90deg);
+                    }
+                }
+
+                .accordion-title-right {
+                    font-size: 14px;
+                    color: var(--color-body);
+                    font-weight: 400;
+
+                    .lec-count {
+                        margin-right: 8px;
+                    }
+                    .section-time {
+                        &::before {
+                            content: "•";
+                            margin-right: 8px;
+                        }
+                    }
+                }
+            }
+        }
+
+        .accordion-body {
+            padding: 0 !important;
+        }
+    }
+
+    .rbt-course-main-content {
+        margin: 0;
+        padding: 0;
+
+        li {
+            margin: 0;
+            border-bottom: 0 none; 
+            
+            a {
+                padding: 12px 20px !important;
+                border-bottom: 1px solid var(--color-border);
+                transition: background 0.2s;
+                background: transparent !important;
+                width: 100%;
+                display: flex !important;
+
+                &:hover {
+                    background-color: rgba(0, 0, 0, 0.03) !important;
+                }
+
+                .course-content-left-outer {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 15px;
+
+                    .course-content-left {
+                        margin-bottom: 0 !important;
+                        gap: 12px;
+                        display: flex;
+                        align-items: flex-start;
+
+                        i {
+                            font-size: 16px;
+                            color: var(--color-body);
+                            padding-right: 0;
+                            margin-top: 3px;
+                        }
+
+                        .course-content-text-wrap {
+                            .text-toggle-wrap {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+
+                                .text {
+                                    font-size: 15px !important;
+                                    font-weight: 500 !important;
+                                    color: var(--color-heading);
+                                }
+
+                                .summary-toggle-btn {
+                                    background: none;
+                                    border: none;
+                                    padding: 0;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    transition: transform 0.2s;
+                                    color: var(--color-body);
+                                    opacity: 0.7;
+
+                                    i {
+                                        font-size: 11px;
+                                        margin-top: 0;
+                                    }
+
+                                    &.active {
+                                        transform: rotate(180deg);
+                                    }
+
+                                    &:hover {
+                                        opacity: 1;
+                                    }
+                                }
+                            }
+
+                            .lesson-summary-content {
+                                font-size: 12px;
+                                color: var(--color-body);
+                                opacity: 0.7;
+                                line-height: 1.5;
+                                max-width: 650px;
+                                font-weight: 400;
+                                margin-top: 2px !important;
+                                padding-left: 0;
+
+                                p {
+                                    margin-bottom: 0;
+                                }
+                            }
+                        }
+                    }
+
+                    .course-content-right {
+                        margin: 0 !important;
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        flex-shrink: 0;
+                        margin-top: 2px !important;
+
+                        span {
+                            margin: 0 !important;
+                            font-size: 14px;
+                            color: var(--color-body);
+                        }
+
+                        .preview-text {
+                            color: var(--color-primary) !important;
+                            text-decoration: underline !important;
+                            cursor: pointer;
+                            font-weight: 500;
+                        }
+
+                        .course-lock {
+                            opacity: 0.5;
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+
+            &:last-child a {
+                border-bottom: 0 none;
+            }
+        }
+    }
+}

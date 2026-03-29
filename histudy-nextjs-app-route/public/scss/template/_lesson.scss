@@ -652,6 +652,68 @@
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         mix-blend-mode: difference;
     }
+
+    .video-custom-fullscreen-btn {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        width: 36px;
+        height: 36px;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 30;
+        transition: background 0.2s, transform 0.2s;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        i {
+            font-size: 20px;
+        }
+    }
+
+    // Fullscreen behavior for the container
+    &:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        aspect-ratio: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+
+        .video-email-watermark {
+            font-size: 24px;
+            z-index: 2147483647; // Max z-index for full-screen top layer
+        }
+
+        .video-custom-fullscreen-btn {
+            bottom: 30px;
+            right: 30px;
+            width: 44px;
+            height: 44px;
+            z-index: 2147483647;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+    }
+
+    &:-webkit-full-screen {
+        width: 100vw;
+        height: 100vh;
+    }
 }
 
 

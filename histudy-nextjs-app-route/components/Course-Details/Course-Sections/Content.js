@@ -2,11 +2,23 @@ import Link from "next/link";
 import React from "react";
 
 const Content = ({ checkMatchCourses, courseSlug }) => {
+  const [expandedLessons, setExpandedLessons] = React.useState([]);
+
+  const toggleLessonSummary = (e, lessonId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedLessons((prev) =>
+      prev.includes(lessonId)
+        ? prev.filter((id) => id !== lessonId)
+        : [...prev, lessonId]
+    );
+  };
+
   return (
     <>
-      <div className="rbt-course-feature-inner">
+      <div className="rbt-course-feature-inner udemy-curriculum">
         <div className="section-title">
-          <h4 className="rbt-title-style-3">{checkMatchCourses.title}</h4>
+          <h4 className="rbt-title-style-3">Course Content</h4>
         </div>
         <div className="rbt-accordion-style rbt-accordion-02 accordion">
           <div className="accordion" id="accordionExampleb2">
@@ -25,8 +37,18 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                     aria-expanded={item.expand}
                     aria-controls={`collapseTwo${innerIndex + 1}`}
                   >
-                    {item.title}
-                    <span className="rbt-badge-5 ml--10">{item.time}</span>
+                    <span className="accordion-title-left">
+                      <i className="feather-chevron-down mr--10"></i>
+                      {item.title}
+                    </span>
+                    <span className="accordion-title-right">
+                      {item.listItem?.length > 0 && (
+                        <span className="lec-count">{item.listItem.length} lectures</span>
+                      )}
+                      {item.time && (
+                        <span className="section-time">{item.time}</span>
+                      )}
+                    </span>
                   </button>
                 </h2>
                 <div
@@ -36,38 +58,52 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                   aria-labelledby={`headingTwo${innerIndex}`}
                   data-bs-parent="#accordionExampleb2"
                 >
-                  <div className="accordion-body card-body pr--0">
+                  <div className="accordion-body card-body pr--0 pb--0">
                     <ul className="rbt-course-main-content liststyle">
-                      {item.listItem.map((list, subIndex) => (
-                        <li key={subIndex}>
-                          <Link href={`/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`}>
-                            <div className="course-content-left align-items-start">
-                              <i className={list.icon || "feather-circle"} style={{ marginTop: list.summary ? "4px" : "0" }}></i>
-                              <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
-                                <span className="text">{list.text}</span>
-                                {list.summary && (
-                                  <span className="course-content-summary">{list.summary}</span>
-                                )}
+                      {item.listItem.map((list, subIndex) => {
+                        const lessonId = `lesson-${innerIndex}-${subIndex}`;
+                        const isExpanded = expandedLessons.includes(lessonId);
+                        return (
+                          <li key={subIndex} className={isExpanded ? "item-expanded" : ""}>
+                            <Link href={`/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`}>
+                              <div className="course-content-left-outer w-100">
+                                <div className="course-content-left">
+                                  <i className={list.icon || "feather-play-circle"}></i>
+                                  <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
+                                    <div className="text-toggle-wrap">
+                                      <span className="text">{list.text}</span>
+                                      {list.summary && (
+                                        <button
+                                          className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
+                                          onClick={(e) => toggleLessonSummary(e, lessonId)}
+                                        >
+                                          <i className="feather-chevron-down"></i>
+                                        </button>
+                                      )}
+                                    </div>
+                                    {list.summary && isExpanded && (
+                                      <div className="lesson-summary-content mt--5">
+                                        <p>{list.summary}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="course-content-right">
+                                  {list.status && (
+                                    <span className="preview-text">Preview</span>
+                                  )}
+                                  <span className="min-lable">{list.time}</span>
+                                  {!list.status && (
+                                    <span className="course-lock">
+                                      <i className="feather-lock"></i>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            {list.status ? (
-                              <div className="course-content-right">
-                                <span className="min-lable">{list.time}</span>
-                                <span className="rbt-badge variation-03 bg-primary-opacity">
-                                  <i className="feather-eye"></i> Preview
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="course-content-right">
-                                <span className="min-lable">{list.time}</span>
-                                <span className="course-lock">
-                                  <i className="feather-lock"></i>
-                                </span>
-                              </div>
-                            )}
-                          </Link>
-                        </li>
-                      ))}
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>

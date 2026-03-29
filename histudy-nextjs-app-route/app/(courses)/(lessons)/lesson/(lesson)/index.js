@@ -79,6 +79,7 @@ const LessonPage = () => {
   const vimeoPlayerRef = useRef(null);    // Vimeo Player instance
   const ytTimerRef = useRef(null);        // YT polling interval
   const iframeIdRef = useRef("lesson-iframe-" + Date.now());
+  const videoWrapperRef = useRef(null);   // ref for the entire video container
 
   // Point 9: Chat / Summary tabs
   const [activeBottomTab, setActiveBottomTab] = useState("chat");
@@ -109,6 +110,27 @@ const LessonPage = () => {
   // ── Email Watermark State ─────────────────────────────────────
   const [userEmail, setUserEmail] = useState("");
   const [watermarkPos, setWatermarkPos] = useState({ top: 10, left: 10 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Sync isFullscreen state with browser's fullscreen API
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!videoWrapperRef.current) return;
+    if (!document.fullscreenElement) {
+      videoWrapperRef.current.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   // Update watermark position every 5 seconds
   useEffect(() => {
@@ -789,19 +811,30 @@ const LessonPage = () => {
         );
       };
 
+      const renderFullscreenBtn = () => (
+        <button
+          className="video-custom-fullscreen-btn"
+          onClick={toggleFullscreen}
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        >
+          <i className={isFullscreen ? "feather-minimize" : "feather-maximize"}></i>
+        </button>
+      );
+
       if (videoUrl.includes("vimeo.com")) {
         const vimeoId = videoUrl.split("/").pop();
         return (
-          <div className="lesson-video-wrapper">
+          <div className="lesson-video-wrapper" ref={videoWrapperRef}>
             <iframe
               id={iframeIdRef.current}
-              src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0`}
+              src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0&fullscreen=0`}
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
               title="Vimeo Video"
               ref={(el) => { if (el && !vimeoPlayerRef.current) initVimeoPlayer(el); }}
             ></iframe>
             {renderWatermark()}
+            {renderFullscreenBtn()}
           </div>
         );
       }
@@ -812,21 +845,22 @@ const LessonPage = () => {
         else youtubeId = videoUrl.split("/").pop();
 
         return (
-          <div className="lesson-video-wrapper">
+          <div className="lesson-video-wrapper" ref={videoWrapperRef}>
             <iframe
               id={iframeIdRef.current}
-              src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&fs=0`}
               allowFullScreen
               title="YouTube Video"
               ref={(el) => { if (el && !ytPlayerRef.current) initYouTubePlayer(el); }}
             ></iframe>
             {renderWatermark()}
+            {renderFullscreenBtn()}
           </div>
         );
       }
       // Raw Video
       return (
-        <div className="lesson-video-wrapper">
+        <div className="lesson-video-wrapper" ref={videoWrapperRef}>
           <video
             ref={videoRef}
             controls
@@ -852,6 +886,7 @@ const LessonPage = () => {
             onEnded={(e) => postProgress(content_id, e.target.duration || e.target.currentTime)}
           />
           {renderWatermark()}
+          {renderFullscreenBtn()}
         </div>
       );
     };
