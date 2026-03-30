@@ -388,6 +388,7 @@
 
     .description {
         color: var(--color-heading);
+        margin-bottom: 25px;
 
         @media #{$sm-layout} {
             margin-bottom: 20px;
@@ -419,12 +420,12 @@
     }
 
     .rbt-course-details-feature {
-        margin: -5px;
+        margin: -10px;
 
         .feature-sin {
-            margin: 5px;
+            margin: 10px;
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
 
         &.vertion-02 {

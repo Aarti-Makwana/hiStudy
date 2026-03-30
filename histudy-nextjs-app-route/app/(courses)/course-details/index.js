@@ -142,7 +142,7 @@ const SingleCourse = ({ getParams }) => {
                   title: "Instructor",
                   body: apiData.instructor ? [{
                     name: apiData.instructor.name,
-                    desc: apiData.instructor.short_description,
+                    desc: apiData.instructor.bio || apiData.instructor.short_description,
                     img: apiData.instructor.file?.url || "/images/client/avatar-02.png",
                     type: "Instructor",
                     companies: apiData.instructor.companies || [],

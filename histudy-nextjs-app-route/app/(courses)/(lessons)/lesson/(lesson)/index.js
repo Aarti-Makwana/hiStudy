@@ -828,8 +828,7 @@ const LessonPage = () => {
             <iframe
               id={iframeIdRef.current}
               src={`https://player.vimeo.com/video/${vimeoId}?h=0&title=0&byline=0&portrait=0&fullscreen=0`}
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
+              allow="autoplay; picture-in-picture"
               title="Vimeo Video"
               ref={(el) => { if (el && !vimeoPlayerRef.current) initVimeoPlayer(el); }}
             ></iframe>
@@ -849,7 +848,6 @@ const LessonPage = () => {
             <iframe
               id={iframeIdRef.current}
               src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&fs=0`}
-              allowFullScreen
               title="YouTube Video"
               ref={(el) => { if (el && !ytPlayerRef.current) initYouTubePlayer(el); }}
             ></iframe>
@@ -864,6 +862,7 @@ const LessonPage = () => {
           <video
             ref={videoRef}
             controls
+            controlsList="nofullscreen"
             src={videoUrl}
             onLoadedMetadata={(e) => {
               const dur = e.target.duration || 0;

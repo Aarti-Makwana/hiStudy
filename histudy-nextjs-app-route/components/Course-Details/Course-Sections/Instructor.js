@@ -29,9 +29,6 @@ const Instructor = ({ checkMatchCourses }) => {
                       {teacher.name}
                     </Link>
                   </h5>
-                  <Link href={teacher.linkedinUrl} className="linkedin-icon-link">
-                    <i className="feather-linkedin branding-linkedin"></i>
-                  </Link>
                 </div>
 
                 <span className="b3 subtitle instructor-subtitle">

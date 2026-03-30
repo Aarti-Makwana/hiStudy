@@ -640,6 +640,10 @@
         display: block;
     }
 
+    video::-webkit-media-controls-fullscreen-button {
+        display: none;
+    }
+
     .video-email-watermark {
         position: absolute;
         color: rgba(255, 255, 255, 0.4);
@@ -661,17 +665,18 @@
         height: 36px;
         background: rgba(0, 0, 0, 0.5);
         color: #fff;
-        border: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         z-index: 30;
-        transition: background 0.2s, transform 0.2s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
         &:hover {
-            background: rgba(0, 0, 0, 0.8);
+            background: var(--color-primary);
+            border-color: transparent;
             transform: scale(1.1);
         }
 
@@ -692,7 +697,8 @@
 
         .video-email-watermark {
             font-size: 24px;
-            z-index: 2147483647; // Max z-index for full-screen top layer
+            z-index: 2147483647 !important; // Max z-index for full-screen top layer
+            opacity: 0.6;
         }
 
         .video-custom-fullscreen-btn {
@@ -700,12 +706,14 @@
             right: 30px;
             width: 44px;
             height: 44px;
-            z-index: 2147483647;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 2147483647 !important;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
 
             &:hover {
-                background: rgba(255, 255, 255, 0.2);
+                background: var(--color-primary);
+                border-color: transparent;
             }
         }
     }
@@ -2611,6 +2619,10 @@ a.sidebar-item:hover .sidebar-playpause {
     }
 }
 
+.lesson-assignment-submission-container h4 {
+    color: white;
+}
+
 /* Assignment & Project Submission UI */
 .lesson-assignment-submission-container {
     padding: 30px 40px;
@@ -2785,16 +2797,22 @@ a.sidebar-item:hover .sidebar-playpause {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes scaleUp {
-    from { 
+    from {
         opacity: 0;
         transform: scale(0.95);
     }
-    to { 
+
+    to {
         opacity: 1;
         transform: scale(1);
     }
@@ -2812,6 +2830,7 @@ body:has(.rbt-lesson-area) {
    Premium Custom Scrollbars
 -------------------------------------*/
 .rbt-lesson-area {
+
     // Target all scrollable components universally in the lesson UI
     *::-webkit-scrollbar {
         width: 6px;

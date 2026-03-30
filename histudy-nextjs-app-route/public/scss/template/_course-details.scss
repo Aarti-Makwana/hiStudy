@@ -1030,7 +1030,7 @@
 }
 
 .instructor-bio-text {
-    font-size: 15px !important;
+    font-size: 17px !important;
     line-height: 1.8 !important;
     color: var(--color-body) !important;
     margin-top: 0 !important;
@@ -1043,14 +1043,13 @@
     
     p {
         margin-bottom: 15px !important;
-        font-size: 15px !important;
+        font-size: 17px !important;
     }
 }
 
 .instructor-actions {
     display: flex !important;
-    justify-content: center !important;
-    width: 100% !important;
+    justify-content: flex-start !important;
     margin-top: 10px !important;
     padding-bottom: 20px !important;
 }
