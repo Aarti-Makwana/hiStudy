@@ -1,14 +1,18 @@
 "use client";
 import React, { useState } from "react";
+import toast from "react-hot-toast";
+import { UserCoursesServices } from "@/services/User/Courses/index.service";
 
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
-const QuizPlayer = ({ quizzes = [] }) => {
+const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) => {
     const [current, setCurrent] = useState(0);
     const [selected, setSelected] = useState({});   // { quizId: optionId }
     const [submitted, setSubmitted] = useState(false);
     const [showAnswer, setShowAnswer] = useState({});  // { quizId: true }
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [quizResult, setQuizResult] = useState(null); // Server response
 
     if (!quizzes.length)
         return <div className="qp-empty"><i className="feather-help-circle"></i><p>No questions available.</p></div>;
@@ -29,17 +33,41 @@ const QuizPlayer = ({ quizzes = [] }) => {
         setSelected(prev => ({ ...prev, [quiz.id]: optId }));
     };
 
+    const submitQuizAttempt = async () => {
+        setSubmitting(true);
+        try {
+            const payload = {
+                enrollment_id: enrollmentId,
+                content_id: contentId
+            };
+
+            const res = await UserCoursesServices.submitQuiz(payload);
+            if (res && res.status === "success") {
+                setQuizResult(res.data);
+                setSubmitted(true);
+                toast.success("Quiz submitted successfully!");
+            } else {
+                toast.error(res?.message || "Failed to submit quiz.");
+            }
+        } catch (error) {
+            console.error("Error submitting quiz:", error);
+            toast.error("An error occurred during submission.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleSubmit = () => {
         if (answered < total) {
             setShowConfirmModal(true);
             return;
         }
-        setSubmitted(true);
+        submitQuizAttempt();
     };
 
     const confirmSubmit = () => {
         setShowConfirmModal(false);
-        setSubmitted(true);
+        submitQuizAttempt();
     };
 
     const handleReset = () => {
@@ -48,6 +76,7 @@ const QuizPlayer = ({ quizzes = [] }) => {
         setShowAnswer({});
         setCurrent(0);
         setShowConfirmModal(false);
+        setQuizResult(null);
     };
 
     const getOptionClass = (optId) => {
@@ -59,8 +88,11 @@ const QuizPlayer = ({ quizzes = [] }) => {
 
     /* ── Result screen ── */
     if (submitted) {
-        const pct = Math.round((score / total) * 100);
-        const passed = pct >= 60;
+        const pct = quizResult?.percentage !== undefined ? quizResult.percentage : Math.round((score / total) * 100);
+        const passed = quizResult ? quizResult.result === "Pass" : pct >= 60;
+        const finalScore = quizResult?.correct_answers !== undefined ? quizResult.correct_answers : score;
+        const finalTotal = quizResult?.total_questions !== undefined ? quizResult.total_questions : total;
+        
         return (
             <div className="qp-wrapper">
                 {/* Score card */}
@@ -83,7 +115,7 @@ const QuizPlayer = ({ quizzes = [] }) => {
                         <h2 className={passed ? "qp-result-pass" : "qp-result-fail"}>
                             {passed ? "🎉 Passed!" : "😔 Try Again"}
                         </h2>
-                        <p>You scored <strong>{score}</strong> out of <strong>{total}</strong> questions correctly.</p>
+                        <p>You scored <strong>{finalScore}</strong> out of <strong>{finalTotal}</strong> questions correctly.</p>
                         <button className="qp-btn-retry" onClick={handleReset}>
                             <i className="feather-refresh-cw"></i> Retake Quiz
                         </button>
@@ -139,110 +171,128 @@ const QuizPlayer = ({ quizzes = [] }) => {
     /* ── Active quiz ── */
     return (
         <>
-        {/* Confirmation Modal */}
-        {showConfirmModal && (
-            <div className="qp-confirm-modal-backdrop">
-                <div className="qp-confirm-modal">
-                    <div className="qp-confirm-icon">
-                        <i className="feather-alert-triangle"></i>
-                    </div>
-                    <h4 className="qp-confirm-title">Incomplete Quiz</h4>
-                    <p className="qp-confirm-desc">
-                        You have answered <strong>{answered}</strong> out of <strong>{total}</strong> questions. 
-                        Are you sure you want to submit? Unanswered questions will be marked incorrect.
-                    </p>
-                    <div className="qp-confirm-actions">
-                        <button className="qp-btn-cancel" onClick={() => setShowConfirmModal(false)}>
-                            Cancel
-                        </button>
-                        <button className="qp-btn-submit" onClick={confirmSubmit}>
-                            <i className="feather-send mr--5"></i> Submit Anyway
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        <div className="qp-wrapper">
-            {/* Header */}
-            <div className="qp-header">
-                <div className="qp-header-left">
-                    <i className="feather-help-circle qp-header-icon"></i>
-                    <div>
-                        <h5 className="qp-header-title">Knowledge Check</h5>
-                        <span className="qp-header-sub">{answered}/{total} answered</span>
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="qp-confirm-modal-backdrop">
+                    <div className="qp-confirm-modal">
+                        <div className="qp-confirm-icon">
+                            <i className="feather-alert-triangle"></i>
+                        </div>
+                        <h4 className="qp-confirm-title">Incomplete Quiz</h4>
+                        <p className="qp-confirm-desc">
+                            You have answered <strong>{answered}</strong> out of <strong>{total}</strong> questions.
+                            Are you sure you want to submit? Unanswered questions will be marked incorrect.
+                        </p>
+                        <div className="qp-confirm-actions">
+                            <button className="qp-btn-cancel" onClick={() => setShowConfirmModal(false)}>
+                                Cancel
+                            </button>
+                            <button className="qp-btn-submit" onClick={confirmSubmit}>
+                                <i className="feather-send mr--5"></i> Submit Anyway
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div className="qp-header-right">
-                    <span className="qp-attempts">Attempts Allowed: 1</span>
-                </div>
-            </div>
+            )}
 
-            {/* Progress */}
-            <div className="qp-progress-bar">
-                <div className="qp-progress-fill" style={{ width: `${((current + 1) / total) * 100}%` }} />
-            </div>
-
-            {/* Question card */}
-            <div className="qp-question-card">
-                {/* Question counter */}
-                <div className="qp-q-meta">
-                    <span className="qp-q-pill">Question {current + 1} of {total}</span>
-                    {selected[quiz.id] && <span className="qp-answered-pill">✓ Answered</span>}
-                </div>
-
-                {/* Question text */}
-                <div className="qp-question-text" dangerouslySetInnerHTML={{ __html: quiz.question }} />
-
-                {/* Options grid */}
-                <div className="qp-options-grid">
-                    {quiz.options?.map((opt, oi) => (
-                        <button
-                            key={opt.id}
-                            className={getOptionClass(opt.id)}
-                            onClick={() => handleSelect(opt.id)}
-                        >
-                            <span className="qp-option-letter">{LETTERS[oi]}</span>
-                            <span className="qp-option-text">{opt.option_text}</span>
-                            {isCorrect(opt.id) && <i className="feather-check-circle qp-option-icon correct"></i>}
-                            {isWrong(opt.id) && <i className="feather-x-circle qp-option-icon wrong"></i>}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="qp-nav">
-                <button
-                    className="qp-nav-btn secondary"
-                    disabled={current === 0}
-                    onClick={() => setCurrent(c => c - 1)}
-                >
-                    <i className="feather-arrow-left"></i> Previous
-                </button>
-
-                {/* Dot indicators */}
-                <div className="qp-dots">
-                    {quizzes.map((q, i) => (
-                        <button
-                            key={i}
-                            className={`qp-dot ${i === current ? "active" : ""} ${selected[q.id] ? "done" : ""}`}
-                            onClick={() => setCurrent(i)}
-                        />
-                    ))}
+            <div className="qp-wrapper">
+                {/* Header */}
+                <div className="qp-header">
+                    <div className="qp-header-left">
+                        <i className="feather-help-circle qp-header-icon"></i>
+                        <div>
+                            <h5 className="qp-header-title">Knowledge Check</h5>
+                            <span className="qp-header-sub">{answered}/{total} answered</span>
+                        </div>
+                    </div>
+                    <div className="qp-header-right" style={{ textAlign: "right" }}>
+                        {latestAttempt ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <span className="qp-attempts" style={{ color: "white", fontWeight: "500", fontSize: "14px" }}>
+                                    Attempts Made: {latestAttempt.attempt_number}
+                                </span>
+                                {latestAttempt.percentage !== null && (
+                                    <span className="qp-attempts" style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", border: "none", padding: "0", background: "transparent" }}>
+                                        Last Score: {latestAttempt.percentage}% {latestAttempt.result ? `(${latestAttempt.result})` : ""}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="qp-attempts">Attempts Allowed: 1</span>
+                        )}
+                    </div>
                 </div>
 
-                {current < total - 1 ? (
-                    <button className="qp-nav-btn primary" onClick={() => setCurrent(c => c + 1)}>
-                        Next <i className="feather-arrow-right"></i>
+                {/* Progress */}
+                <div className="qp-progress-bar">
+                    <div className="qp-progress-fill" style={{ width: `${((current + 1) / total) * 100}%` }} />
+                </div>
+
+                {/* Question card */}
+                <div className="qp-question-card">
+                    {/* Question counter */}
+                    <div className="qp-q-meta">
+                        <span className="qp-q-pill">Question {current + 1} of {total}</span>
+                        {selected[quiz.id] && <span className="qp-answered-pill">✓ Answered</span>}
+                    </div>
+
+                    {/* Question text */}
+                    <div className="qp-question-text" dangerouslySetInnerHTML={{ __html: quiz.question }} />
+
+                    {/* Options grid */}
+                    <div className="qp-options-grid">
+                        {quiz.options?.map((opt, oi) => (
+                            <button
+                                key={opt.id}
+                                className={getOptionClass(opt.id)}
+                                onClick={() => handleSelect(opt.id)}
+                            >
+                                <span className="qp-option-letter">{LETTERS[oi]}</span>
+                                <span className="qp-option-text">{opt.option_text}</span>
+                                {isCorrect(opt.id) && <i className="feather-check-circle qp-option-icon correct"></i>}
+                                {isWrong(opt.id) && <i className="feather-x-circle qp-option-icon wrong"></i>}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="qp-nav">
+                    <button
+                        className="qp-nav-btn secondary"
+                        disabled={current === 0}
+                        onClick={() => setCurrent(c => c - 1)}
+                    >
+                        <i className="feather-arrow-left"></i> Previous
                     </button>
-                ) : (
-                    <button className="qp-nav-btn submit" onClick={handleSubmit}>
-                        <i className="feather-send"></i> Submit Quiz
-                    </button>
-                )}
+
+                    {/* Dot indicators */}
+                    <div className="qp-dots">
+                        {quizzes.map((q, i) => (
+                            <button
+                                key={i}
+                                className={`qp-dot ${i === current ? "active" : ""} ${selected[q.id] ? "done" : ""}`}
+                                onClick={() => setCurrent(i)}
+                            />
+                        ))}
+                    </div>
+
+                    {current < total - 1 ? (
+                        <button className="qp-nav-btn primary" onClick={() => setCurrent(c => c + 1)}>
+                            Next <i className="feather-arrow-right"></i>
+                        </button>
+                    ) : (
+                        <button className="qp-nav-btn submit" onClick={handleSubmit} disabled={submitting}>
+                            {submitting ? (
+                                <i className="feather-loader icon-spin"></i>
+                            ) : (
+                                <i className="feather-send"></i>
+                            )}
+                            {submitting ? " Submitting..." : " Submit Quiz"}
+                        </button>
+                    )}
+                </div>
             </div>
-        </div>
         </>
     );
 };

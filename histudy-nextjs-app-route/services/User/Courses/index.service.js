@@ -168,4 +168,17 @@ export const UserCoursesServices = {
       throw error;
     }
   },
+  submitQuiz: async (bodyData) => {
+    try {
+      const payload = {
+        ...UserCourses.submitQuiz,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },  
 };

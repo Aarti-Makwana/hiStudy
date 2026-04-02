@@ -188,11 +188,10 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
   const remainingSeconds = Math.max(0, totalSecondsAll - watchedSeconds);
   const progressPercent = totalSecondsAll > 0 ? Math.round((watchedSeconds / totalSecondsAll) * 100) : 0;
 
-  // Icon purely from API `icon` field
   const getItemIcon = (content) => {
     const icon = content?.icon; // from API: "quiz", "editor", "video", etc.
     if (icon === "quiz") return "feather-help-circle";
-    if (icon === "document") return "feather-book-open";
+    if (icon === "document" || icon === "pdf") return "feather-file-text";
     if (icon === "video") return "feather-play-circle";
     if (icon === "editor") return "feather-edit";
     // fallback: check category slug
@@ -201,6 +200,12 @@ const LessonSidebar = ({ courseData, courseSlug, currentVideoProgress, lessonPro
     if (slug === "assignment") return "feather-file-text";
     if (slug === "practice-problem") return "feather-code";
     if (slug === "project") return "feather-folder";
+    if (slug === "pdf") return "feather-file-text";
+
+    // Detect PDF by URL
+    const fileUrl = content?.file?.url || content?.video_url || content?.url;
+    if (fileUrl && fileUrl.toLowerCase().includes('.pdf')) return "feather-file-text";
+
     // null / unknown → generic circle
     return "feather-circle";
   };

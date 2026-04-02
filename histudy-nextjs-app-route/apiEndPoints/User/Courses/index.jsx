@@ -54,6 +54,12 @@ const UserCourses = {
     url: "/api/v1/submission",
     method: "POST",
   },
+
+  submitQuiz: {
+    url: "/api/v1/quiz/attempts",
+    method: "POST",
+  },
+
 };
 
 export default UserCourses;

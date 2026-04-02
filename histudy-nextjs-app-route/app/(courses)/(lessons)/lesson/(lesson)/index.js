@@ -84,7 +84,7 @@ const LessonPage = () => {
   // Point 9: Chat / Summary tabs
   const [activeBottomTab, setActiveBottomTab] = useState("chat");
   // Point 9: Chat filter
-  const [chatFilter, setChatFilter] = useState("");
+  const [chatFilter, setChatFilter] = useState("current");
   // Sequential reveal for pagination
   const [showPagination, setShowPagination] = useState(false);
   const sentinelRef = useRef(null);
@@ -633,7 +633,7 @@ const LessonPage = () => {
       const player = new window.YT.Player(iframeEl, {
         events: {
           onReady: (evt) => {
-            const dur = evt.target.getDuration();
+            const dur = typeof evt.target?.getDuration === "function" ? evt.target.getDuration() : 0;
             if (dur > 0) {
               setVideoProgress((prev) => ({
                 ...prev,
@@ -641,14 +641,14 @@ const LessonPage = () => {
               }));
             }
             // Seek to saved position
-            if (lastPostedTimeRef.current > 0) {
+            if (lastPostedTimeRef.current > 0 && typeof evt.target?.seekTo === "function") {
               evt.target.seekTo(lastPostedTimeRef.current, true);
             }
           },
           onStateChange: (evt) => {
             const state = evt.data;
-            const cur = evt.target.getCurrentTime();
-            const dur = evt.target.getDuration() || 1;
+            const cur = typeof evt.target?.getCurrentTime === "function" ? evt.target.getCurrentTime() : 0;
+            const dur = typeof evt.target?.getDuration === "function" ? Math.max(evt.target.getDuration(), 1) : 1;
             const pct = Math.min(100, Math.round((cur / dur) * 100));
 
             // PLAYING
@@ -711,7 +711,7 @@ const LessonPage = () => {
         {latestSubmission ? (
           <div className="bg-color-white rbt-shadow-box p--30">
             <div className="submission-status-item mb--20 d-flex align-items-center gap-3">
-              <span className="h6 mb--0">Status:</span>
+              <span className="h6 mb--0 text-white">Status:</span>
               <span className={`status-badge ${latestSubmission.is_approved ? "approved" : "pending"}`}
                 style={{
                   padding: "4px 12px",
@@ -751,7 +751,7 @@ const LessonPage = () => {
               </div>
 
               <div className="mt--30">
-                <label className="mb--10 d-block font-weight-bold h6">Upload files (optional)</label>
+                <label className="mb--10 d-block font-weight-bold h6 text-white">Upload files (optional)</label>
                 <div className="custom-file-upload-wrapper p--20 border-dashed rounded text-center bg-color-light">
                   <input
                     type="file"
@@ -1006,7 +1006,7 @@ const LessonPage = () => {
                   <i className="feather-arrow-left"></i>
                 </Link> */}
 
-                  
+
 
                 <button
                   className="lesson-strip-btn"
@@ -1023,13 +1023,6 @@ const LessonPage = () => {
               {/* ─── Relocated Tabs ─── */}
               {showTabs && (
                 <div className="lesson-content-tabs ml--auto">
-                  <button
-                    className={`lesson-content-tab-btn ${activeContentTab === "content" ? "active" : ""}`}
-                    onClick={() => setActiveContentTab("content")}
-                  >
-                    <i className={hasVideo ? "feather-play-circle" : "feather-file-text"}></i>
-                    {hasVideo ? "Lesson" : "Description"}
-                  </button>
                   <button
                     className="lesson-content-tab-btn"
                     onClick={() => window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(finalPdfUrl)}`, '_blank')}
@@ -1064,7 +1057,15 @@ const LessonPage = () => {
                   {/* ─── QUIZ ─────────────────────────────────────────── */}
                   {isQuiz ? (() => {
                     const quizzes = lessonContent?.course_quizzes || [];
-                    return <QuizPlayer quizzes={quizzes} />;
+                    const latestAttempt = lessonContent?.latest_attempt || null;
+                    return (
+                      <QuizPlayer
+                        quizzes={quizzes}
+                        contentId={content_id}
+                        enrollmentId={enrollmentId}
+                        latestAttempt={latestAttempt}
+                      />
+                    );
                   })() : (
                     <>
                       {/* ─── Main asset (PDF/HTML/Video all auto-detected) ─── */}
@@ -1101,16 +1102,18 @@ const LessonPage = () => {
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Chat filter */}
+                                    {/* Chat dropdown filter */}
                                     <div className="lesson-chat-filter-bar">
                                       <i className="feather-filter"></i>
-                                      <input
-                                        type="text"
-                                        placeholder="Filter messages..."
+                                      <select
                                         value={chatFilter}
                                         onChange={(e) => setChatFilter(e.target.value)}
                                         className="lesson-chat-filter-input"
-                                      />
+                                        style={{ backgroundColor: "transparent", color: "white", cursor: "pointer", border: "none", outline: "none", width: "100%", paddingLeft: "10px" }}
+                                      >
+                                        <option value="current" style={{ backgroundColor: "#1c1d20" }}>Current Lesson</option>
+                                        <option value="all" style={{ backgroundColor: "#1c1d20" }}>All Lessons</option>
+                                      </select>
                                     </div>
                                     <div className="lesson-chat-messages">
                                       {!Array.isArray(comments) || comments.length === 0 ? (
@@ -1118,7 +1121,13 @@ const LessonPage = () => {
                                       ) : (
                                         <div className="chat-list">
                                           {comments
-                                            .filter(c => c && (typeof c.comment === 'string' || typeof c.content === 'string') && (!chatFilter || (c.comment || c.content).toLowerCase().includes(chatFilter.toLowerCase())))
+                                            .filter(c => {
+                                              if (!c) return false;
+                                              if (chatFilter === "current") {
+                                                return c.commentable?.id && String(c.commentable.id) === String(content_id);
+                                              }
+                                              return true;
+                                            })
                                             .map((c) => (
                                               <div key={c.id} className="chat-item-wrapper premium-chat-item">
                                                 <div className="chat-msg">
@@ -1205,7 +1214,7 @@ const LessonPage = () => {
                                     <div className="lesson-chat-input-bar">
                                       <input
                                         type="text"
-                                        placeholder="Type a message..."
+                                        placeholder="Type a Message"
                                         className="lesson-chat-input"
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
