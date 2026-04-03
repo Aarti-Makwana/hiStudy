@@ -1,7 +1,11 @@
 import Link from "next/link";
 import Separator from "../Common/Separator";
+import { useSettings } from "@/context/SettingsContext";
 
 const CopyRight = () => {
+  const { settings } = useSettings();
+  const copyright = settings?.footer?.copyright || "Copyright © 2026 Courses by Addonn. All Rights Reserved";
+
   return (
     <>
       <Separator />
@@ -10,11 +14,7 @@ const CopyRight = () => {
           <div className="row align-items-center">
             <div className="col-xxl-6 col-xl-6 col-lg-6 col-md-12 col-12">
               <p className="rbt-link-hover text-center text-lg-start">
-                Copyright © 2025
-                <Link className="mx-2" href="https://rainbowthemes.net">
-                  Rainbow-Themes.
-                </Link>
-                All Rights Reserved
+                {copyright}
               </p>
             </div>
             <div className="col-xxl-6 col-xl-6 col-lg-6 col-md-12 col-12">
@@ -26,7 +26,7 @@ const CopyRight = () => {
                   <Link href="/privacy-policy">Privacy policy</Link>
                 </li>
                 <li>
-                  <Link href="/subscription">Subscription</Link>
+                  <Link href="/refund-policy">Refund Policy</Link>
                 </li>
                 <li>
                   <Link href="/login">Login & Register</Link>

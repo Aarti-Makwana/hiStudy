@@ -12,9 +12,13 @@ import CopyRight from "./CopyRight";
 import FooterData from "../../data/footer.json";
 import SingleFooter from "./FooterProps/SingleFooter";
 import { useAppContext } from "@/context/Context";
+import { useSettings } from "@/context/SettingsContext";
 
 const FooterOne = ({ isBox, bgColor, newsletterBorder, islamic }) => {
   const { isLightTheme } = useAppContext();
+  const { settings } = useSettings();
+  const footerSetting = settings?.footer || {};
+  const contactSetting = settings?.contact_us || {};
   
   return (
     <>
@@ -92,7 +96,9 @@ const FooterOne = ({ isBox, bgColor, newsletterBorder, islamic }) => {
                         </Link>
                       </div>
 
-                      <p className="description mt--20">{footer.description}</p>
+                      <p className="description mt--20">
+                        {footerSetting.description || footer.description}
+                      </p>
 
                       <ul className="social-icon social-default justify-content-start">
                         {footer.socialLink.map((value, innerIndex) => (
@@ -140,12 +146,12 @@ const FooterOne = ({ isBox, bgColor, newsletterBorder, islamic }) => {
                       <ul className="ft-link">
                         <li>
                           <span>Phone: </span>
-                          <Link href="#">{footer.phone}</Link>
+                          <Link href="#">{contactSetting.phone || footer.phone}</Link>
                         </li>
                         <li>
                           <span>E-mail:</span>
-                          <Link href="mailto:hr@example.com">
-                            {footer.mail}
+                          <Link href={`mailto:${contactSetting.email || footer.mail}`}>
+                            {contactSetting.email || footer.mail}
                           </Link>
                         </li>
                       </ul>

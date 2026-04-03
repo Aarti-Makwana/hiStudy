@@ -97,6 +97,8 @@ const LessonPage = () => {
   const [replyingTo, setReplyingTo] = useState(null); // comment_id of the comment being replied to
   const [replyText, setReplyText] = useState("");
   const [postingComment, setPostingComment] = useState(false);
+  const chatMessagesRef = useRef(null);
+  const shouldAutoScrollChatRef = useRef(false);
 
   // Assignment / Quiz Attempt status state
   const [courseQuizAttempts, setCourseQuizAttempts] = useState([]);
@@ -453,7 +455,15 @@ const LessonPage = () => {
   }, [topic_id, content_id]);
 
   /* ─── Chat / Comments Logic ────────────────────────────────── */
-  const fetchComments = useCallback(async () => {
+  const scrollChatToBottom = useCallback(() => {
+    if (!chatMessagesRef.current) return;
+    chatMessagesRef.current.scrollTo({
+      top: chatMessagesRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const fetchComments = useCallback(async (options = {}) => {
     if (!content_id) return;
     try {
       const res = await UserCoursesServices.getAllCommentReply(content_id);
@@ -461,6 +471,9 @@ const LessonPage = () => {
         // Correctly extract comments array based on provided JSON structure
         const commentsData = Array.isArray(res.data) ? res.data : (res.data?.comments || []);
         setComments(commentsData);
+        if (options.scrollToBottom) {
+          shouldAutoScrollChatRef.current = true;
+        }
       }
     } catch (err) {
       console.error("[LessonPage] Error fetching comments:", err);
@@ -470,6 +483,16 @@ const LessonPage = () => {
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
+
+  useEffect(() => {
+    if (!shouldAutoScrollChatRef.current || activeBottomTab !== "chat") return;
+    const timer = window.setTimeout(() => {
+      scrollChatToBottom();
+      shouldAutoScrollChatRef.current = false;
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [comments, activeBottomTab, scrollChatToBottom]);
 
   const handleSaveComment = async () => {
     if (!newComment.trim() || !content_id || postingComment) return;
@@ -482,7 +505,7 @@ const LessonPage = () => {
       });
       if (res && res.status === "success") {
         setNewComment("");
-        fetchComments();
+        fetchComments({ scrollToBottom: true });
       }
     } catch (err) {
       console.error("[LessonPage] Error saving comment:", err);
@@ -503,7 +526,7 @@ const LessonPage = () => {
       if (res && res.status === "success") {
         setReplyText("");
         setReplyingTo(null);
-        fetchComments();
+        fetchComments({ scrollToBottom: true });
       }
     } catch (err) {
       console.error("[LessonPage] Error saving reply:", err);
@@ -944,6 +967,15 @@ const LessonPage = () => {
   const isChatDisabled =
     String(chatVal).toLowerCase() === "no" ||
     String(chatVal).toLowerCase() === "disabled";
+  const filteredComments = Array.isArray(comments)
+    ? comments.filter((c) => {
+        if (!c) return false;
+        if (chatFilter === "current") {
+          return c.commentable?.id && String(c.commentable.id) === String(content_id);
+        }
+        return true;
+      })
+    : [];
 
   // ── Overall course progress for header indicator ──
   const calculateOverallProgress = () => {
@@ -1109,26 +1141,20 @@ const LessonPage = () => {
                                         value={chatFilter}
                                         onChange={(e) => setChatFilter(e.target.value)}
                                         className="lesson-chat-filter-input"
-                                        style={{ backgroundColor: "transparent", color: "white", cursor: "pointer", border: "none", outline: "none", width: "100%", paddingLeft: "10px" }}
                                       >
                                         <option value="current" style={{ backgroundColor: "#1c1d20" }}>Current Lesson</option>
                                         <option value="all" style={{ backgroundColor: "#1c1d20" }}>All Lessons</option>
                                       </select>
                                     </div>
-                                    <div className="lesson-chat-messages">
-                                      {!Array.isArray(comments) || comments.length === 0 ? (
-                                        <p className="lesson-chat-empty">No messages yet. Start the conversation!</p>
+                                    <div className="lesson-chat-messages" ref={chatMessagesRef}>
+                                      {filteredComments.length === 0 ? (
+                                        <p className="lesson-chat-empty">
+                                          There are currently no comments in this lecture. You can try switching to
+                                          {" "}“All Lectures” in the filter tab.
+                                        </p>
                                       ) : (
                                         <div className="chat-list">
-                                          {comments
-                                            .filter(c => {
-                                              if (!c) return false;
-                                              if (chatFilter === "current") {
-                                                return c.commentable?.id && String(c.commentable.id) === String(content_id);
-                                              }
-                                              return true;
-                                            })
-                                            .map((c) => (
+                                          {filteredComments.map((c) => (
                                               <div key={c.id} className="chat-item-wrapper premium-chat-item">
                                                 <div className="chat-msg">
                                                   <div className="chat-user-avatar">

@@ -32,8 +32,27 @@ const Instructor = ({ checkMatchCourses }) => {
                 </div>
 
                 <span className="b3 subtitle instructor-subtitle">
-                  JAVA, DSA in JAVA
+                  {teacher.type}
                 </span>
+
+                <ul className="rbt-meta instructor-meta d-flex flex-wrap gap-4 mt--15 mb--15 liststyle-none" style={{ padding: 0 }}>
+                  <li className="d-flex align-items-center gap-1">
+                    <i className="feather-star color-warning"></i> 
+                    <span><b>{teacher.star}</b> Rating</span>
+                  </li>
+                  <li className="d-flex align-items-center gap-1">
+                    <i className="feather-message-square color-primary"></i> 
+                    <span><b>{teacher.ratingNumber}</b> Reviews</span>
+                  </li>
+                  <li className="d-flex align-items-center gap-1">
+                    <i className="feather-user color-info"></i> 
+                    <span><b>{teacher.studentNumber}</b> Students</span>
+                  </li>
+                  <li className="d-flex align-items-center gap-1">
+                    <i className="feather-video color-secondary"></i> 
+                    <span><b>{teacher.course}</b> Courses</span>
+                  </li>
+                </ul>
 
                 <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 mt--15 mb--15">
                   {teacher.companies && teacher.companies.length > 0 &&

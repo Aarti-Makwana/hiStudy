@@ -11,11 +11,11 @@ const Counter = ({ isDesc, head, settings }) => {
   const dataToRender = settings?.items
     ? [{
       body: settings.items.map(item => ({
-        num: parseInt(item.value.replace(/[^0-9]/g, '')) || 0,
+        num: parseFloat(item.value.replace(/[^0-9.]/g, '')) || 0,
         text: item.label,
         img: item.icon,
-        value: item.value, // Keep original string if needed
-        top: false // API doesn't seem to have 'top' property, default to false or alternate?
+        value: item.value,
+        top: false
       }))
     }]
     : CounterData.counterOne;
@@ -68,9 +68,13 @@ const Counter = ({ isDesc, head, settings }) => {
                       </div>
                       <div className="content">
                         <h3 className="counter">
-                          <span className="odometer">
-                            <CounterWrap value={item.num} format="(d)" />
-                          </span>
+                          {item.value.includes('/') || item.value.includes('%') ? (
+                            <span>{item.value}</span>
+                          ) : (
+                            <span className="odometer">
+                              <CounterWrap value={item.num} format="(d)" />
+                            </span>
+                          )}
                         </h3>
                         <span className="subtitle">{item.text}</span>
                       </div>

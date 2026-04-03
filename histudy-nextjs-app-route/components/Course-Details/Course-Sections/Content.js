@@ -1,7 +1,11 @@
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import "venobox/dist/venobox.min.css";
 
 const Content = ({ checkMatchCourses, courseSlug }) => {
+  const router = useRouter();
   const [expandedLessons, setExpandedLessons] = React.useState([]);
 
   const toggleLessonSummary = (e, lessonId) => {
@@ -13,6 +17,14 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
         : [...prev, lessonId]
     );
   };
+
+  useEffect(() => {
+    import("venobox/dist/venobox.min.js").then((venobox) => {
+      new venobox.default({
+        selector: ".popup-video",
+      });
+    });
+  }, [checkMatchCourses.contentList]);
 
   return (
     <>
@@ -56,7 +68,6 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                   className={`accordion-collapse collapse ${item.isShow ? "show" : ""
                     }`}
                   aria-labelledby={`headingTwo${innerIndex}`}
-                  data-bs-parent="#accordionExampleb2"
                 >
                   <div className="accordion-body card-body pr--0 pb--0">
                     <ul className="rbt-course-main-content liststyle">
@@ -75,7 +86,11 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                                       {list.summary && (
                                         <button
                                           className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
-                                          onClick={(e) => toggleLessonSummary(e, lessonId)}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleLessonSummary(e, lessonId);
+                                          }}
                                         >
                                           <i className="feather-chevron-down"></i>
                                         </button>
@@ -83,14 +98,24 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                                     </div>
                                     {list.summary && isExpanded && (
                                       <div className="lesson-summary-content mt--5">
-                                        <p>{list.summary}</p>
+                                        <p style={{ fontSize: "12px" }}>{list.summary}</p>
                                       </div>
                                     )}
                                   </div>
                                 </div>
                                 <div className="course-content-right">
                                   {list.status && (
-                                    <span className="preview-text">Preview</span>
+                                    <span
+                                      className="preview-text popup-video"
+                                      data-vbtype="video"
+                                      href={list.videoUrl || "https://www.youtube.com/watch?v=nA1Aqp0sPQo"}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      Preview
+                                    </span>
                                   )}
                                   <span className="min-lable">{list.time}</span>
                                   {!list.status && (

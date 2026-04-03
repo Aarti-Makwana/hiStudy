@@ -78,7 +78,7 @@ const Viedo = ({ checkMatchCourses }) => {
           className={`video-popup-with-text video-popup-wrapper text-center popup-video sidebar-video-hidden mb--15 ${hideOnScroll ? "d-none" : ""
             }`}
           data-vbtype="video"
-          href="https://www.youtube.com/watch?v=nA1Aqp0sPQo"
+          href={checkMatchCourses.courseVideo || "https://www.youtube.com/watch?v=nA1Aqp0sPQo"}
         >
           <div className="video-content">
             {checkMatchCourses.courseImg && (

@@ -8,9 +8,13 @@ import FooterData from "../../data/footer.json";
 import SingleFooter from "./FooterProps/SingleFooter";
 import CopyRight from "./CopyRight";
 import { useAppContext } from "@/context/Context";
+import { useSettings } from "@/context/SettingsContext";
 
 const FooterThree = () => {
   const { isLightTheme } = useAppContext();
+  const { settings } = useSettings();
+  const footerSetting = settings?.footer || {};
+  const contactSetting = settings?.contact_us || {};
   return (
     <>
       <footer className="rbt-footer footer-style-1">
@@ -43,7 +47,9 @@ const FooterThree = () => {
                         </Link>
                       </div>
 
-                      <p className="description mt--20">{footer.description}</p>
+                      <p className="description mt--20">
+                        {footerSetting.description || footer.description}
+                      </p>
 
                       <div className="contact-btn mt--30">
                         <Link
@@ -82,16 +88,16 @@ const FooterThree = () => {
                       <ul className="ft-link">
                         <li>
                           <span>Phone:</span>
-                          <Link href="#">{footer.phone}</Link>
+                          <Link href="#">{contactSetting.phone || footer.phone}</Link>
                         </li>
                         <li>
                           <span>E-mail:</span>
-                          <Link href="mailto:hr@example.com">
-                            {footer.mail}
+                          <Link href={`mailto:${contactSetting.email || footer.mail}`}>
+                            {contactSetting.email || footer.mail}
                           </Link>
                         </li>
                         <li>
-                          <span>Location:</span> {footer.address}
+                          <span>Location:</span> {contactSetting.address || footer.address}
                         </li>
                       </ul>
                       <ul className="social-icon social-default icon-naked justify-content-start mt--20">

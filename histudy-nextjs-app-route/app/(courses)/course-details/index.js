@@ -132,7 +132,8 @@ const SingleCourse = ({ getParams }) => {
                       topicId: topic.id,
                       contentId: content.id,
                       icon: getItemIcon(content),
-                      summary: content.summary
+                      summary: content.summary,
+                      videoUrl: content.file?.url || ""
                     })) || []
                   })) || []
                 }
@@ -142,9 +143,9 @@ const SingleCourse = ({ getParams }) => {
                   title: "Instructor",
                   body: apiData.instructor ? [{
                     name: apiData.instructor.name,
-                    desc: apiData.instructor.bio || apiData.instructor.short_description,
+                    desc: apiData.instructor.short_description || apiData.instructor.bio,
                     img: apiData.instructor.file?.url || "/images/client/avatar-02.png",
-                    type: "Instructor",
+                    type: apiData.instructor.subtitle || "Instructor",
                     companies: apiData.instructor.companies || [],
                     ratingNumber: apiData.instructor.rating_count || 0,
                     star: apiData.instructor.instructor_rating || 0,
@@ -161,13 +162,17 @@ const SingleCourse = ({ getParams }) => {
               courseRequirement: [
                 {
                   title: "Prerequisites",
-                  detailsList: apiData.prerequisites ? (Array.isArray(apiData.prerequisites) ? apiData.prerequisites : [apiData.prerequisites]) : []
+                  detailsList: apiData.prerequisites
+                    ? apiData.prerequisites.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
+                    : []
                 }
               ],
               courseBenefits: [
                 {
                   title: "Benefits",
-                  detailsList: apiData.benefits ? (Array.isArray(apiData.benefits) ? apiData.benefits : [apiData.benefits]) : []
+                  detailsList: apiData.benefits
+                    ? apiData.benefits.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
+                    : []
                 }
               ],
               featuredReview: [
