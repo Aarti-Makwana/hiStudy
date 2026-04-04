@@ -12,6 +12,9 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
     const [showAnswer, setShowAnswer] = useState({});  // { quizId: true }
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [starting, setStarting] = useState(false);
+    const [started, setStarted] = useState(false);
+    const [attemptId, setAttemptId] = useState(null);
     const [quizResult, setQuizResult] = useState(null); // Server response
 
     if (!quizzes.length)
@@ -33,12 +36,38 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
         setSelected(prev => ({ ...prev, [quiz.id]: optId }));
     };
 
-    const submitQuizAttempt = async () => {
-        setSubmitting(true);
+    const handleStartQuiz = async () => {
+        setStarting(true);
         try {
             const payload = {
                 enrollment_id: enrollmentId,
                 content_id: contentId
+            };
+            const res = await UserCoursesServices.startQuiz(payload);
+            if (res && res.status === "success") {
+                setAttemptId(res.data.attempt_id || res.data.id);
+                setStarted(true);
+                toast.success("Quiz started!");
+            } else {
+                toast.error(res?.message || "Failed to start quiz.");
+            }
+        } catch (error) {
+            console.error("Error starting quiz:", error);
+            toast.error("An error occurred while starting the quiz.");
+        } finally {
+            setStarting(false);
+        }
+    };
+
+    const submitQuizAttempt = async () => {
+        setSubmitting(true);
+        try {
+            const payload = {
+                attempt_id: attemptId,
+                answers: quizzes.map(q => ({
+                    question_id: q.id,
+                    option_id: selected[q.id] || null
+                }))
             };
 
             const res = await UserCoursesServices.submitQuiz(payload);
@@ -73,6 +102,8 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
     const handleReset = () => {
         setSelected({});
         setSubmitted(false);
+        setStarted(false);
+        setAttemptId(null);
         setShowAnswer({});
         setCurrent(0);
         setShowConfirmModal(false);
@@ -163,6 +194,117 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
                             </div>
                         );
                     })}
+                </div>
+            </div>
+        );
+    }
+
+    /* ── Start screen ── */
+    if (!started && !submitted) {
+        return (
+            <div className="qp-wrapper">
+                <div className="qp-start-screen" style={{
+                    padding: "60px 40px",
+                    textAlign: "center",
+                    backgroundColor: "rgba(255,255,255,0.03)",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    margin: "20px 0"
+                }}>
+                    <div className="qp-start-icon" style={{
+                       fontSize: "48px",
+                       color: "var(--color-primary)",
+                       marginBottom: "20px"
+                    }}>
+                        <i className="feather-help-circle"></i>
+                    </div>
+                    <h3 style={{ color: "white", marginBottom: "15px" }}>Ready for the Quiz?</h3>
+                    <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: "30px", fontSize: "16px" }}>
+                        Check your understanding with <strong>{total}</strong> practice questions.
+                    </p>
+                    
+                    <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "40px" }}>
+                         <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.8)" }}>
+                             <i className="feather-award"></i>
+                             <span>Grade: Pass/Fail</span>
+                         </div>
+                         <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.8)" }}>
+                             <i className="feather-clock"></i>
+                             <span>No Time Limit</span>
+                         </div>
+                    </div>
+
+                    <button 
+                        className="rbt-btn btn-gradient"
+                        style={{ height: "55px", padding: "0 40px", fontSize: "18px" }}
+                        onClick={handleStartQuiz}
+                        disabled={starting}
+                    >
+                        {starting ? (
+                            <><i className="feather-loader icon-spin mr--10"></i> Starting...</>
+                        ) : (
+                            <><i className="feather-play mr--10"></i> Start Knowledge Check</>
+                        )}
+                    </button>
+                    
+                    {latestAttempt && (
+                        <div style={{ 
+                            marginTop: "40px", 
+                            padding: "30px", 
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                            textAlign: "left"
+                        }}>
+                            <h5 style={{ color: "white", marginBottom: "20px", fontSize: "16px", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px" }}>
+                                <i className="feather-clock" style={{ color: "var(--color-primary)" }}></i>
+                                Previous Attempt Summary
+                            </h5>
+                            
+                            <div style={{ 
+                                display: "grid", 
+                                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", 
+                                gap: "15px"
+                            }}>
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Total Attempt</span>
+                                    <span style={{ fontSize: "18px", color: "white", fontWeight: "700" }}>{latestAttempt.attempt_number}</span>
+                                </div>
+                                
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Questions</span>
+                                    <span style={{ fontSize: "18px", color: "white", fontWeight: "700" }}>{latestAttempt.total_questions}</span>
+                                </div>
+                                
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Correct</span>
+                                    <span style={{ fontSize: "18px", color: "#22c55e", fontWeight: "700" }}>{latestAttempt.correct_answers}</span>
+                                </div>
+
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Score</span>
+                                    <span style={{ fontSize: "18px", color: "var(--color-primary)", fontWeight: "700" }}>{latestAttempt.percentage}%</span>
+                                </div>
+
+                                <div style={{ 
+                                    backgroundColor: latestAttempt.result === "Pass" ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)", 
+                                    padding: "15px", 
+                                    borderRadius: "12px", 
+                                    border: `1px solid ${latestAttempt.result === "Pass" ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center"
+                                }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Result</span>
+                                    <span style={{ fontSize: "18px", color: latestAttempt.result === "Pass" ? "#22c55e" : "#ef4444", fontWeight: "700", display: "flex", alignItems: "center", gap: "5px" }}>
+                                        {latestAttempt.result === "Pass" ? (
+                                            <><i className="feather-check-circle"></i> Pass</>
+                                        ) : (
+                                            <><i className="feather-x-circle"></i> Fail</>
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );

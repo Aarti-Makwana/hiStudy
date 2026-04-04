@@ -180,5 +180,19 @@ export const UserCoursesServices = {
       logger(error);
       throw error;
     }
-  },  
+  },
+
+  startQuiz: async (bodyData) => {
+    try {
+      const payload = {
+        ...UserCourses.startQuiz,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

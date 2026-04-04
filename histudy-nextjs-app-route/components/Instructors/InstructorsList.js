@@ -29,7 +29,7 @@ const InstructorsList = () => {
     const fetchInstructors = async (pageNum) => {
         setLoading(true);
         try {
-            const res = await InstructorServices.getAllInstructors({ page: pageNum, limit: 9 });
+            const res = await InstructorServices.getAllInstructors({ page: pageNum, limit: 1000 });
             if (res && res.success) {
                 if (res.data.length === 0) {
                     setHasMore(false);
@@ -43,7 +43,7 @@ const InstructorsList = () => {
                     // For demo/assignment purposes, if the API doesn't support pagination properly yet,
                     // we might want to stop after one fetch or handle it accordingly.
                     // Assuming real API handles pagination:
-                    if (res.data.length < 9) setHasMore(false);
+                    if (res.data.length < 1000) setHasMore(false);
                 }
             }
         } catch (error) {

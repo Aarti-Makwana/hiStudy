@@ -37,29 +37,39 @@ const InstructorCardCore = ({ instructor, onOpenModal, className = "", showSocia
                                     <li><a href="#"><i className="feather-twitter"></i></a></li>
                                 </ul>
                             )}
-                            <h4 className="title">{instructor.name}</h4>
+                             {/* Company and Expertise at Top */}
+                             {instructor.companies && (
+                                 <div className="company-info-top d-flex align-items-center mb--5" style={{ pointerEvents: 'auto' }}>
+                                     {(typeof instructor.companies === 'string'
+                                         ? instructor.companies.split(',')
+                                         : Array.isArray(instructor.companies)
+                                             ? instructor.companies
+                                             : []
+                                     ).map((company, idx) => (
+                                         <div key={idx} className="d-flex align-items-center mr--10">
+                                             {idx > 0 && <span className="bullet-separator" style={{ margin: '0 8px', color: 'var(--color-primary)' }}>•</span>}
+                                             {company.logo?.url && (
+                                                 <div style={{ background: '#fff', borderRadius: '4px', padding: '2px', display: 'flex', marginRight: '6px' }}>
+                                                  <Image 
+                                                      src={company.logo.url} 
+                                                      width={20} 
+                                                      height={20} 
+                                                      alt="logo" 
+                                                      style={{ objectFit: 'contain' }}
+                                                  />
+                                                 </div>
+                                             )}
+                                             <span style={{ fontSize: '14px', fontWeight: '500', color: '#fff' }}>
+                                                 {typeof company === 'string' ? company.trim() : (company?.name || '')}
+                                             </span>
+                                         </div>
+                                     ))}
+                                 </div>
+                             )}
+                             <h6 className="subtitle theme-gradient mb--5" style={{ fontSize: '13px', fontWeight: '500', opacity: '0.9' }}>{instructor.expertise}</h6>
 
-                            {/* Company Name Display */}
-                            <h6 className="subtitle theme-gradient">{instructor.expertise}</h6>
-                            {instructor.companies && (
-                                <div className="company-name" style={{ fontSize: '14px', color: '#ffffff', marginTop: '5px' }}>
-                                    {(typeof instructor.companies === 'string'
-                                        ? instructor.companies.split(',')
-                                        : Array.isArray(instructor.companies)
-                                            ? instructor.companies
-                                            : []
-                                    ).map((company, idx) => (
-                                        <span key={idx}>
-                                            {idx > 0 && <span className="bullet-separator" style={{ margin: '0 5px' }}>•</span>}
-                                            {typeof company === 'string'
-                                                ? company.trim()
-                                                : (company && typeof company === 'object' && company.name)
-                                                    ? company.name
-                                                    : ''}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
+                             <h4 className="title" style={{ fontSize: '26px', marginBottom: '10px' }}>{instructor.name}</h4>
+
 
                             {/* LinkedIn Icon Display */}
                             {instructor.socialMedia && instructor.socialMedia.some(social => social.platform.toLowerCase() === 'linkedin') && (

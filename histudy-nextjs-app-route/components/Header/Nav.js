@@ -55,10 +55,10 @@ const Nav = () => {
         </li>
         <li className="has-dropdown has-menu-child-item">
           <Link
-            className={`${isActive("/team") ? "active" : ""}`}
-            href="/team"
+            className={`${isActive("/instructors") ? "active" : ""}`}
+            href="/instructors"
           >
-            Teams
+            Mentors
           </Link>
         </li>
         <li className="has-dropdown has-menu-child-item">

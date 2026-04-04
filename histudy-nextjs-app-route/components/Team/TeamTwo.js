@@ -13,7 +13,7 @@ const TeamTwo = () => {
   useEffect(() => {
     const fetchInstructors = async () => {
       try {
-        const res = await InstructorServices.getAllInstructors();
+        const res = await InstructorServices.getAllInstructors({ limit: 100 });
         if (res && res.success) {
           const data = res.data.sort((a, b) => a.order - b.order);
           setInstructors(data);
@@ -51,8 +51,8 @@ const TeamTwo = () => {
         <div className="row mb--60">
           <div className="col-lg-12">
             <div className="section-title text-center">
-              <span className="subtitle bg-primary-opacity">Our Teacher</span>
-              <h2 className="title">Whose Inspirations You</h2>
+              <span className="subtitle bg-primary-opacity">Our Mentors</span>
+              <h2 className="title">Turning Curiosity into Capability</h2>
             </div>
           </div>
         </div>
@@ -63,7 +63,7 @@ const TeamTwo = () => {
               className="rbt-team-tab-content tab-content"
               id="myTabContent"
             >
-              {instructors.map((instructor, index) => {
+              {instructors.slice(0, 6).map((instructor, index) => {
                 const isActive = selectedInstructor?.id === instructor.id;
                 return (
                   <div
@@ -88,38 +88,8 @@ const TeamTwo = () => {
                         </div>
                       </div>
                       <div className="rbt-team-details">
-                        <div className="author-info">
-                          <div className="d-flex align-items-center gap-3 mb--5">
-                            <h4 className="title mb-0">{instructor.name}</h4>
-                            {instructor.socialMedia?.find(
-                              (s) => s.platform.toLowerCase() === "linkedin"
-                            ) && (
-                                <Link
-                                  href={
-                                    instructor.socialMedia.find(
-                                      (s) =>
-                                        s.platform.toLowerCase() === "linkedin"
-                                    ).url
-                                  }
-                                  target="_blank"
-                                >
-                                  <i
-                                    className="feather-linkedin"
-                                    style={{
-                                      fontSize: "20px",
-                                      color: "var(--color-primary)",
-                                    }}
-                                  ></i>
-                                </Link>
-                              )}
-                          </div>
-                          <span className="designation theme-gradient">
-                            {instructor.subject}
-                          </span>
-                        </div>
-
                         {instructor.companies && (
-                          <div className="companies-list mb--20">
+                          <div className="companies-list mb--15">
                             <ul className="rbt-meta justify-content-start mt--10 mb--10 list-horizontal-bullets p-0">
                               {instructor.companies.map((company, idx) => (
                                 <li
@@ -160,7 +130,37 @@ const TeamTwo = () => {
                           </div>
                         )}
 
-                        <p className="description">
+                        <div className="author-info">
+                          <div className="d-flex align-items-center gap-3 mb--5">
+                            <h4 className="title mb-0" style={{ fontSize: '28px' }}>{instructor.name}</h4>
+                            {instructor.socialMedia?.find(
+                              (s) => s.platform.toLowerCase() === "linkedin"
+                            ) && (
+                                <Link
+                                  href={
+                                    instructor.socialMedia.find(
+                                      (s) =>
+                                        s.platform.toLowerCase() === "linkedin"
+                                    ).url
+                                  }
+                                  target="_blank"
+                                >
+                                  <i
+                                    className="feather-linkedin"
+                                    style={{
+                                      fontSize: "20px",
+                                      color: "var(--color-primary)",
+                                    }}
+                                  ></i>
+                                </Link>
+                              )}
+                          </div>
+                          <span className="designation theme-gradient" style={{ fontSize: '16px' }}>
+                            {instructor.subject}
+                          </span>
+                        </div>
+
+                        <p className="description mt--20" style={{ fontSize: '15px', lineHeight: '1.6' }}>
                           {instructor.bio || instructor.short_description}
                         </p>
 
@@ -240,6 +240,18 @@ const TeamTwo = () => {
               })}
             </ul>
             {/* End Tab Content  */}
+          </div>
+        </div>
+        <div className="row mt--60">
+          <div className="col-lg-12">
+            <div className="view-more-btn text-center">
+              <Link
+                className="rbt-btn btn-gradient btn-md"
+                href="/instructors"
+              >
+                View All Instructors
+              </Link>
+            </div>
           </div>
         </div>
       </div>

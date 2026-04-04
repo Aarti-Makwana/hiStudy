@@ -56,7 +56,12 @@ const UserCourses = {
   },
 
   submitQuiz: {
-    url: "/api/v1/quiz/attempts",
+    url: "/api/v1/quiz/submit",
+    method: "POST",
+  },
+
+  startQuiz: {
+    url: "/api/v1/quiz/start",
     method: "POST",
   },
 
