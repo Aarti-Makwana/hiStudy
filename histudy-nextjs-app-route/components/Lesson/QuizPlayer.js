@@ -5,7 +5,7 @@ import { UserCoursesServices } from "@/services/User/Courses/index.service";
 
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
-const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) => {
+const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt, remainingAttempt }) => {
     const [current, setCurrent] = useState(0);
     const [selected, setSelected] = useState({});   // { quizId: optionId }
     const [submitted, setSubmitted] = useState(false);
@@ -236,12 +236,14 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
 
                     <button 
                         className="rbt-btn btn-gradient"
-                        style={{ height: "55px", padding: "0 40px", fontSize: "18px" }}
+                        style={{ height: "55px", padding: "0 40px", fontSize: "18px", opacity: remainingAttempt <= 0 ? 0.6 : 1, cursor: remainingAttempt <= 0 ? "not-allowed" : "pointer" }}
                         onClick={handleStartQuiz}
-                        disabled={starting}
+                        disabled={starting || remainingAttempt <= 0}
                     >
                         {starting ? (
                             <><i className="feather-loader icon-spin mr--10"></i> Starting...</>
+                        ) : remainingAttempt <= 0 ? (
+                            <><i className="feather-lock mr--10"></i> Limit Reached</>
                         ) : (
                             <><i className="feather-play mr--10"></i> Start Knowledge Check</>
                         )}
@@ -267,6 +269,11 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
                                 <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                     <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Total Attempt</span>
                                     <span style={{ fontSize: "18px", color: "white", fontWeight: "700" }}>{latestAttempt.attempt_number}</span>
+                                </div>
+                                
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "5px" }}>Remaining</span>
+                                    <span style={{ fontSize: "18px", color: remainingAttempt > 0 ? "#22c55e" : "#ef4444", fontWeight: "700" }}>{remainingAttempt !== undefined ? remainingAttempt : "-"}</span>
                                 </div>
                                 
                                 <div style={{ backgroundColor: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -351,7 +358,7 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
                         {latestAttempt ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                                 <span className="qp-attempts" style={{ color: "white", fontWeight: "500", fontSize: "14px" }}>
-                                    Attempts Made: {latestAttempt.attempt_number}
+                                    Attempts Made: {latestAttempt.attempt_number} {remainingAttempt !== undefined && `| Remaining: ${remainingAttempt}`}
                                 </span>
                                 {latestAttempt.percentage !== null && (
                                     <span className="qp-attempts" style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", border: "none", padding: "0", background: "transparent" }}>
@@ -424,13 +431,13 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt }) =>
                             Next <i className="feather-arrow-right"></i>
                         </button>
                     ) : (
-                        <button className="qp-nav-btn submit" onClick={handleSubmit} disabled={submitting}>
+                        <button className="qp-nav-btn submit" onClick={handleSubmit} disabled={submitting || remainingAttempt <= 0}>
                             {submitting ? (
                                 <i className="feather-loader icon-spin"></i>
                             ) : (
                                 <i className="feather-send"></i>
                             )}
-                            {submitting ? " Submitting..." : " Submit Quiz"}
+                            {submitting ? " Submitting..." : remainingAttempt <= 0 ? " Limit Reached" : " Submit Quiz"}
                         </button>
                     )}
                 </div>

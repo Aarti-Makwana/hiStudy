@@ -113,11 +113,15 @@ export const UserCoursesServices = {
     }
   },
 
-  getAllCommentReply: async (content_id) => {
+  getAllCommentReply: async (params = {}) => {
     try {
+      const queryParts = [];
+      if (params.course_id) queryParts.push(`course_id=${params.course_id}`);
+      if (params.commentable_id) queryParts.push(`commentable_id=${params.commentable_id}`);
+      const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
       const payload = {
         ...UserCourses.getAllCommentReply,
-        url: `${UserCourses.getAllCommentReply.url}?content_id=${content_id}`,
+        url: `${UserCourses.getAllCommentReply.url}${queryString}`,
       };
       const res = await APIrequest(payload);
       return res;
@@ -195,4 +199,33 @@ export const UserCoursesServices = {
       throw error;
     }
   },
+
+  updateCommentReply: async (commentId, bodyData) => {
+    try {
+      const payload = {
+        ...UserCourses.updateCommentReply,
+        url: UserCourses.updateCommentReply.url.replace("{comment_id}", commentId),
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },  
+
+  deleteCommentReply: async (commentId) => {
+    try {
+      const payload = {
+        ...UserCourses.deleteCommentReply,
+        url: UserCourses.deleteCommentReply.url.replace("{comment_id}", commentId),
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },  
 };

@@ -72,8 +72,8 @@ const ItemRing = ({ percent }) => {
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
           {isComplete ? (
             <>
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#16a34a" />
+              <stop offset="0%" stopColor="rgba(34, 197, 94, 0.5)" />
+              <stop offset="100%" stopColor="rgba(22, 163, 74, 0.5)" />
             </>
           ) : (
             <>
@@ -104,7 +104,7 @@ const ItemRing = ({ percent }) => {
         <path
           d="M12.5 18.5l3 3 8-8"
           fill="none"
-          stroke="#22c55e"
+          stroke="rgba(34, 197, 94, 0.6)"
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"

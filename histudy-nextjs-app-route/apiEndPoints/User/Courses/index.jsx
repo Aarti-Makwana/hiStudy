@@ -35,6 +35,18 @@ const UserCourses = {
     method: "POST",
   },
 
+
+
+  updateCommentReply: {
+    url: "/api/v1/course-content/update-comment-reply/{comment_id}",
+    method: "PUT",
+  },
+
+  deleteCommentReply: {
+    url: "/api/v1/course-content/delete-comment-reply/{comment_id}",
+    method: "DELETE",
+  },  
+
   getAllCommentReply: {
     url: "/api/v1/course-content/getall-comment-reply",
     method: "GET",

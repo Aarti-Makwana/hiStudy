@@ -99,6 +99,9 @@ const LessonPage = () => {
   const [postingComment, setPostingComment] = useState(false);
   const chatMessagesRef = useRef(null);
   const shouldAutoScrollChatRef = useRef(false);
+  // New state for editing comments/replies
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState("");
 
   // Assignment / Quiz Attempt status state
   const [courseQuizAttempts, setCourseQuizAttempts] = useState([]);
@@ -111,6 +114,8 @@ const LessonPage = () => {
 
   // ── Email Watermark State ─────────────────────────────────────
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState("");
   const [watermarkPos, setWatermarkPos] = useState({ top: 10, left: 10 });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -233,6 +238,12 @@ const LessonPage = () => {
         if (res?.status === "success") {
           if (res.data?.email) {
             setUserEmail(res.data.email);
+          }
+          if (res.data?.id || res.data?._id) {
+            setUserId(res.data?.id || res.data?._id);
+          }
+          if (res.data?.name) {
+            setUserName(res.data.name);
           }
           const enrollment = (res.data?.active_enrollments || []).find(
             (en) => String(en.course_id) === String(courseData.id)
@@ -464,11 +475,16 @@ const LessonPage = () => {
   }, []);
 
   const fetchComments = useCallback(async (options = {}) => {
-    if (!content_id) return;
+    if (!courseData?.id) return;
     try {
-      const res = await UserCoursesServices.getAllCommentReply(content_id);
+      const params = { course_id: courseData.id };
+      // "current" filter: send both course_id & commentable_id (content_id) to get only this lesson's comments
+      // "all" filter: send only course_id to get all course comments
+      if (chatFilter === "current" && content_id) {
+        params.commentable_id = content_id;
+      }
+      const res = await UserCoursesServices.getAllCommentReply(params);
       if (res && res.status === "success") {
-        // Correctly extract comments array based on provided JSON structure
         const commentsData = Array.isArray(res.data) ? res.data : (res.data?.comments || []);
         setComments(commentsData);
         if (options.scrollToBottom) {
@@ -478,7 +494,7 @@ const LessonPage = () => {
     } catch (err) {
       console.error("[LessonPage] Error fetching comments:", err);
     }
-  }, [content_id]);
+  }, [courseData?.id, content_id, chatFilter]);
 
   useEffect(() => {
     fetchComments();
@@ -533,6 +549,64 @@ const LessonPage = () => {
     } finally {
       setPostingComment(false);
     }
+  };
+
+  // Edit existing comment/reply
+  const handleEditComment = (commentId, currentText) => {
+    setEditingCommentId(commentId);
+    setEditText(currentText);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditText("");
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    if (!editText.trim() || !content_id || postingComment) return;
+    setPostingComment(true);
+    try {
+      const res = await UserCoursesServices.updateCommentReply(commentId, { comment: editText });
+      if (res && res.status === "success") {
+        handleCancelEdit();
+        fetchComments({ scrollToBottom: true });
+        toast.success("Comment updated successfully");
+      }
+    } catch (err) {
+      console.error("[LessonPage] Error updating comment:", err);
+      toast.error("Failed to update comment");
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await UserCoursesServices.deleteCommentReply(commentId);
+      if (res && res.status === "success") {
+        fetchComments();
+        toast.success("Comment deleted successfully");
+      }
+    } catch (err) {
+      console.error("[LessonPage] Error deleting comment:", err);
+      toast.error("Failed to delete comment");
+    }
+  };
+
+  const isOwnComment = (item) => {
+    if (item.is_mine !== undefined) return item.is_mine;
+    
+    if (userId && (String(item.user_id) === String(userId) || String(item.authable_id) === String(userId) || String(item.authable?.id) === String(userId) || String(item.user?.id) === String(userId))) {
+      return true;
+    }
+    if (userEmail && (item.authable?.email === userEmail || item.user?.email === userEmail)) {
+      return true;
+    }
+    if (userName && (item.authable?.name === userName || item.user?.name === userName)) {
+      return true;
+    }
+    return false;
   };
 
   /* ─── Handle Assignment Submission ───────────────────────── */
@@ -725,42 +799,68 @@ const LessonPage = () => {
     const submission = submissionContents.find(s => String(s.id) === String(content_id));
     const latestSubmission = submission?.latest_submission;
 
+    const statusStr = String(latestSubmission?.status || "").toLowerCase();
+    const isRejected = statusStr === "rejected" || statusStr === "reject";
+    const isAccepted = statusStr === "accepted" || statusStr === "approve" || statusStr === "approved" || latestSubmission?.is_approved;
+    
+    // Status Display text and styling
+    let statusText = "Pending Approval";
+    let statusBg = "rgba(245, 158, 11, 0.1)";
+    let statusColor = "#f59e0b";
+    let statusIcon = "clock";
+
+    if (isAccepted) {
+      statusText = "Accepted";
+      statusBg = "rgba(34, 197, 94, 0.1)";
+      statusColor = "#22c55e";
+      statusIcon = "check-circle";
+    } else if (isRejected) {
+      statusText = "Rejected";
+      statusBg = "rgba(239, 68, 68, 0.1)";
+      statusColor = "#ef4444";
+      statusIcon = "x-circle";
+    }
+
     return (
       <div ref={submissionRef} className="lesson-assignment-submission-container mt--40">
         <div className="section-title">
           <h4 className="mb--20">Assignment Submission</h4>
         </div>
 
-        {latestSubmission ? (
-          <div className="bg-color-white rbt-shadow-box p--30">
+        {latestSubmission && (
+          <div className="bg-color-white rbt-shadow-box p--30 mb--30">
             <div className="submission-status-item mb--20 d-flex align-items-center gap-3">
               <span className="h6 mb--0 text-white">Status:</span>
-              <span className={`status-badge ${latestSubmission.is_approved ? "approved" : "pending"}`}
+              <span className="status-badge"
                 style={{
                   padding: "4px 12px",
                   borderRadius: "4px",
                   fontSize: "14px",
-                  backgroundColor: latestSubmission.is_approved ? "rgba(34, 197, 94, 0.1)" : "rgba(245, 158, 11, 0.1)",
-                  color: latestSubmission.is_approved ? "#22c55e" : "#f59e0b",
-                  border: `1px solid ${latestSubmission.is_approved ? "#22c55e" : "#f59e0b"}`
+                  backgroundColor: statusBg,
+                  color: statusColor,
+                  border: `1px solid ${statusColor}`,
+                  textTransform: "uppercase",
+                  fontWeight: "600"
                 }}>
-                <i className={`feather-${latestSubmission.is_approved ? "check-circle" : "clock"} mr--5`}></i>
-                {latestSubmission.is_approved ? "Approved" : "Pending Approval"}
+                <i className={`feather-${statusIcon} mr--5`}></i>
+                {statusText}
               </span>
             </div>
             {latestSubmission.feedback && (
-              <div className="submission-feedback mt--20 p--15 bg-color-light rounded shadow-sm">
-                <h6 className="mb--5 text-primary">Feedback from Instructor:</h6>
-                <p className="mb--0 text-dark">{latestSubmission.feedback}</p>
+              <div className="submission-feedback mt--20 p--15 rounded border-0" style={{ backgroundColor: "rgba(255,255,255,0.05)", borderLeft: `4px solid ${statusColor} !important` }}>
+                <h6 className="mb--5" style={{ color: statusColor }}>Feedback from Instructor:</h6>
+                <p className="mb--0" style={{ color: "rgba(255,255,255,0.8)" }}>{latestSubmission.feedback}</p>
               </div>
             )}
             <div className="mt--20 text-secondary small">
               <p className="mb--0">Submitted on: {new Date(latestSubmission.submitted_at).toLocaleString()}</p>
-              <p className="mb--0">Attempt: {latestSubmission.attempt}</p>
             </div>
           </div>
-        ) : (
+        )}
+
+        {(!latestSubmission || isRejected) && (
           <div className="bg-color-white rbt-shadow-box p--30">
+            {isRejected && <h5 className="mb--20 text-white">Resubmit Assignment</h5>}
             <form onSubmit={handleAssignmentSubmit}>
               <div className="assignment-answer-form mb--20">
                 <textarea
@@ -769,13 +869,13 @@ const LessonPage = () => {
                   className="w-100 p--15 rounded border"
                   value={assignmentText}
                   onChange={(e) => setAssignmentText(e.target.value)}
-                  style={{ backgroundColor: "#f9f9f9" }}
+                  style={{ backgroundColor: "var(--color-black-2)", color: "white", borderColor: "rgba(255,255,255,0.1)" }}
                 ></textarea>
               </div>
 
               <div className="mt--30">
                 <label className="mb--10 d-block font-weight-bold h6 text-white">Upload files (optional)</label>
-                <div className="custom-file-upload-wrapper p--20 border-dashed rounded text-center bg-color-light">
+                <div className="custom-file-upload-wrapper p--20 rounded text-center" style={{ border: "1px dashed rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.02)" }}>
                   <input
                     type="file"
                     id="assignment-file"
@@ -784,7 +884,7 @@ const LessonPage = () => {
                   />
                   <label htmlFor="assignment-file" className="cursor-pointer mb--0 d-block">
                     <i className="feather-upload-cloud h3 d-block mb--10 text-primary"></i>
-                    <span className="d-block">{assignmentFile ? assignmentFile.name : "Click to upload or drag and drop"}</span>
+                    <span className="d-block text-white">{assignmentFile ? assignmentFile.name : "Click to upload or drag and drop"}</span>
                     {!assignmentFile && <small className="text-secondary">(Images, PDFs, or ZIP files recommended)</small>}
                   </label>
                 </div>
@@ -798,7 +898,7 @@ const LessonPage = () => {
                 >
                   <span className="icon-reverse-wrapper">
                     <span className="btn-text">
-                      {submittingAssignment ? "Submitting..." : "Submit Assignment"}
+                      {submittingAssignment ? "Submitting..." : (isRejected ? "Resubmit Assignment" : "Submit Assignment")}
                     </span>
                     <span className="btn-icon">
                       <i className="feather-arrow-right"></i>
@@ -967,15 +1067,7 @@ const LessonPage = () => {
   const isChatDisabled =
     String(chatVal).toLowerCase() === "no" ||
     String(chatVal).toLowerCase() === "disabled";
-  const filteredComments = Array.isArray(comments)
-    ? comments.filter((c) => {
-        if (!c) return false;
-        if (chatFilter === "current") {
-          return c.commentable?.id && String(c.commentable.id) === String(content_id);
-        }
-        return true;
-      })
-    : [];
+  const filteredComments = Array.isArray(comments) ? comments : [];
 
   // ── Overall course progress for header indicator ──
   const calculateOverallProgress = () => {
@@ -1096,6 +1188,7 @@ const LessonPage = () => {
                         contentId={content_id}
                         enrollmentId={enrollmentId}
                         latestAttempt={latestAttempt}
+                        remainingAttempt={lessonContent?.remaining_attempt}
                       />
                     );
                   })() : (
@@ -1164,13 +1257,32 @@ const LessonPage = () => {
                                                       <div className="avatar-placeholder">{(c.authable?.name || c.user?.name || "U")[0]}</div>
                                                     )}
                                                   </div>
-                                                  <div className="chat-msg-content">
+                                                  <div className="chat-msg-content w-100">
                                                     <div className="chat-msg-header">
                                                       <span className="chat-user-name">{c.authable?.name || c.user?.name || "User"}</span>
                                                       <span className="chat-time">{new Date(c.created_at).toLocaleString()}</span>
                                                     </div>
-                                                    <p className="chat-msg-text">{c.comment || c.content}</p>
-                                                    <div className="chat-actions">
+                                                    
+                                                    {editingCommentId === c.id ? (
+                                                      <div className="chat-edit-wrapper mt--10 mb--10">
+                                                        <input 
+                                                          type="text" 
+                                                          className="chat-edit-input p--10 w-100 mb--5" 
+                                                          value={editText} 
+                                                          onChange={(e) => setEditText(e.target.value)} 
+                                                          onKeyDown={(e) => e.key === "Enter" && handleUpdateComment(c.id)}
+                                                          style={{ borderRadius: "5px", border: "1px solid #ddd", background: "var(--color-black-2)", color: "inherit" }}
+                                                        />
+                                                        <div className="d-flex gap-2 mt--5">
+                                                          <button className="rbt-btn btn-xs btn-border" onClick={handleCancelEdit}>Cancel</button>
+                                                          <button className="rbt-btn btn-xs btn-gradient" onClick={() => handleUpdateComment(c.id)} disabled={postingComment}>Save</button>
+                                                        </div>
+                                                      </div>
+                                                    ) : (
+                                                      <p className="chat-msg-text">{c.comment || c.content}</p>
+                                                    )}
+
+                                                    <div className="chat-actions d-flex align-items-center gap-3 mt--10">
                                                       <button
                                                         className="chat-reply-btn"
                                                         onClick={() => {
@@ -1181,6 +1293,17 @@ const LessonPage = () => {
                                                         <i className="feather-corner-up-left mr--5"></i>
                                                         {replyingTo === c.id ? "Cancel Reply" : "Reply"}
                                                       </button>
+                                                      
+                                                      {isOwnComment(c) && (
+                                                        <>
+                                                          <button className="chat-reply-btn text-warning" onClick={() => handleEditComment(c.id, c.comment || c.content)}>
+                                                            <i className="feather-edit mr--5"></i> Edit
+                                                          </button>
+                                                          <button className="chat-reply-btn text-danger" onClick={() => handleDeleteComment(c.id)}>
+                                                            <i className="feather-trash-2 mr--5"></i> Delete
+                                                          </button>
+                                                        </>
+                                                      )}
                                                     </div>
                                                   </div>
                                                 </div>
@@ -1202,7 +1325,36 @@ const LessonPage = () => {
                                                             <span className="chat-user-name">{r.authable?.name || r.user?.name || "User"}</span>
                                                             <span className="chat-time">{new Date(r.created_at).toLocaleString()}</span>
                                                           </div>
-                                                          <p className="chat-msg-text">{r.comment || r.content}</p>
+                                                          
+                                                          {editingCommentId === r.id ? (
+                                                            <div className="chat-edit-wrapper mt--10 mb--10">
+                                                              <input 
+                                                                type="text" 
+                                                                className="chat-edit-input p--10 w-100 mb--5" 
+                                                                value={editText} 
+                                                                onChange={(e) => setEditText(e.target.value)} 
+                                                                onKeyDown={(e) => e.key === "Enter" && handleUpdateComment(r.id)}
+                                                                style={{ borderRadius: "5px", border: "1px solid #ddd", background: "var(--color-black-2)", color: "inherit" }}
+                                                              />
+                                                              <div className="d-flex gap-2 mt--5">
+                                                                <button className="rbt-btn btn-xs btn-border" onClick={handleCancelEdit}>Cancel</button>
+                                                                <button className="rbt-btn btn-xs btn-gradient" onClick={() => handleUpdateComment(r.id)} disabled={postingComment}>Save</button>
+                                                              </div>
+                                                            </div>
+                                                          ) : (
+                                                            <p className="chat-msg-text">{r.comment || r.content}</p>
+                                                          )}
+                                                          
+                                                          {isOwnComment(r) && (
+                                                            <div className="chat-actions d-flex align-items-center gap-3 mt--10">
+                                                              <button className="chat-reply-btn text-warning" onClick={() => handleEditComment(r.id, r.comment || r.content)}>
+                                                                <i className="feather-edit mr--5"></i> Edit
+                                                              </button>
+                                                              <button className="chat-reply-btn text-danger" onClick={() => handleDeleteComment(r.id)}>
+                                                                <i className="feather-trash-2 mr--5"></i> Delete
+                                                              </button>
+                                                            </div>
+                                                          )}
                                                         </div>
                                                       </div>
                                                     ))}
