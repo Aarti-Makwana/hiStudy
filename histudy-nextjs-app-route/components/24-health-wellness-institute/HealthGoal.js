@@ -1,13 +1,9 @@
 import React from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 import { useParallax } from "react-scroll-parallax";
-const Odometer = dynamic(() => import("react-odometerjs"), {
-  ssr: false,
-  loading: () => 0,
-});
 
 import hShapeDots from "../../public/images/shape/h-shape-dot-01.png";
 import awardImg from "../../public/images/icons/award-gd-01.png";
@@ -16,6 +12,31 @@ import personImg from "../../public/images/others/health-b-01.png";
 import addImg from "../../public/images/others/health-b-02.png";
 import union from "../../public/images/shape/v-union.png";
 import signature from "../../public/images/others/signature-01.png";
+
+const AnimatedCounter = ({ targetValue }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = targetValue;
+    const duration = 2000;
+    const increment = end / (duration / 16);
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [targetValue]);
+
+  return <>{count}</>;
+};
 
 const HealthGoal = () => {
   const sinceParallax = useParallax({ translateY: [-20, 0] });
@@ -55,7 +76,7 @@ const HealthGoal = () => {
                           className="odometer rbt-font-primary"
                           data-count="1890"
                         >
-                          <Odometer value={1890} />
+                          <AnimatedCounter targetValue={1890} />
                         </span>
                       </h4>
                       <h6 className="subtitle">Since</h6>
@@ -71,7 +92,7 @@ const HealthGoal = () => {
                           className="odometer rbt-font-primary"
                           data-count="99"
                         >
-                          <Odometer value={99} />
+                          <AnimatedCounter targetValue={99} />
                         </span>
                         %
                       </h6>

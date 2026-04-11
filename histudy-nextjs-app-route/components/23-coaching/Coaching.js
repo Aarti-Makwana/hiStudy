@@ -4,11 +4,6 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import dynamic from "next/dynamic";
-const Odometer = dynamic(() => import("react-odometerjs"), {
-  ssr: false,
-  loading: () => 0,
-});
 import "venobox/dist/venobox.min.css";
 import { useParallax } from "react-scroll-parallax";
 
@@ -18,6 +13,31 @@ import CourseDetails from "../../data/course-details/courseData.json";
 import CoachingBanner from "./Coaching-Banner";
 import BlogGrid from "../Blogs/BlogGrid";
 import Service from "../Services/Service";
+
+const AnimatedCounter = ({ targetValue, suffix = "" }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = targetValue;
+    const duration = 2000;
+    const increment = end / (duration / 16);
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [targetValue]);
+
+  return <>{count}{suffix}</>;
+};
 import CoachingForm from "./CoachingForm";
 import CounterWrap from "../Counters/CounterWrap";
 
@@ -97,7 +117,7 @@ const Coaching = ({ blogdata }) => {
                       <div className="title-wrap">
                         <h4 className="number">
                           <span className="odometer rbt-font-primary">
-                            <Odometer value={1890} />
+                            <AnimatedCounter targetValue={1890} />
                           </span>
                         </h4>
                         <h6 className="subtitle">Since</h6>
@@ -111,9 +131,8 @@ const Coaching = ({ blogdata }) => {
                         <div>
                           <h6 className="enrolled-title d-flex align-items-center">
                             <span className="odometer rbt-font-primary">
-                              <Odometer value={36} />
+                              <AnimatedCounter targetValue={36} suffix="k+" />
                             </span>
-                            k+
                           </h6>
                           <p className="enrolled-description">
                             Success Students

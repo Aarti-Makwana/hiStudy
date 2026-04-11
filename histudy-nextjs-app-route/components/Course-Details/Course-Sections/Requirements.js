@@ -1,6 +1,10 @@
 import React from "react";
 
 const Requirements = ({ checkMatchCourses }) => {
+  if (!checkMatchCourses || !checkMatchCourses.detailsList || checkMatchCourses.detailsList.length === 0) {
+    return null;
+  }
+  
   return (
     <>
       <div className="col-lg-6">

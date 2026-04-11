@@ -10,7 +10,7 @@ const Instructor = ({ checkMatchCourses }) => {
           <h4 className="rbt-title-style-3">{checkMatchCourses.title}</h4>
         </div>
         {checkMatchCourses.body.map((teacher, innerIndex) => (
-          <div className="media align-items-center" key={innerIndex}>
+            <div className="media align-items-center" key={innerIndex}>
             <div className="thumbnail">
               <Link href={`#`}>
                 <Image
@@ -18,24 +18,36 @@ const Instructor = ({ checkMatchCourses }) => {
                   width={250}
                   height={250}
                   alt="Author Images"
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 />
               </Link>
             </div>
             <div className="media-body">
               <div className="author-info">
-                <div className="author-name-wrap d-flex align-items-center gap-2 mb--5">
-                  <h5 className="title mb-0">
-                    <Link className="hover-flip-item-wrapper" href={`#`}>
-                      {teacher.name}
-                    </Link>
-                  </h5>
-                </div>
+                {teacher.companies && teacher.companies.length > 0 && (
+                  <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 mb--10">
+                    {teacher.companies.slice(0, 1).map((company, cIndex) => (
+                      <div key={cIndex} className="company-item d-flex align-items-center gap-2">
+                        {company.logo?.url && (
+                          <div className="company-logo">
+                            <Image
+                              src={company.logo.url}
+                              width={32}
+                              height={32}
+                              alt={company.name}
+                              style={{ objectFit: 'contain', borderRadius: '4px' }}
+                            />
+                          </div>
+                        )}
+                        <span className="company-name b3" style={{ fontSize: '16px', fontWeight: '600' }}>
+                          {company.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                <span className="b3 subtitle instructor-subtitle">
-                  {teacher.type}
-                </span>
-
-                <ul className="rbt-meta instructor-meta d-flex flex-wrap gap-4 mt--15 mb--15 liststyle-none" style={{ padding: 0 }}>
+                <ul className="rbt-meta instructor-meta d-flex flex-wrap gap-4 mt--10 mb--15 liststyle-none" style={{ padding: 0 }}>
                   <li className="d-flex align-items-center gap-1">
                     <i className="feather-star color-warning"></i> 
                     <span><b>{teacher.star}</b> Rating</span>
@@ -55,8 +67,8 @@ const Instructor = ({ checkMatchCourses }) => {
                 </ul>
 
                 <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 mt--15 mb--15">
-                  {teacher.companies && teacher.companies.length > 0 &&
-                    teacher.companies.map((company, cIndex) => (
+                  {teacher.companies && teacher.companies.length > 1 &&
+                    teacher.companies.slice(1).map((company, cIndex) => (
                       <div key={cIndex} className="company-item d-flex align-items-center gap-2">
                         {company.logo?.url && (
                           <div className="company-logo">

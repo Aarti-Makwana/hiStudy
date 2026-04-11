@@ -23,6 +23,7 @@ import { UserCoursesServices } from "@/services/User/Courses/index.service";
 // Helper: format total seconds to "Xh Ym Zs"
 const formatTime = (h, m, s) => {
   const totalSec = (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+  if (totalSec === 0) return "";
   const hours = Math.floor(totalSec / 3600);
   const minutes = Math.floor((totalSec % 3600) / 60);
   const seconds = Math.floor(totalSec % 60);
@@ -89,11 +90,15 @@ const SingleCourse = ({ getParams }) => {
               lesson: apiData.number_of_lectures,
               duration: apiData.duration,
               language: apiData.language ? apiData.language.charAt(0).toUpperCase() + apiData.language.slice(1) : "English",
-              date: new Date(apiData.updated_at || Date.now()).toLocaleDateString(),
+              date: apiData.updated_at ? new Date(apiData.updated_at).toLocaleDateString() : new Date().toLocaleDateString(),
               isBestseller: apiData.is_bestseller || false,
               courseAward: apiData.is_certificate_enabled ? "Certificate" : "No Certificate",
+              certificateNumber: apiData.certificate_number || null,
               hasMoneyBackGuarantee: apiData.has_money_back_guarantee || false,
-              days: 10, // Placeholder or calculated from API if available
+              moneyBackDuration: apiData.money_back_duration || 30,
+              days: apiData.days_left || 10,
+              quizCount: apiData.quizzes_count || 0,
+              validity: apiData.validity_unit === 'unlimited' ? 'Lifetime' : (apiData.validity || 'Unlimited'),
 
               // Rating Distribution
               ratingDistribution: [
@@ -159,22 +164,22 @@ const SingleCourse = ({ getParams }) => {
                   }] : []
                 }
               ],
-              courseRequirement: [
-                {
-                  title: "Prerequisites",
-                  detailsList: apiData.prerequisites
-                    ? apiData.prerequisites.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
-                    : []
-                }
-              ],
-              courseBenefits: [
-                {
-                  title: "Benefits",
-                  detailsList: apiData.benefits
-                    ? apiData.benefits.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
-                    : []
-                }
-              ],
+              courseRequirement: apiData.prerequisites
+                ? [
+                  {
+                    title: "Prerequisites",
+                    detailsList: apiData.prerequisites.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
+                  }
+                ]
+                : [],
+              courseBenefits: apiData.benefits
+                ? [
+                  {
+                    title: "Benefits",
+                    detailsList: apiData.benefits.split(/\r?\n/).filter(line => line.trim() !== "").map(line => ({ listItem: line.trim() }))
+                  }
+                ]
+                : [],
               featuredReview: [
                 {
                   title: "Featured Reviews",

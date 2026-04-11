@@ -595,15 +595,19 @@ const LessonPage = () => {
   };
 
   const isOwnComment = (item) => {
-    if (item.is_mine !== undefined) return item.is_mine;
+    if (!item) return false;
+    if (item.is_mine !== undefined) return (item.is_mine === true || item.is_mine === 1 || item.is_mine === "1");
     
-    if (userId && (String(item.user_id) === String(userId) || String(item.authable_id) === String(userId) || String(item.authable?.id) === String(userId) || String(item.user?.id) === String(userId))) {
+    const itemUserId = item.user_id || item.authable_id || item.authable?.id || item.user?.id;
+    if (userId && itemUserId && String(itemUserId) === String(userId)) {
       return true;
     }
-    if (userEmail && (item.authable?.email === userEmail || item.user?.email === userEmail)) {
+    const itemEmail = item.authable?.email || item.user?.email;
+    if (userEmail && itemEmail && itemEmail === userEmail) {
       return true;
     }
-    if (userName && (item.authable?.name === userName || item.user?.name === userName)) {
+    const itemUserName = item.authable?.name || item.user?.name;
+    if (userName && itemUserName && itemUserName === userName) {
       return true;
     }
     return false;
@@ -1293,13 +1297,22 @@ const LessonPage = () => {
                                                         <i className="feather-corner-up-left mr--5"></i>
                                                         {replyingTo === c.id ? "Cancel Reply" : "Reply"}
                                                       </button>
-                                                      
+
                                                       {isOwnComment(c) && (
                                                         <>
-                                                          <button className="chat-reply-btn text-warning" onClick={() => handleEditComment(c.id, c.comment || c.content)}>
-                                                            <i className="feather-edit mr--5"></i> Edit
+                                                          <button
+                                                            className="chat-edit-btn"
+                                                            onClick={() => handleEditComment(c.id, c.comment || c.content)}
+                                                            style={{ marginLeft: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-warning)' }}
+                                                          >
+                                                            <i className="feather-edit-2 mr--5"></i> Edit
                                                           </button>
-                                                          <button className="chat-reply-btn text-danger" onClick={() => handleDeleteComment(c.id)}>
+
+                                                          <button
+                                                            className="chat-delete-btn"
+                                                            onClick={() => handleDeleteComment(c.id)}
+                                                            style={{ marginLeft: '8px', color: 'red', cursor: 'pointer', background: 'none', border: 'none' }}
+                                                          >
                                                             <i className="feather-trash-2 mr--5"></i> Delete
                                                           </button>
                                                         </>

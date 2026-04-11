@@ -26,16 +26,7 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
             <div className="feature-sin best-seller-badge">
               {getMatchCourse.isBestseller ? (
                 <span className="rbt-badge-2 bestseller">
-                  <span className="image">
-                    {getMatchCourse.awardImg && (
-                      <Image
-                        src={getMatchCourse.awardImg}
-                        width={30}
-                        height={30}
-                        alt="Best Seller Icon"
-                      />
-                    )}
-                  </span>
+                  <i className="feather-zap" style={{ marginRight: '5px' }}></i>
                   Bestseller
                 </span>
               ) : (
@@ -84,6 +75,7 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
                     height={40}
                     src={getMatchCourse.userImg}
                     alt={getMatchCourse.userName}
+                    style={{ objectFit: 'cover', objectPosition: 'top' }}
                   />
                 )}
               </Link>
@@ -106,9 +98,11 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
               <i className="feather-globe"></i>
               {getMatchCourse.language}
             </li>
-            <li>
-              <i className="feather-award"></i> {getMatchCourse.courseAward}
-            </li>
+            {getMatchCourse.courseAward !== 'No Certificate' && (
+              <li>
+                <i className="feather-award"></i> {getMatchCourse.certificateNumber ? `Certificate - ${getMatchCourse.certificateNumber}` : getMatchCourse.courseAward}
+              </li>
+            )}
           </ul>
         </div>
       </div>

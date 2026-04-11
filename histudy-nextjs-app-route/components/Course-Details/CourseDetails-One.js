@@ -38,30 +38,33 @@ const CourseDetailsOne = ({ checkMatchCourses, courseSlug }) => {
               ))}
           </div>
 
-          <div
-            className="rbt-course-feature-box rbt-shadow-box details-wrapper mt--30"
-            id="details"
-          >
-            <div className="row g-5">
-              {checkMatchCourses &&
-                checkMatchCourses.courseRequirement.map((data, index) => (
-                  <Requirements
-                    {...data}
-                    key={index}
-                    checkMatchCourses={data}
-                  />
-                ))}
-              {checkMatchCourses &&
-                checkMatchCourses.courseBenefits &&
-                checkMatchCourses.courseBenefits.map((data, index) => (
-                  <Requirements
-                    {...data}
-                    key={index}
-                    checkMatchCourses={data}
-                  />
-                ))}
+          {((checkMatchCourses.courseRequirement && checkMatchCourses.courseRequirement.length > 0 && checkMatchCourses.courseRequirement.some(r => r.detailsList && r.detailsList.length > 0)) ||
+            (checkMatchCourses.courseBenefits && checkMatchCourses.courseBenefits.length > 0 && checkMatchCourses.courseBenefits.some(b => b.detailsList && b.detailsList.length > 0))) && (
+            <div
+              className="rbt-course-feature-box rbt-shadow-box details-wrapper mt--30"
+              id="details"
+            >
+              <div className="row g-5">
+                {checkMatchCourses &&
+                  checkMatchCourses.courseRequirement.map((data, index) => (
+                    <Requirements
+                      {...data}
+                      key={index}
+                      checkMatchCourses={data}
+                    />
+                  ))}
+                {checkMatchCourses &&
+                  checkMatchCourses.courseBenefits &&
+                  checkMatchCourses.courseBenefits.map((data, index) => (
+                    <Requirements
+                      {...data}
+                      key={index}
+                      checkMatchCourses={data}
+                    />
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
           <div
             className="rbt-instructor rbt-shadow-box intructor-wrapper mt--30"
             id="intructor"

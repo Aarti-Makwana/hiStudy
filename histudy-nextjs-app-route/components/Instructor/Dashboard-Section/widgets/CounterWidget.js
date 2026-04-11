@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { useInView } from "react-intersection-observer";
-import "odometer/themes/odometer-theme-default.css";
 import Image from "next/image";
 
-let loadedCallback = null;
-let loaded = false;
-
-const Odometer = dynamic(() => import("react-odometerjs"), {
-  ssr: false,
-  loading: () => <span>00</span>,
-});
 const CounterWidget = ({
   counterStyle = "one",
   icon,
@@ -23,25 +14,31 @@ const CounterWidget = ({
   iconClass,
   numberClass,
 }) => {
-  const [odometerLoaded, setOdometerLoaded] = useState(loaded);
-  const [odometerValue, setOdometerValue] = useState(0);
-
-  loadedCallback = () => {
-    setOdometerLoaded(true);
-  };
+  const [counterValue, setCounterValue] = useState(0);
 
   const { ref, inView } = useInView({
     threshold: 0,
   });
 
   useEffect(() => {
-    if (odometerLoaded) {
-      setOdometerValue(1);
+    if (inView) {
+      let start = 0;
+      const end = parseInt(value) || 0;
+      const duration = 1000;
+      const increment = end / (duration / 16);
+      
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= end) {
+          setCounterValue(end);
+          clearInterval(timer);
+        } else {
+          setCounterValue(Math.floor(start));
+        }
+      }, 16);
+      
+      return () => clearInterval(timer);
     }
-  }, [odometerLoaded]);
-
-  useEffect(() => {
-    if (inView) setOdometerValue(value);
   }, [inView, value]);
 
   return (
@@ -57,7 +54,7 @@ const CounterWidget = ({
             )}
             <div className="content">
               <h3 className="counter">
-                <Odometer format="d" duration={1000} value={numberClass} />
+                <span className={numberClass}>{counterValue}</span>
               </h3>
               <span className="subtitle">{title}</span>
             </div>
@@ -76,7 +73,7 @@ const CounterWidget = ({
             </div>
             <div className="content">
               <h3 className={`counter without-icon ${numberClass}`}>
-                <Odometer format="d" duration={1000} value={odometerValue} />
+                {counterValue}
               </h3>
               <span className="rbt-title-style-2 d-block">{title}</span>
             </div>
@@ -89,7 +86,7 @@ const CounterWidget = ({
           <div ref={ref} className="inner">
             <div className="content">
               <h3 className="counter color-white">
-                <Odometer format="d" duration={1000} value={odometerValue} />
+                {counterValue}
               </h3>
               <h5 className="title color-white">{title}</h5>
               <span className="subtitle color-white">{subtitle}</span>
@@ -103,7 +100,7 @@ const CounterWidget = ({
           <div className="inner">
             <div className="content">
               <h3 className="counter">
-                <Odometer format="d" duration={1000} value={odometerValue} />
+                {counterValue}
               </h3>
               <span className="subtitle">{title}</span>
             </div>

@@ -74,11 +74,12 @@ const Viedo = ({ checkMatchCourses }) => {
   return (
     <>
       {!disableVideo ? (
-        <Link
+        <div
           className={`video-popup-with-text video-popup-wrapper text-center popup-video sidebar-video-hidden mb--15 ${hideOnScroll ? "d-none" : ""
             }`}
           data-vbtype="video"
           href={checkMatchCourses.courseVideo || "https://www.youtube.com/watch?v=nA1Aqp0sPQo"}
+          style={{ cursor: 'pointer' }}
         >
           <div className="video-content">
             {checkMatchCourses.courseImg && (
@@ -88,6 +89,7 @@ const Viedo = ({ checkMatchCourses }) => {
                 width={355}
                 height={255}
                 alt="Video Images"
+                style={{ objectFit: 'cover', objectPosition: 'top' }}
               />
             )}
             <div className="position-to-top">
@@ -99,7 +101,7 @@ const Viedo = ({ checkMatchCourses }) => {
               <i className="feather-eye"></i> Preview this course
             </span>
           </div>
-        </Link>
+        </div>
       ) : (
         ""
       )}
@@ -178,7 +180,7 @@ const Viedo = ({ checkMatchCourses }) => {
           </Link>
         </div>
         <span className="subtitle">
-          <i className="feather-rotate-ccw"></i> {checkMatchCourses.hasMoneyBackGuarantee ? `${checkMatchCourses.money_back_duration || '30'}-Day Money-Back Guarantee` : 'Secure Payment Guarantee'}
+          <i className="feather-rotate-ccw"></i> {checkMatchCourses.hasMoneyBackGuarantee ? `${checkMatchCourses.moneyBackDuration || 30}-Day Money-Back Guarantee` : 'Secure Payment Gateway'}
         </span>
         <div
           className={`rbt-widget-details has-show-more ${toggle ? "active" : ""
@@ -192,9 +194,9 @@ const Viedo = ({ checkMatchCourses }) => {
               </span>
             </li>
             <li>
-              <span>{checkMatchCourses.is_live ? 'Batch Start Date' : 'Course Validity'}</span>
+              <span>Course Validity</span>
               <span className="rbt-feature-value rbt-badge-5">
-                {checkMatchCourses.is_live ? (checkMatchCourses.start_date || '03 March 2026') : (checkMatchCourses.validity || 'Unlimited')}
+                {checkMatchCourses.is_live ? (checkMatchCourses.start_date || '03 March 2026') : (checkMatchCourses.validity === 'Unlimited' ? 'Lifetime' : checkMatchCourses.validity)}
               </span>
             </li>
             <li>
@@ -224,7 +226,7 @@ const Viedo = ({ checkMatchCourses }) => {
             <li>
               <span>Quizzes</span>
               <span className="rbt-feature-value rbt-badge-5">
-                {checkMatchCourses.quiz_count || 0}
+                {checkMatchCourses.quizCount || 0}
               </span>
             </li>
             <li>
@@ -246,23 +248,23 @@ const Viedo = ({ checkMatchCourses }) => {
           <div className="rbt-post-share d-flex align-items-center justify-content-center">
             <ul className="social-icon social-default transparent-with-border justify-content-center">
               <li>
-                <Link href="https://www.facebook.com/">
-                  <i className="feather-facebook"></i>
-                </Link>
-              </li>
-              <li>
-                <Link href="https://www.twitter.com">
-                  <i className="feather-twitter"></i>
-                </Link>
-              </li>
-              <li>
                 <Link href="https://www.instagram.com/">
                   <i className="feather-instagram"></i>
                 </Link>
               </li>
               <li>
-                <Link href="https://www.linkdin.com/">
+                <Link href="https://www.youtube.com/">
+                  <i className="feather-youtube"></i>
+                </Link>
+              </li>
+              <li>
+                <Link href="https://www.linkedin.com/">
                   <i className="feather-linkedin"></i>
+                </Link>
+              </li>
+              <li>
+                <Link href="https://wa.me/">
+                  <i className="feather-message-circle"></i>
                 </Link>
               </li>
             </ul>
@@ -271,7 +273,7 @@ const Viedo = ({ checkMatchCourses }) => {
           <div className="contact-with-us text-center">
             <p>For details about the course</p>
             <p className="rbt-badge-2 mt--10 justify-content-center w-100">
-              <i className="feather-phone mr--5"></i> Call Us:
+              <i className="feather-message-circle mr--5" style={{ color: '#25D366' }}></i> WhatsApp:
               <Link href="#">
                 <strong>+444 555 666 777</strong>
               </Link>

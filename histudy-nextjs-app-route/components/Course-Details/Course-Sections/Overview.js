@@ -22,7 +22,7 @@ const Overview = ({ checkMatchCourses }) => {
           <div className="section-title">
             <h4 className="rbt-title-style-3">{title}</h4>
           </div>
-          <div dangerouslySetInnerHTML={{ __html: desc }}></div>
+          <div dangerouslySetInnerHTML={{ __html: desc }} style={{ fontSize: '14px' }}></div>
 
           <div className="row g-5 mb--30">
             <div className="col-lg-6">
