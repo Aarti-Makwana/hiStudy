@@ -10,7 +10,7 @@ const Instructor = ({ checkMatchCourses }) => {
           <h4 className="rbt-title-style-3">{checkMatchCourses.title}</h4>
         </div>
         {checkMatchCourses.body.map((teacher, innerIndex) => (
-            <div className="media align-items-center" key={innerIndex}>
+          <div className="media align-items-center" key={innerIndex}>
             <div className="thumbnail">
               <Link href={`#`}>
                 <Image
@@ -18,7 +18,7 @@ const Instructor = ({ checkMatchCourses }) => {
                   width={250}
                   height={250}
                   alt="Author Images"
-                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+
                 />
               </Link>
             </div>
@@ -47,26 +47,26 @@ const Instructor = ({ checkMatchCourses }) => {
                   </div>
                 )}
 
-                <ul className="rbt-meta instructor-meta d-flex flex-wrap gap-4 mt--10 mb--15 liststyle-none" style={{ padding: 0 }}>
+                <ul className="rbt-meta instructor-meta d-flex flex-wrap  liststyle-none" style={{ padding: 0 }}>
                   <li className="d-flex align-items-center gap-1">
-                    <i className="feather-star color-warning"></i> 
+                    <i className="feather-star color-warning"></i>
                     <span><b>{teacher.star}</b> Rating</span>
                   </li>
                   <li className="d-flex align-items-center gap-1">
-                    <i className="feather-message-square color-primary"></i> 
+                    <i className="feather-message-square color-primary"></i>
                     <span><b>{teacher.ratingNumber}</b> Reviews</span>
                   </li>
                   <li className="d-flex align-items-center gap-1">
-                    <i className="feather-user color-info"></i> 
+                    <i className="feather-user color-info"></i>
                     <span><b>{teacher.studentNumber}</b> Students</span>
                   </li>
                   <li className="d-flex align-items-center gap-1">
-                    <i className="feather-video color-secondary"></i> 
+                    <i className="feather-video color-secondary"></i>
                     <span><b>{teacher.course}</b> Courses</span>
                   </li>
                 </ul>
 
-                <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 mt--15 mb--15">
+                <div className="company-info-wrapper d-flex align-items-center flex-wrap gap-3 ">
                   {teacher.companies && teacher.companies.length > 1 &&
                     teacher.companies.slice(1).map((company, cIndex) => (
                       <div key={cIndex} className="company-item d-flex align-items-center gap-2">
@@ -90,14 +90,14 @@ const Instructor = ({ checkMatchCourses }) => {
                 </div>
               </div>
               <div className="content">
-                <div 
-                  className="description instructor-bio-text" 
+                <div
+                  className="description instructor-bio-text"
                   dangerouslySetInnerHTML={{ __html: teacher.desc }}
                 ></div>
 
                 <div className="instructor-actions">
-                  <Link 
-                    href={teacher.linkedinUrl} 
+                  <Link
+                    href={teacher.linkedinUrl}
                     className="rbt-btn btn-gradient hover-icon-reverse linkedin-btn-custom"
                   >
                     <span className="btn-text">LinkedIn</span>

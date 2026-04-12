@@ -24,7 +24,7 @@ const CounterWrap = ({ value, format = "d" }) => {
   }, []);
 
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && value !== undefined && value !== null) {
       let start = 0;
       const end = parseInt(value) || 0;
       const duration = 2000;

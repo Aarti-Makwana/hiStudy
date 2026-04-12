@@ -66,18 +66,18 @@ const Counter = ({ isDesc, head, settings }) => {
                           alt="Icons Images"
                         />
                       </div>
-                      <div className="content">
-                        <h3 className="counter">
-                          {item.value.includes('/') || item.value.includes('%') ? (
-                            <span>{item.value}</span>
-                          ) : (
-                            <span className="odometer">
-                              <CounterWrap value={item.num} format="(d)" />
-                            </span>
-                          )}
-                        </h3>
-                        <span className="subtitle">{item.text}</span>
-                      </div>
+                        <div className="content">
+                          <h3 className="counter">
+                            {item.value && (item.value.includes('/') || item.value.includes('%')) ? (
+                              <span>{item.value}</span>
+                            ) : (
+                              <span className="odometer">
+                                <CounterWrap value={item.num} format="(d)" />
+                              </span>
+                            )}
+                          </h3>
+                          <span className="subtitle">{item.text}</span>
+                        </div>
                     </div>
                   </div>
                 </div>
