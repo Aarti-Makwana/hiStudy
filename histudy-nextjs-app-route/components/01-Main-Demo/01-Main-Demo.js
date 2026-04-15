@@ -147,6 +147,7 @@ const MainDemo = ({ blogs }) => {
             courses={topCourses}
             title={<>Histudy Course student <br /> can join with us.</>}
             subTitle="Top Popular Course"
+            sectionId="live-courses"
           />
         )}
 
@@ -210,7 +211,7 @@ const MainDemo = ({ blogs }) => {
         {/* AddOnn Advantage */}
         {/* <AddonAdvantage /> */}
         {homeSettings.comparison ? (
-          <ComparisonTable settings={{ ...homeSettings.comparison, subTitle: "Why We Are Best" }} />
+          <ComparisonTable settings={{ ...homeSettings.comparison, subTitle: "Why We Are Best", site: homeSettings.site }} />
         ) : !loading ? (
           <div className="container mt-5 mb-5"><p className="text-center">comparison I didn't find</p></div>
         ) : null}

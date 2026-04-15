@@ -58,6 +58,20 @@ const EnrolledCourses = () => {
                   <span className="title">Completed Courses</span>
                 </Link>
               </li>
+              <li role="presentation">
+                <Link
+                  href="#"
+                  className="tab-button"
+                  id="refunded-tab-4"
+                  data-bs-toggle="tab"
+                  data-bs-target="#refunded-4"
+                  role="tab"
+                  aria-controls="refunded-4"
+                  aria-selected="false"
+                >
+                  <span className="title">Refunded Courses</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -69,22 +83,30 @@ const EnrolledCourses = () => {
               aria-labelledby="home-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 3)?.map((slide, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-enrolled-${index}`}
-                  >
-                    <CourseWidgets
-                      data={slide}
-                      courseStyle="two"
-                      isProgress={true}
-                      isCompleted={false}
-                      isEdit={false}
-                      showDescription={false}
-                      showAuthor={false}
-                    />
+                {Courses.slice(0, 3)?.length > 0 ? (
+                  Courses.slice(0, 3)?.map((slide, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-enrolled-${index}`}
+                    >
+                      <CourseWidgets
+                        data={slide}
+                        courseStyle="two"
+                        isProgress={true}
+                        isCompleted={false}
+                        isEdit={false}
+                        showDescription={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
+                      <p>There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -95,22 +117,30 @@ const EnrolledCourses = () => {
               aria-labelledby="profile-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(3, 6)?.map((slide, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-active-${index}`}
-                  >
-                    <CourseWidgets
-                      data={slide}
-                      courseStyle="two"
-                      isCompleted={false}
-                      isProgress={false}
-                      isEdit={false}
-                      showDescription={false}
-                      showAuthor={false}
-                    />
+                {Courses.slice(3, 6)?.length > 0 ? (
+                  Courses.slice(3, 6)?.map((slide, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-active-${index}`}
+                    >
+                      <CourseWidgets
+                        data={slide}
+                        courseStyle="two"
+                        isCompleted={false}
+                        isProgress={false}
+                        isEdit={false}
+                        showDescription={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
+                      <p>There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -121,22 +151,64 @@ const EnrolledCourses = () => {
               aria-labelledby="contact-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(1, 4)?.map((slide, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-completed-${index}`}
-                  >
-                    <CourseWidgets
-                      data={slide}
-                      courseStyle="two"
-                      isCompleted={true}
-                      isProgress={true}
-                      showDescription={false}
-                      isEdit={false}
-                      showAuthor={false}
-                    />
+                {Courses.slice(1, 4)?.length > 0 ? (
+                  Courses.slice(1, 4)?.map((slide, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-completed-${index}`}
+                    >
+                      <CourseWidgets
+                        data={slide}
+                        courseStyle="two"
+                        isCompleted={true}
+                        isProgress={true}
+                        showDescription={false}
+                        isEdit={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
+                      <p>There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
+              </div>
+            </div>
+
+            <div
+              className="tab-pane fade"
+              id="refunded-4"
+              role="tabpanel"
+              aria-labelledby="refunded-tab-4"
+            >
+              <div className="row g-5">
+                {Courses.slice(0, 0)?.length > 0 ? (
+                  Courses.slice(0, 0)?.map((slide, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-refunded-${index}`}
+                    >
+                      <CourseWidgets
+                        data={slide}
+                        courseStyle="two"
+                        isCompleted={false}
+                        isProgress={false}
+                        isEdit={false}
+                        showDescription={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
+                      <p>There are no courses to display</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

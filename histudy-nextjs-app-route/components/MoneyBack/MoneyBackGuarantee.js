@@ -8,7 +8,7 @@ const MoneyBackGuarantee = ({ settings }) => {
     return (
         <section className="rbt-section-gap px-md-4 mw_money_v3_new">
             <div className="container">
-                <div className="mw-money-back2 shadow-sm rounded-4 p-4 p-lg-5 bg-white">
+                <div className="mw-money-back2 shadow-sm rounded-4 p-4 p-lg-5 bg-color-white">
                     <div className="row align-items-center">
                         <div className="col-md-3 text-center mb-4 mb-md-0">
                             <div className="mw-money-back2-img">

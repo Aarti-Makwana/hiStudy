@@ -6,9 +6,9 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
-const CourseCarousel = ({ courses, title, subTitle, isComingSoon }) => {
+const CourseCarousel = ({ courses, title, subTitle, isComingSoon, sectionId }) => {
   return (
-    <div className="rbt-course-area ">
+    <div id={sectionId} className="rbt-course-area ">
       <div className="container">
         <div className="row mb--60 mt--60">
           <div className="col-lg-12">

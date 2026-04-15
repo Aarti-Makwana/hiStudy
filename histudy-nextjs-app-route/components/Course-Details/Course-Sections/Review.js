@@ -6,7 +6,7 @@ const Review = ({ checkMatchCourses }) => {
     <>
       <div className="course-content">
         <div className="section-title">
-          <h4 className="rbt-title-style-3">Review</h4>
+          <h4 className="rbt-title-style-3">Course Review</h4>
         </div>
         <div className="row g-5 align-items-center">
           <div className="col-lg-3">

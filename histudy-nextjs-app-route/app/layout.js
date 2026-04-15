@@ -26,7 +26,7 @@ import { SettingsProvider, useSettings } from "@/context/SettingsContext";
 
 const Favicon = () => {
   const { settings } = useSettings();
-  const favicon = settings?.site?.addonn_favicon || "/favicon.ico";
+  const favicon = settings?.site?.addonn_favicon || "/images/favicon.png";
 
   useEffect(() => {
     if (favicon) {

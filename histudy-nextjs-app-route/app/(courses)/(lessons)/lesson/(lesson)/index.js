@@ -102,6 +102,7 @@ const LessonPage = () => {
   // New state for editing comments/replies
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Assignment / Quiz Attempt status state
   const [courseQuizAttempts, setCourseQuizAttempts] = useState([]);
@@ -555,11 +556,23 @@ const LessonPage = () => {
   const handleEditComment = (commentId, currentText) => {
     setEditingCommentId(commentId);
     setEditText(currentText);
+    setActiveActionMenuId(null);
   };
 
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditText("");
+  };
+
+  const toggleActionMenu = (commentId) => {
+    setActiveActionMenuId((prevId) => (prevId === commentId ? null : commentId));
+  };
+
+  const canModifyComment = (item) => {
+    const createdAt = item?.created_at || item?.createdAt;
+    if (!createdAt) return true;
+    const ageMs = Date.now() - new Date(createdAt).getTime();
+    return ageMs <= 3600000; // 1 hour
   };
 
   const handleUpdateComment = async (commentId) => {
@@ -1262,9 +1275,79 @@ const LessonPage = () => {
                                                     )}
                                                   </div>
                                                   <div className="chat-msg-content w-100">
-                                                    <div className="chat-msg-header">
-                                                      <span className="chat-user-name">{c.authable?.name || c.user?.name || "User"}</span>
-                                                      <span className="chat-time">{new Date(c.created_at).toLocaleString()}</span>
+                                                    <div className="chat-msg-header d-flex align-items-start justify-content-between">
+                                                      <div>
+                                                        <span className="chat-user-name">{c.authable?.name || c.user?.name || "User"}</span>
+                                                        <span className="chat-time">{new Date(c.created_at).toLocaleString()}</span>
+                                                      </div>
+                                                      {isOwnComment(c) && (
+                                                        <div className="chat-action-menu position-relative" style={{ display: 'inline-flex' }}>
+                                                          <button
+                                                            className="chat-action-menu-btn"
+                                                            onClick={() => toggleActionMenu(c.id)}
+                                                            style={{
+                                                              background: 'transparent',
+                                                              border: 'none',
+                                                              color: 'var(--color-white)',
+                                                              cursor: 'pointer',
+                                                              padding: '4px 8px',
+                                                            }}
+                                                          >
+                                                            <i className="feather-more-vertical" style={{ fontSize: '1.2rem' }}></i>
+                                                          </button>
+
+                                                          {activeActionMenuId === c.id && (
+                                                            <div
+                                                              className="chat-action-dropdown"
+                                                              style={{
+                                                                position: 'absolute',
+                                                                right: 0,
+                                                                top: 'calc(100% + 8px)',
+                                                                zIndex: 10,
+                                                                minWidth: '120px',
+                                                                background: 'var(--color-black-2)',
+                                                                border: '1px solid rgba(255,255,255,0.15)',
+                                                                borderRadius: '8px',
+                                                                boxShadow: '0 12px 30px rgba(0,0,0,0.3)',
+                                                                padding: '6px',
+                                                              }}
+                                                            >
+                                                              <button
+                                                                className="chat-action-dropdown-item"
+                                                                onClick={() => handleEditComment(c.id, c.comment || c.content)}
+                                                                disabled={!canModifyComment(c)}
+                                                                style={{
+                                                                  width: '100%',
+                                                                  textAlign: 'left',
+                                                                  padding: '8px 10px',
+                                                                  background: 'transparent',
+                                                                  border: 'none',
+                                                                  color: canModifyComment(c) ? 'var(--color-white)' : 'rgba(255,255,255,0.45)',
+                                                                  cursor: canModifyComment(c) ? 'pointer' : 'not-allowed',
+                                                                }}
+                                                              >
+                                                                <i className="feather-edit-2 mr--5"></i> Edit
+                                                              </button>
+                                                              <button
+                                                                className="chat-action-dropdown-item"
+                                                                onClick={() => handleDeleteComment(c.id)}
+                                                                disabled={!canModifyComment(c)}
+                                                                style={{
+                                                                  width: '100%',
+                                                                  textAlign: 'left',
+                                                                  padding: '8px 10px',
+                                                                  background: 'transparent',
+                                                                  border: 'none',
+                                                                  color: canModifyComment(c) ? '#ff6b6b' : 'rgba(255,107,107,0.4)',
+                                                                  cursor: canModifyComment(c) ? 'pointer' : 'not-allowed',
+                                                                }}
+                                                              >
+                                                                <i className="feather-trash-2 mr--5"></i> Delete
+                                                              </button>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      )}
                                                     </div>
                                                     
                                                     {editingCommentId === c.id ? (
@@ -1278,7 +1361,17 @@ const LessonPage = () => {
                                                           style={{ borderRadius: "5px", border: "1px solid #ddd", background: "var(--color-black-2)", color: "inherit" }}
                                                         />
                                                         <div className="d-flex gap-2 mt--5">
-                                                          <button className="rbt-btn btn-xs btn-border" onClick={handleCancelEdit}>Cancel</button>
+                                                          <button
+                                                            className="rbt-btn btn-xs btn-border"
+                                                            onClick={handleCancelEdit}
+                                                            style={{
+                                                              borderColor: 'rgba(255,255,255,0.35)',
+                                                              color: 'rgba(255,255,255,0.85)',
+                                                              background: 'transparent',
+                                                            }}
+                                                          >
+                                                            Cancel
+                                                          </button>
                                                           <button className="rbt-btn btn-xs btn-gradient" onClick={() => handleUpdateComment(c.id)} disabled={postingComment}>Save</button>
                                                         </div>
                                                       </div>
@@ -1297,26 +1390,6 @@ const LessonPage = () => {
                                                         <i className="feather-corner-up-left mr--5"></i>
                                                         {replyingTo === c.id ? "Cancel Reply" : "Reply"}
                                                       </button>
-
-                                                      {isOwnComment(c) && (
-                                                        <>
-                                                          <button
-                                                            className="chat-edit-btn"
-                                                            onClick={() => handleEditComment(c.id, c.comment || c.content)}
-                                                            style={{ marginLeft: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-warning)' }}
-                                                          >
-                                                            <i className="feather-edit-2 mr--5"></i> Edit
-                                                          </button>
-
-                                                          <button
-                                                            className="chat-delete-btn"
-                                                            onClick={() => handleDeleteComment(c.id)}
-                                                            style={{ marginLeft: '8px', color: 'red', cursor: 'pointer', background: 'none', border: 'none' }}
-                                                          >
-                                                            <i className="feather-trash-2 mr--5"></i> Delete
-                                                          </button>
-                                                        </>
-                                                      )}
                                                     </div>
                                                   </div>
                                                 </div>
@@ -1334,9 +1407,79 @@ const LessonPage = () => {
                                                           )}
                                                         </div>
                                                         <div className="chat-msg-content">
-                                                          <div className="chat-msg-header">
-                                                            <span className="chat-user-name">{r.authable?.name || r.user?.name || "User"}</span>
-                                                            <span className="chat-time">{new Date(r.created_at).toLocaleString()}</span>
+                                                          <div className="chat-msg-header d-flex align-items-start justify-content-between">
+                                                            <div>
+                                                              <span className="chat-user-name">{r.authable?.name || r.user?.name || "User"}</span>
+                                                              <span className="chat-time">{new Date(r.created_at).toLocaleString()}</span>
+                                                            </div>
+                                                            {isOwnComment(r) && (
+                                                              <div className="chat-action-menu position-relative" style={{ display: 'inline-flex' }}>
+                                                                <button
+                                                                  className="chat-action-menu-btn"
+                                                                  onClick={() => toggleActionMenu(r.id)}
+                                                                  style={{
+                                                                    background: 'transparent',
+                                                                    border: 'none',
+                                                                    color: 'var(--color-white)',
+                                                                    cursor: 'pointer',
+                                                                    padding: '4px 8px',
+                                                                  }}
+                                                                >
+                                                                  <i className="feather-more-vertical" style={{ fontSize: '1.2rem' }}></i>
+                                                                </button>
+
+                                                                {activeActionMenuId === r.id && (
+                                                                  <div
+                                                                    className="chat-action-dropdown"
+                                                                    style={{
+                                                                      position: 'absolute',
+                                                                      right: 0,
+                                                                      top: 'calc(100% + 8px)',
+                                                                      zIndex: 10,
+                                                                      minWidth: '120px',
+                                                                      background: 'var(--color-black-2)',
+                                                                      border: '1px solid rgba(255,255,255,0.15)',
+                                                                      borderRadius: '8px',
+                                                                      boxShadow: '0 12px 30px rgba(0,0,0,0.3)',
+                                                                      padding: '6px',
+                                                                    }}
+                                                                  >
+                                                                    <button
+                                                                      className="chat-action-dropdown-item"
+                                                                      onClick={() => handleEditComment(r.id, r.comment || r.content)}
+                                                                      disabled={!canModifyComment(r)}
+                                                                      style={{
+                                                                        width: '100%',
+                                                                        textAlign: 'left',
+                                                                        padding: '8px 10px',
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        color: canModifyComment(r) ? 'var(--color-white)' : 'rgba(255,255,255,0.45)',
+                                                                        cursor: canModifyComment(r) ? 'pointer' : 'not-allowed',
+                                                                      }}
+                                                                    >
+                                                                      <i className="feather-edit mr--5"></i> Edit
+                                                                    </button>
+                                                                    <button
+                                                                      className="chat-action-dropdown-item"
+                                                                      onClick={() => handleDeleteComment(r.id)}
+                                                                      disabled={!canModifyComment(r)}
+                                                                      style={{
+                                                                        width: '100%',
+                                                                        textAlign: 'left',
+                                                                        padding: '8px 10px',
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        color: canModifyComment(r) ? '#ff6b6b' : 'rgba(255,107,107,0.4)',
+                                                                        cursor: canModifyComment(r) ? 'pointer' : 'not-allowed',
+                                                                      }}
+                                                                    >
+                                                                      <i className="feather-trash-2 mr--5"></i> Delete
+                                                                    </button>
+                                                                  </div>
+                                                                )}
+                                                              </div>
+                                                            )}
                                                           </div>
                                                           
                                                           {editingCommentId === r.id ? (
@@ -1350,7 +1493,17 @@ const LessonPage = () => {
                                                                 style={{ borderRadius: "5px", border: "1px solid #ddd", background: "var(--color-black-2)", color: "inherit" }}
                                                               />
                                                               <div className="d-flex gap-2 mt--5">
-                                                                <button className="rbt-btn btn-xs btn-border" onClick={handleCancelEdit}>Cancel</button>
+                                                                <button
+                                                                  className="rbt-btn btn-xs btn-border"
+                                                                  onClick={handleCancelEdit}
+                                                                  style={{
+                                                                    borderColor: 'rgba(255,255,255,0.35)',
+                                                                    color: 'rgba(255,255,255,0.85)',
+                                                                    background: 'transparent',
+                                                                  }}
+                                                                >
+                                                                  Cancel
+                                                                </button>
                                                                 <button className="rbt-btn btn-xs btn-gradient" onClick={() => handleUpdateComment(r.id)} disabled={postingComment}>Save</button>
                                                               </div>
                                                             </div>
@@ -1358,16 +1511,6 @@ const LessonPage = () => {
                                                             <p className="chat-msg-text">{r.comment || r.content}</p>
                                                           )}
                                                           
-                                                          {isOwnComment(r) && (
-                                                            <div className="chat-actions d-flex align-items-center gap-3 mt--10">
-                                                              <button className="chat-reply-btn text-warning" onClick={() => handleEditComment(r.id, r.comment || r.content)}>
-                                                                <i className="feather-edit mr--5"></i> Edit
-                                                              </button>
-                                                              <button className="chat-reply-btn text-danger" onClick={() => handleDeleteComment(r.id)}>
-                                                                <i className="feather-trash-2 mr--5"></i> Delete
-                                                              </button>
-                                                            </div>
-                                                          )}
                                                         </div>
                                                       </div>
                                                     ))}

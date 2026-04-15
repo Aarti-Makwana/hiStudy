@@ -44,7 +44,7 @@ const TestimonialFour = ({ isGradient, leftContent }) => {
                     </h2>
                   </div>
                 </div>
-                <div className="col-lg-4 col-md-4 col-12">
+                {/* <div className="col-lg-4 col-md-4 col-12">
                   <div className="load-more-btn text-start text-md-end">
                     <a
                       className="rbt-btn btn-gradient hover-icon-reverse"
@@ -61,7 +61,7 @@ const TestimonialFour = ({ isGradient, leftContent }) => {
                       </span>
                     </a>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
 

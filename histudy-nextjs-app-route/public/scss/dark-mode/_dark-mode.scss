@@ -87,6 +87,21 @@
         background: #333d51;
     }
 
+    .mw-money-back2 {
+        background: var(--color-bodyest-opacity) !important;
+        box-shadow: var(--dark-shadow-2);
+    }
+
+    .mw-money-back-h2,
+    .mw-money-back-p2,
+    .mw_our_name {
+        color: var(--color-white) !important;
+    }
+
+    .mw-money-back2 .text-muted {
+        color: rgba(255,255,255,0.7) !important;
+    }
+
     // .bg-coral-opacity {
     //     background: var(--color-primary) !important;
     //     color: var(--color-white) !important;

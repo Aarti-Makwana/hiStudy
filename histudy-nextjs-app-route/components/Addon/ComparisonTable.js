@@ -1,12 +1,14 @@
 import React from "react";
+import Link from "next/link";
 import "./comparison.css";
 
 const ComparisonTable = ({ settings }) => {
     if (!settings) return null;
 
-    const { heading, features, providers } = settings;
+    const { heading, features, providers, site } = settings;
 
-    // Mapping feature text to data keys based on API response structure
+    const logoSrc = site?.logo?.url || site?.logo || null;
+
     const keyMap = {
         "Know Your Tutor Before Joining": "know_tutor",
         "Curriculum": "curriculum",
@@ -17,8 +19,27 @@ const ComparisonTable = ({ settings }) => {
         "Refund Policy": "refund"
     };
 
+    const labelMap = {
+        "Know Your Tutor Before Joining": "Tutor Before Joining"
+    };
+
+    const normalizeKey = (text) => text?.toString().toLowerCase().replace(/[^a-z0-9]+/g, "") || "";
+
+    const getProviderValue = (provider, feature) => {
+        const data = provider.data || {};
+        const dataKey = keyMap[feature] || Object.keys(data).find((key) => normalizeKey(key) === normalizeKey(feature));
+        if (dataKey && data[dataKey] !== undefined) {
+            return data[dataKey];
+        }
+
+        const fallbackKey = Object.keys(data).find((key) => normalizeKey(feature).includes(normalizeKey(key)) || normalizeKey(key).includes(normalizeKey(feature)));
+        return fallbackKey ? data[fallbackKey] : provider.data?.[feature] ?? "—";
+    };
+
+    const getDisplayFeature = (feature) => labelMap[feature] || feature;
+
     return (
-        <div className="container my-5">
+        <div className="comparison-section container my-5">
             <div className="section-title text-center mb-3">
                 {settings?.subTitle && (
                     <span className="subtitle bg-primary-opacity">
@@ -29,10 +50,6 @@ const ComparisonTable = ({ settings }) => {
                     {heading}
                 </h2>
             </div>
-            <p className="text-center text-muted mb-5">
-                We’ve compared MilesWeb with leading web hosting providers to help you
-                make the smarter choice.
-            </p>
 
             <div className="row justify-content-center">
                 <div className="col-md-10">
@@ -44,11 +61,12 @@ const ComparisonTable = ({ settings }) => {
                                     <th></th>
                                     {providers.map((provider, index) => (
                                         <th key={index} className={provider.highlight === "1" ? "highlight-column" : ""}>
-                                            <h5 className="fw-bold">{provider.name}</h5>
-                                            {provider.highlight === "1" && (
-                                                <small className="text-muted">
-                                                    Your Hosting, Our Responsibility.
-                                                </small>
+                                            {index === 0 && logoSrc ? (
+                                                <div className="comparison-provider-logo">
+                                                    <img src={logoSrc} alt={provider.name} />
+                                                </div>
+                                            ) : (
+                                                <h5 className="fw-bold">{provider.name}</h5>
                                             )}
                                         </th>
                                     ))}
@@ -57,16 +75,15 @@ const ComparisonTable = ({ settings }) => {
 
                             <tbody>
                                 {features.map((feature, featureIndex) => {
-                                    const dataKey = keyMap[feature] || feature; // Fallback to feature name if no map
+                                    const displayFeature = getDisplayFeature(feature);
                                     return (
                                         <tr key={featureIndex}>
-                                            <td className="text-start fw-semibold">{feature}</td>
+                                            <td className="text-start">{displayFeature}</td>
                                             {providers.map((provider, providerIndex) => {
-                                                const value = provider.data[dataKey] || "—";
+                                                const value = getProviderValue(provider, feature);
                                                 const isCheck = value.includes("✅");
                                                 const isCross = value.includes("❌");
 
-                                                // Simple formatting for check/cross if needed, or just render text
                                                 return (
                                                     <td key={providerIndex} className={provider.highlight === "1" ? "highlight-column" : ""}>
                                                         {isCheck ? <span className="text-success">{value}</span> :
@@ -83,9 +100,9 @@ const ComparisonTable = ({ settings }) => {
                                     {providers.map((provider, index) => (
                                         <td key={index} className={provider.highlight === "1" ? "highlight-column" : ""}>
                                             {provider.highlight === "1" && (
-                                                <button className="btn btn-primary px-4 rounded-pill">
-                                                    Get Started
-                                                </button>
+                                                <Link href="#live-courses" className="btn btn-primary px-4 rounded-pill">
+                                                    Explore
+                                                </Link>
                                             )}
                                         </td>
                                     ))}

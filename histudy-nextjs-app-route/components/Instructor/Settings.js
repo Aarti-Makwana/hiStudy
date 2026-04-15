@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 import { UserAuthServices } from "../../services/User";
 import { getUser, setUser } from "../../utils/storage";
@@ -11,6 +12,13 @@ import { useAppContext } from "../../context/Context";
 
 const Setting = () => {
   const { userData, fetchUserProfile } = useAppContext();
+  const occupationOptions = [
+    { value: "", label: "Select Occupation" },
+    { value: "Working Professional", label: "Working Professional" },
+    { value: "1st–Final Year", label: "1st–Final Year" },
+    { value: "Pre-Final Year", label: "Pre-Final Year" },
+  ];
+
   const [form, setForm] = useState({
     first_name: "",
     middle_name: "",
@@ -28,6 +36,9 @@ const Setting = () => {
     twitter: "",
     otp: "",
   });
+  const [occupationType, setOccupationType] = useState("");
+  const [editingContact, setEditingContact] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     current_password: "",
     password: "",
@@ -39,12 +50,18 @@ const Setting = () => {
 
   useEffect(() => {
     if (userData) {
+      const occupationValue = userData.profile?.profession && !userData.university
+        ? "Working Professional"
+        : userData.university
+        ? "1st–Final Year"
+        : "";
+
       setForm({
         first_name: userData.profile?.first_name || userData.first_name || "",
         middle_name: userData.profile?.middle_name || "",
         last_name: userData.profile?.last_name || userData.last_name || "",
         profession: userData.profile?.profession || "",
-        university: userData.profile?.university || "",
+        university: userData.university || userData.profile?.university || "",
         email: userData.email || "",
         phone: userData.profile?.phone || userData.phone || "",
         bio: userData.profile?.bio || "",
@@ -56,6 +73,11 @@ const Setting = () => {
         twitter: userData.profile?.twitter || "",
         otp: "",
       });
+      setOccupationType(occupationValue);
+      setEditingContact(null);
+      setOtpSent(false);
+      setIsEmailEditable(false);
+      setIsPhoneEditable(false);
     }
   }, [userData]);
 
@@ -73,11 +95,8 @@ const Setting = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Call the updateProfileService with nested socials
       const body = {
         bio: form.bio,
-        profession: form.profession,
-        university: form.university,
         socials: {
           facebook: form.facebook,
           instagram: form.instagram,
@@ -87,15 +106,27 @@ const Setting = () => {
           twitter: form.twitter,
         },
       };
+
+      if (occupationType === "Working Professional") {
+        body.profession = form.profession;
+        body.university = "";
+      } else if (["1st–Final Year", "Pre-Final Year"].includes(occupationType)) {
+        body.profession = "";
+        body.university = form.university;
+      } else {
+        body.profession = form.profession;
+        body.university = form.university;
+      }
+
       const res = await UserAuthServices.updateProfileService(body);
       if (res && res.status === "success") {
         await fetchUserProfile();
-        alert(res.message || "Profile updated");
+        toast.success(res.message || "Profile updated");
       } else {
-        alert(res?.message || "Failed to update profile");
+        toast.error(res?.message || "Failed to update profile");
       }
     } catch (err) {
-      alert(err.message || "Update error");
+      toast.error(err.message || "Update error");
     } finally {
       setLoading(false);
     }
@@ -111,12 +142,12 @@ const Setting = () => {
         const res = await UserAuthServices.profileAvatarService(formData);
         if (res && res.status === "success") {
           await fetchUserProfile();
-          alert("Avatar updated successfully");
+          toast.success("Avatar updated successfully");
         } else {
-          alert(res?.message || "Failed to update avatar");
+          toast.error(res?.message || "Failed to update avatar");
         }
       } catch (err) {
-        alert(err.message || "Avatar update error");
+        toast.error(err.message || "Avatar update error");
       } finally {
         setLoading(false);
       }
@@ -126,32 +157,40 @@ const Setting = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.password !== passwordForm.password_confirmation) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     setLoading(true);
     try {
       const res = await UserAuthServices.profileChangePasswordService(passwordForm);
       if (res && res.status === "success") {
-        alert(res.message || "Password updated successfully");
+        toast.success(res.message || "Password updated successfully");
         setPasswordForm({
           current_password: "",
           password: "",
           password_confirmation: "",
         });
       } else {
-        alert(res?.message || "Failed to update password");
+        toast.error(res?.message || "Failed to update password");
       }
     } catch (err) {
-      alert(err.message || "Password update error");
+      toast.error(err.message || "Password update error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleContactSubmit = async () => {
+  const handleContactEdit = (field) => {
+    setEditingContact(field);
+    setOtpSent(false);
+    setForm((s) => ({ ...s, otp: "" }));
+    setIsEmailEditable(field === "email");
+    setIsPhoneEditable(field === "phone");
+  };
+
+  const handleContactVerify = async () => {
     if (!form.otp) {
-      alert("Please enter OTP");
+      toast.error("Please enter OTP");
       return;
     }
     setLoading(true);
@@ -164,33 +203,41 @@ const Setting = () => {
       const res = await UserAuthServices.profileChangeContactService(body);
       if (res && res.status === "success") {
         await fetchUserProfile();
-        alert(res.message || "Contact updated successfully");
+        toast.success(res.message || "Contact updated successfully");
         setIsEmailEditable(false);
         setIsPhoneEditable(false);
+        setEditingContact(null);
+        setOtpSent(false);
+        setForm((s) => ({ ...s, otp: "" }));
       } else {
-        alert(res?.message || "Failed to update contact");
+        toast.error(res?.message || "Failed to update contact");
       }
     } catch (err) {
-      alert(err.message || "Contact update error");
+      toast.error(err.message || "Contact update error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSendOtp = async () => {
+    if (!editingContact) {
+      toast.error("Please select Email or Number to edit first.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await UserAuthServices.resendOtp({
-        email: form.email || userData.email,
+        email: form.email || userData?.email,
         type: "change_contact",
       });
       if (res && res.status === "success") {
-        alert("OTP sent successfully");
+        setOtpSent(true);
+        toast.success("OTP sent successfully. Enter it below to verify.");
       } else {
-        alert(res?.message || "Failed to send OTP");
+        toast.error(res?.message || "Failed to send OTP");
       }
     } catch (err) {
-      alert(err.message || "Error sending OTP");
+      toast.error(err.message || "Error sending OTP");
     } finally {
       setLoading(false);
     }
@@ -270,20 +317,21 @@ const Setting = () => {
                       <Image
                         width={300}
                         height={300}
-                        src={userData?.profile?.avatar || "/images/team/avatar.jpg"}
-                        alt="Instructor"
+                        src={userData?.profile?.file?.url || userData?.profile?.avatar || "/images/team/avatar.jpg"}
+                        alt={userData?.first_name || "Instructor"}
                         style={{ objectFit: 'cover' }}
                       />
                       <div className="rbt-edit-photo-inner">
-                        <label className="rbt-edit-photo" title="Upload Photo" style={{ cursor: 'pointer' }}>
+                        <label htmlFor="avatarUpload" className="rbt-edit-photo" title="Upload Photo" style={{ cursor: 'pointer' }}>
                           <i className="feather-camera" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            style={{ display: 'none' }}
-                          />
                         </label>
+                        <input
+                          id="avatarUpload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          style={{ display: 'none' }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -323,21 +371,39 @@ const Setting = () => {
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="profession">Occupation</label>
-                    <select id="profession" value={form.profession} onChange={handleChange} className="w-100">
-                      <option value="">Select Occupation</option>
-                      <option value="Instructor">Instructor</option>
-                      <option value="Developer">Developer</option>
-                      <option value="Designer">Designer</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Other">Other</option>
+                    <label htmlFor="occupationType">Occupation</label>
+                    <select id="occupationType" value={occupationType} onChange={(e) => {
+                      const value = e.target.value;
+                      setOccupationType(value);
+                      if (value === "Working Professional") {
+                        setForm((s) => ({ ...s, university: "" }));
+                      } else {
+                        setForm((s) => ({ ...s, profession: "" }));
+                      }
+                    }} className="w-100">
+                      {occupationOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="university">University/Company</label>
-                    <input id="university" type="text" value={form.university} onChange={handleChange} />
+                    <label htmlFor="occupationField">
+                      {occupationType === "Working Professional" ? "Company" : occupationType ? "University" : "University/Company"}
+                    </label>
+                    <input
+                      id="occupationField"
+                      type="text"
+                      value={occupationType === "Working Professional" ? form.profession : form.university}
+                      onChange={(e) => {
+                        if (occupationType === "Working Professional") {
+                          setForm((s) => ({ ...s, profession: e.target.value }));
+                        } else {
+                          setForm((s) => ({ ...s, university: e.target.value }));
+                        }
+                      }}
+                    />
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
@@ -354,18 +420,17 @@ const Setting = () => {
                         autoFocus={isEmailEditable}
                       />
                       <i
-                        className={`feather-${isEmailEditable ? 'check' : 'edit'} position-absolute`}
-                        onClick={() => {
-                          if (isEmailEditable) {
-                            handleContactSubmit();
-                          } else {
-                            setIsEmailEditable(true);
-                          }
-                        }}
-                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: isEmailEditable ? '#2ecc71' : '#6b7385' }}
-                        title={isEmailEditable ? "Save" : "Edit Email"}
+                        className={`feather-${editingContact === 'email' ? 'edit' : 'edit'} position-absolute`}
+                        onClick={() => handleContactEdit('email')}
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: editingContact === 'email' ? '#6b7385' : '#6b7385' }}
+                        title={editingContact === 'email' ? "Editing Email" : "Edit Email"}
                       />
                     </div>
+                    {editingContact === 'email' && !otpSent && (
+                      <button type="button" className="rbt-btn btn-sm btn-gradient mt-3" onClick={handleSendOtp}>
+                        Send OTP
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="col-lg-6 col-md-6 col-sm-6 col-12">
@@ -382,21 +447,20 @@ const Setting = () => {
                         autoFocus={isPhoneEditable}
                       />
                       <i
-                        className={`feather-${isPhoneEditable ? 'check' : 'edit'} position-absolute`}
-                        onClick={() => {
-                          if (isPhoneEditable) {
-                            handleContactSubmit();
-                          } else {
-                            setIsPhoneEditable(true);
-                          }
-                        }}
-                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: isPhoneEditable ? '#2ecc71' : '#6b7385' }}
-                        title={isPhoneEditable ? "Save" : "Edit Number"}
+                        className={`feather-${editingContact === 'phone' ? 'edit' : 'edit'} position-absolute`}
+                        onClick={() => handleContactEdit('phone')}
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: editingContact === 'phone' ? '#6b7385' : '#6b7385' }}
+                        title={editingContact === 'phone' ? "Editing Number" : "Edit Number"}
                       />
                     </div>
+                    {editingContact === 'phone' && !otpSent && (
+                      <button type="button" className="rbt-btn btn-sm btn-gradient mt-3" onClick={handleSendOtp}>
+                        Send OTP
+                      </button>
+                    )}
                   </div>
                 </div>
-                {(isEmailEditable || isPhoneEditable) && (
+                {otpSent && editingContact && (
                   <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                     <div className="rbt-form-group">
                       <label htmlFor="otp">OTP</label>
@@ -411,11 +475,11 @@ const Setting = () => {
                         />
                         <button
                           type="button"
-                          onClick={handleSendOtp}
+                          onClick={handleContactVerify}
                           className="rbt-btn btn-sm btn-gradient position-absolute"
                           style={{ right: '5px', top: '50%', transform: 'translateY(-50%)', height: '35px', padding: '0 15px' }}
                         >
-                          Send OTP
+                          Verify OTP
                         </button>
                       </div>
                     </div>
@@ -514,20 +578,6 @@ const Setting = () => {
               >
                 <div className="col-12">
                   <div className="rbt-form-group">
-                    <label htmlFor="facebook">
-                      <i className="feather-facebook"></i> Facebook
-                    </label>
-                    <input
-                      id="facebook"
-                      type="text"
-                      value={form.facebook}
-                      onChange={handleChange}
-                      placeholder="https://facebook.com/"
-                    />
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="rbt-form-group">
                     <label htmlFor="instagram">
                       <i className="feather-instagram"></i> Instagram
                     </label>
@@ -579,20 +629,6 @@ const Setting = () => {
                       value={form.github}
                       onChange={handleChange}
                       placeholder="https://github.com/"
-                    />
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="rbt-form-group">
-                    <label htmlFor="twitter">
-                      <i className="feather-twitter"></i> Twitter
-                    </label>
-                    <input
-                      id="twitter"
-                      type="text"
-                      value={form.twitter}
-                      onChange={handleChange}
-                      placeholder="https://twitter.com/"
                     />
                   </div>
                 </div>

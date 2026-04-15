@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserOrderServices } from "@/services/User";
 import { isValidCouponFormat } from "@/validations/coupon";
 
@@ -33,6 +33,7 @@ const Checkout = () => {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
 
+  const router = useRouter();
 
   const handleApplyCoupon = async () => {
     setCouponError(null);
@@ -154,6 +155,7 @@ const Checkout = () => {
 
             if (verifyRes?.status === "success") {
               setStatus("success");
+              router.push("/student-enrolled-course");
             } else {
               setStatus("pending");
             }

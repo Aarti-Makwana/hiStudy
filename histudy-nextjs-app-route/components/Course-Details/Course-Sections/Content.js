@@ -1,6 +1,7 @@
-import Link from "next/link";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getToken } from "@/utils/storage";
+import { getLocalStorageToken } from "@/utils/common.util";
 
 import "venobox/dist/venobox.min.css";
 
@@ -16,6 +17,36 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
         ? prev.filter((id) => id !== lessonId)
         : [...prev, lessonId]
     );
+  };
+
+  const handleLessonClick = (e, list, lessonId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = getLocalStorageToken() || getToken();
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    // If lesson is unlocked, allow lesson player navigation.
+    if (list.status) {
+      router.push(
+        `/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`
+      );
+      return;
+    }
+
+    // If lesson is locked, open summary if available.
+    if (list.summary) {
+      if (!expandedLessons.includes(lessonId)) {
+        setExpandedLessons((prev) => [...prev, lessonId]);
+      }
+      return;
+    }
+
+    // Otherwise send user to checkout so they can enroll.
+    router.push(`/checkout?id=${courseSlug}`);
   };
 
   useEffect(() => {
@@ -74,59 +105,70 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                       {item.listItem.map((list, subIndex) => {
                         const lessonId = `lesson-${innerIndex}-${subIndex}`;
                         const isExpanded = expandedLessons.includes(lessonId);
+                        const hasPreview = list.status && typeof list.videoUrl === "string" && list.videoUrl.trim().length > 0;
                         return (
-                          <li key={subIndex} className={isExpanded ? "item-expanded" : ""}>
-                            <Link href={`/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`}>
-                              <div className="course-content-left-outer w-100">
-                                <div className="course-content-left">
-                                  <i className={list.icon || "feather-play-circle"}></i>
-                                  <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
-                                    <div className="text-toggle-wrap">
-                                      <span className="text">{list.text}</span>
-                                      {list.summary && (
-                                        <button
-                                          className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            toggleLessonSummary(e, lessonId);
-                                          }}
-                                        >
-                                          <i className="feather-chevron-down"></i>
-                                        </button>
-                                      )}
-                                    </div>
-                                    {list.summary && isExpanded && (
-                                      <div className="lesson-summary-content mt--5">
-                                        <p style={{ fontSize: "12px" }}>{list.summary}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="course-content-right">
-                                  {list.status && (
-                                    <span
-                                      className="preview-text popup-video"
-                                      data-vbtype="video"
-                                      href={list.videoUrl || "https://www.youtube.com/watch?v=nA1Aqp0sPQo"}
+                        <li
+                        key={subIndex}
+                        className={isExpanded ? "item-expanded" : ""}
+                      >
+                        <a
+                          href="#"
+                          className="course-content-link"
+                          onClick={(e) => handleLessonClick(e, list, lessonId)}
+                          style={{ display: "block" }}
+                        >
+                          <div className="course-content-left-outer w-100">
+                            <div className="course-content-left">
+                              <i className={list.icon || "feather-play-circle"}></i>
+                              <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
+                                <div className="text-toggle-wrap">
+                                  <span className="text">{list.text}</span>
+                                  {list.summary && (
+                                    <button
+                                      className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        toggleLessonSummary(e, lessonId);
                                       }}
                                     >
-                                      Preview
-                                    </span>
-                                  )}
-                                  <span className="min-lable">{list.time}</span>
-                                  {!list.status && (
-                                    <span className="course-lock">
-                                      <i className="feather-lock"></i>
-                                    </span>
+                                      <i className="feather-chevron-down"></i>
+                                    </button>
                                   )}
                                 </div>
+                                {list.summary && isExpanded && (
+                                  <div className="lesson-summary-content mt--5">
+                                    <p style={{ fontSize: "12px" }}>{list.summary}</p>
+                                  </div>
+                                )}
                               </div>
-                            </Link>
-                          </li>
+                            </div>
+                            <div className="course-content-right">
+                              {hasPreview && (
+                                <span
+                                  className="preview-text popup-video"
+                                  data-vbtype="video"
+                                  href={list.videoUrl}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  Preview
+                                </span>
+                              )}
+                              {(!hasPreview && list.time) && (
+                                <span className="min-lable">{list.time}</span>
+                              )}
+                              {!list.status && (
+                                <span className="course-lock">
+                                  <i className="feather-lock"></i>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </a>
+                      </li>
                         );
                       })}
                     </ul>

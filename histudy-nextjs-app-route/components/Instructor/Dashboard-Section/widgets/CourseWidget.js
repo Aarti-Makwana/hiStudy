@@ -46,17 +46,18 @@ const CourseWidget = ({
     getTotalRating();
   }, [data]);
 
-  const certificateStatus = () => {
-    if (data.progressValue === 100) return "Download Certificate";
-    if (data.progressValue > 70) return "Request Pending";
+  const getCertificateStatus = () => {
+    if (data.certificateStatus === "Granted" || data.certificateStatus === "Downloaded") return "Download Certificate";
+    if (data.certificateStatus === "Pending") return "Request Pending";
+    if (data.certificateStatus === "Rejected") return "Request Rejected";
     return "Request Certificate";
   };
 
   const handleCertificateClick = (e) => {
     e.preventDefault();
-    if (certificateStatus() === "Download Certificate") {
+    if (getCertificateStatus() === "Download Certificate") {
       setShowQRModal(true);
-    } else if (certificateStatus() === "Request Certificate") {
+    } else if (getCertificateStatus() === "Request Certificate") {
       alert("Certificate Request Sent!");
     }
   };
@@ -66,16 +67,18 @@ const CourseWidget = ({
       <div className="rbt-card variation-01 rbt-hover">
         <div className="rbt-card-img">
           <Link href={`/course-details/${data.id}`}>
-            <Image
-              width={330}
-              height={227}
-              src={data.courseThumbnail}
-              alt={data.title}
-            />
-            <div className="rbt-badge-3 bg-white">
-              <span>{`-${discountPercentage}%`}</span>
-              <span>Off</span>
-            </div>
+            {data.courseThumbnail ? (
+              <Image
+                width={330}
+                height={227}
+                src={data.courseThumbnail}
+                alt={data.title}
+              />
+            ) : (
+              <div style={{ width: "330px", height: "227px", backgroundColor: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span>No Image Available</span>
+              </div>
+            )}
           </Link>
         </div>
         <div className="rbt-card-body">
@@ -97,37 +100,30 @@ const CourseWidget = ({
                     {userRating > 0 ? (
                       <>
                         {userRating}{" "}
-                        <a
-                          href="#"
+                        <button
                           onClick={(e) => {
                             e.preventDefault();
                             setShowReviewModal(true);
                           }}
                           className="ms-2 text-primary"
-                          style={{ fontSize: "14px", textDecoration: "underline" }}
+                          style={{ fontSize: "14px", textDecoration: "underline", border: "none", background: "none", cursor: "pointer", padding: "0" }}
                         >
                           (Edit)
-                        </a>
+                        </button>
                       </>
                     ) : (
-                      <a
-                        href="#"
+                      <button
                         onClick={(e) => {
                           e.preventDefault();
                           setShowReviewModal(true);
                         }}
                         className="text-primary"
-                        style={{ fontSize: "14px", textDecoration: "underline" }}
+                        style={{ fontSize: "14px", textDecoration: "underline", border: "none", background: "none", cursor: "pointer", padding: "0" }}
                       >
                         (Write us a review)
-                      </a>
+                      </button>
                     )}
                   </span>
-                </div>
-                <div className="rbt-bookmark-btn">
-                  <Link className="rbt-round-btn" title="Bookmark" href="#">
-                    <i className="feather-bookmark" />
-                  </Link>
                 </div>
               </div>
               <h4 className="rbt-card-title">
@@ -138,11 +134,11 @@ const CourseWidget = ({
           <ul className="rbt-meta">
             <li>
               <i className="feather-video" />
-              {data.lectures} Lectures ({data.courseDuration})
+              {data.lectures || "N/A"} Lecture
             </li>
             <li>
-              <i className="feather-users" />
-              {data.enrolledStudent} Students
+              <i className="feather-clock" />
+              {data.courseDuration || "N/A"} Duration
             </li>
           </ul>
 
@@ -172,13 +168,18 @@ const CourseWidget = ({
               <div className="rbt-card-bottom">
                 <button
                   onClick={handleCertificateClick}
-                  className={`rbt-btn btn-sm w-100 text-center ${certificateStatus() === "Download Certificate"
+                  className={`rbt-btn btn-sm w-100 text-center ${getCertificateStatus() === "Download Certificate"
                     ? "btn-gradient"
                     : "bg-primary-opacity"
                     }`}
                 >
-                  {certificateStatus()}
+                  {getCertificateStatus()}
                 </button>
+                {data.certificateMessage && (
+                  <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#fff3cd", borderRadius: "4px", fontSize: "12px", color: "#856404" }}>
+                    {data.certificateMessage}
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -187,8 +188,8 @@ const CourseWidget = ({
 
           {/* Review Modal */}
           {showReviewModal && (
-            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-              <div className="modal-dialog modal-dialog-centered">
+            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }}>
                 <div className="modal-content rbt-shadow-box">
                   <div className="modal-header">
                     <h5 className="modal-title">{userRating > 0 ? "Edit Review" : "Write a Review"}</h5>
@@ -200,7 +201,7 @@ const CourseWidget = ({
                         {[1, 2, 3, 4, 5].map((star) => (
                           <i
                             key={star}
-                            className={`${star <= userRating ? "fas" : "far"} fa-star pointer`}
+                            className={`${star <= userRating ? "fas" : "far"} fa-star`}
                             onClick={() => setUserRating(star)}
                             style={{ color: "#E5BA12", cursor: "pointer", margin: "0 5px" }}
                           />
@@ -209,7 +210,7 @@ const CourseWidget = ({
                     </div>
                     <div className="rbt-form-group">
                       <label>Your Review</label>
-                      <textarea className="w-100" rows="4" placeholder="Share your experience..."></textarea>
+                      <textarea className="w-100" rows="4" placeholder="Share your experience..." style={{ border: "1px solid #ddd", padding: "8px", borderRadius: "4px" }}></textarea>
                     </div>
                   </div>
                   <div className="modal-footer">
@@ -223,8 +224,8 @@ const CourseWidget = ({
 
           {/* QR Modal */}
           {showQRModal && (
-            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-              <div className="modal-dialog modal-dialog-centered">
+            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }}>
                 <div className="modal-content rbt-shadow-box pt--30 pb--30">
                   <div className="modal-body text-center">
                     <i className="feather-help-circle text-primary mb--20" style={{ fontSize: "50px" }}></i>

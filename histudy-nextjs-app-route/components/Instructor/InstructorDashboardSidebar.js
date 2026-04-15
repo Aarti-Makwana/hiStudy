@@ -76,6 +76,7 @@ const InstructorDashboardSidebar = () => {
                         <Link
                           className={`${pathname === data.link ? "active" : ""}`}
                           href={data.link}
+                          scroll={false}
                         >
                           <i className={data.icon} />
                           <span>{data.text}</span>

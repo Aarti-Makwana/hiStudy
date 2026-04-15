@@ -94,8 +94,6 @@ const SingleCourse = ({ getParams }) => {
               isBestseller: apiData.is_bestseller || false,
               courseAward: apiData.is_certificate_enabled ? "Certificate" : "No Certificate",
               certificateNumber: apiData.certificate_number || null,
-              hasMoneyBackGuarantee: apiData.has_money_back_guarantee || false,
-              moneyBackDuration: apiData.money_back_duration || 30,
               days: apiData.days_left || 10,
               quizCount: apiData.quizzes_count || 0,
               validity: apiData.validity_unit === 'unlimited' ? 'Lifetime' : (apiData.validity || 'Unlimited'),
@@ -110,10 +108,13 @@ const SingleCourse = ({ getParams }) => {
               ],
 
               // Instructor
-              userName: apiData.instructor?.name || "Unknown Instructor",
+              userName: apiData.instructor?.display_name || apiData.instructor?.name || "Unknown Instructor",
               userImg: apiData.instructor?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
               userCategory: apiData.instructor?.short_description || "Instructor",
               instructorCompanies: apiData.instructor?.companies || [],
+              hasMoneyBackGuarantee: apiData.has_money_back_guarantee || false,
+              moneyBackDuration:
+                apiData.money_back_guarantee_period || apiData.money_back_duration || 30,
 
               // Complex structures adapted
               courseOverview: [
@@ -138,7 +139,12 @@ const SingleCourse = ({ getParams }) => {
                       contentId: content.id,
                       icon: getItemIcon(content),
                       summary: content.summary,
-                      videoUrl: content.file?.url || ""
+                      videoUrl:
+                        content.file?.url ||
+                        content.preview_url ||
+                        content.video_url ||
+                        content.url ||
+                        ""
                     })) || []
                   })) || []
                 }
@@ -147,7 +153,7 @@ const SingleCourse = ({ getParams }) => {
                 {
                   title: "Instructor",
                   body: apiData.instructor ? [{
-                    name: apiData.instructor.name,
+                    name: apiData.instructor.display_name || apiData.instructor.name,
                     desc: apiData.instructor.short_description || apiData.instructor.bio,
                     img: apiData.instructor.file?.url || "/images/client/avatar-02.png",
                     type: apiData.instructor.subtitle || "Instructor",

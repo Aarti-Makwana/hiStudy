@@ -8,6 +8,18 @@ const Setting = () => {
   const [textareaText, setTextareaText] = useState(
     "I'm the Front-End Developer for #Rainbow IT in Bangladesh, OR. I have serious passion for UI effects, animations and creating intuitive, dynamic user experiences."
   );
+  const [profileImage, setProfileImage] = useState("/images/team/avatar-2.jpg");
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfileImage(event.target?.result || "/images/team/avatar-2.jpg");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <>
@@ -79,28 +91,62 @@ const Setting = () => {
                 <div className="tutor-bg-photo bg_image bg_image--23 height-245"></div>
                 <div className="rbt-tutor-information">
                   <div className="rbt-tutor-information-left">
-                    <div className="thumbnail rbt-avatars size-lg position-relative">
+                    <div className="thumbnail rbt-avatars size-lg position-relative" style={{ position: "relative", overflow: "hidden", borderRadius: "50%", width: "120px", height: "120px" }}>
                       <Image
-                        width={300}
-                        height={300}
-                        src="/images/team/avatar-2.jpg"
+                        width={120}
+                        height={120}
+                        src={profileImage}
                         alt="Instructor"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
-                      <div className="rbt-edit-photo-inner">
-                        <button className="rbt-edit-photo" title="Upload Photo">
-                          <i className="feather-camera" />
-                        </button>
+                      <div className="rbt-edit-photo-inner" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <label 
+                          htmlFor="profileImageInput" 
+                          className="rbt-edit-photo" 
+                          title="Upload Photo"
+                          style={{ 
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "50%",
+                            backgroundColor: "#6F7DFF",
+                            color: "white",
+                            fontSize: "22px",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                            transition: "all 0.3s ease",
+                            border: "3px solid white",
+                            position: "absolute",
+                            bottom: "-10px",
+                            right: "-10px"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#5865FF"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#6F7DFF"}
+                        >
+                          <i className="feather-camera" style={{ fontSize: "20px" }} />
+                        </label>
+                        <input
+                          id="profileImageInput"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfileImageChange}
+                          style={{ display: "none" }}
+                        />
                       </div>
                     </div>
                   </div>
                   <div className="rbt-tutor-information-right">
                     <div className="tutor-btn">
-                      <Link
+                      <button
                         className="rbt-btn btn-sm btn-border color-white radius-round-10"
-                        href="#"
+                        disabled
+                        style={{ opacity: "0.5", cursor: "not-allowed" }}
+                        title="Feature coming soon"
                       >
                         Edit Cover Photo
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>

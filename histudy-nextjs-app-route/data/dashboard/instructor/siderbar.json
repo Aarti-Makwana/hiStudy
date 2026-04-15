@@ -16,18 +16,13 @@
       "icon": "feather-book-open"
     },
     {
-      "link": "/instructor-wishlist",
-      "text": "Wishlist",
-      "icon": "feather-bookmark"
-    },
-    {
       "link": "/instructor-reviews",
       "text": "Reviews",
       "icon": "feather-star"
     },
     {
       "link": "/instructor-quiz-attempts",
-      "text": "My Quiz Attempts",
+      "text": "Quiz Attempts",
       "icon": "feather-help-circle"
     },
     {
@@ -37,7 +32,7 @@
     },
     {
       "link": "/instructor-assignments",
-      "text": "Assignments",
+      "text": "Assignments/Projects",
       "icon": "feather-list"
     },
     {

@@ -40,72 +40,63 @@ const User = () => {
     }
   };
 
+  const fallbackProfile = UserData?.user?.[0] || { name: "User", img: "/images/avatar.png", userList: [] };
   const display = user
-    ? { name: user.name || `${user.first_name || ""} ${user.last_name || ""}`, img: user.profile?.file?.url }
-    : UserData?.user?.[0] || { name: "User", img: "/images/avatar.png" };
+    ? { name: user.name || `${user.first_name || ""} ${user.last_name || ""}`, img: user.profile?.file?.url || fallbackProfile.img }
+    : fallbackProfile;
+
+  const menuItems = user?.userList || fallbackProfile.userList || [];
 
   return (
-    <>
-      <div className="rbt-user-wrapper">
-        <div className="user-dropdown-wrapper">
-          <div className="rbt-user-menu-list-wrapper">
-            <div className="inner">
-              <div className="rbt-admin-profile">
-                <div className="admin-thumbnail">
-                  <Image
-                    src={display.img}
-                    width={43}
-                    height={43}
-                    alt="User Images"
-                  />
-                </div>
-                <div className="admin-info">
-                  <span className="name">{display.name}</span>
-                  <Link
-                    className="rbt-btn-link color-primary"
-                    href="/instructor-profile"
-                  >
-                    View Profile
-                  </Link>
-                </div>
+    <div className="rbt-user-wrapper">
+      <div className="user-dropdown-wrapper">
+        <div className="rbt-user-menu-list-wrapper">
+          <div className="inner">
+            <div className="rbt-admin-profile">
+              <div className="admin-thumbnail">
+                <Image
+                  src={display.img}
+                  width={43}
+                  height={43}
+                  alt="User Images"
+                />
               </div>
-              <ul className="user-list-wrapper">
-                <li>
-                  <Link href="/instructor-dashboard">
-                    <i className="feather-briefcase"></i>
-                    <span>My Courses</span>
-                  </Link>
-                </li>
-              </ul>
-              <hr className="mt--10 mb--10" />
-              <ul className="user-list-wrapper">
-                <li>
-                  <Link href="#">
-                    <i className="feather-book-open"></i>
-                    <span>Getting Started</span>
-                  </Link>
-                </li>
-              </ul>
-              <hr className="mt--10 mb--10" />
-              <ul className="user-list-wrapper">
-                <li>
-                  <Link href="/instructor-settings">
-                    <i className="feather-settings"></i>
-                    <span>Settings</span>
-                  </Link>
-                </li>
-                <li>
-                  <a href="#" onClick={handleLogout}>
-                    <i className="feather-log-out"></i>
-                    <span>{loading ? "Logging out..." : "Logout"}</span>
-                  </a>
-                </li>
-              </ul>
+              <div className="admin-info">
+                <span className="name">{display.name}</span>
+                <Link className="rbt-btn-link color-primary" href="/instructor-profile">
+                  View Profile
+                </Link>
+              </div>
             </div>
+            <ul className="user-list-wrapper">
+              {menuItems.map((item, index) => (
+                <li key={`user-menu-item-${index}`}>
+                  <Link href={item.link || "#"} className="d-flex align-items-center">
+                    <i className={item.icon || "feather-chevron-right"}></i>
+                    <span>{item.text}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <hr className="mt--10 mb--10" />
+            <ul className="user-list-wrapper">
+              <li>
+                <Link href="/instructor-settings">
+                  <i className="feather-settings"></i>
+                  <span>Settings</span>
+                </Link>
+              </li>
+              <li>
+                <a href="#" onClick={handleLogout}>
+                  <i className="feather-log-out"></i>
+                  <span>{loading ? "Logging out..." : "Logout"}</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

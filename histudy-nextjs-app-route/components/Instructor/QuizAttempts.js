@@ -2,62 +2,49 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Select, { components } from "react-select";
+import Select from "react-select";
 
 import { useAppContext } from "../../context/Context";
 
-const ValueContainer = ({ children, ...props }) => {
-  const { getValue, hasValue } = props;
-  const nbValues = getValue().length;
-  if (!hasValue) {
-    return (
-      <components.ValueContainer {...props}>
-        {children}
-      </components.ValueContainer>
-    );
-  }
-  return (
-    <components.ValueContainer {...props}>
-      {`${nbValues} items selected`}
-    </components.ValueContainer>
-  );
-};
-
-const MultiValue = (props) => {
-  return "3 Selected";
-};
-
 const QuizAttempts = () => {
   const { userData, loadingUser } = useAppContext();
-  const customComponents = { ValueContainer, MultiValue };
-  const [course, setCourses] = useState({ value: "", label: "" });
-  const [sortBy, setSortBy] = useState({ value: "Default", label: "Default" });
-  const [sortByOffer, setSortByOffer] = useState({
-    value: "Free",
-    label: "Free",
-  });
+  const [selectedCourse, setSelectedCourse] = useState({ value: "", label: "All Courses" });
 
   if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
 
-  const courses = (userData?.active_enrollments || []).map(en => ({
-    value: en.course?.id || en.course_id,
-    label: en.course?.title || "Unknown Course"
-  }));
-
-  const sortByOptions = [
-    { value: "Default", label: "Default" },
-    { value: "Latest", label: "Latest" },
-    { value: "Popularity", label: "Popularity" },
-    { value: "Trending", label: "Trending" },
-    { value: "Price: low to high", label: "Price: low to high" },
-    { value: "Price: high to low", label: "Price: high to low" },
+  const courses = [
+    { value: "", label: "All Courses" },
+    ...(userData?.active_enrollments || []).map((en) => ({
+      value: en.course?.id || en.course_id,
+      label: en.course?.title || "Unknown Course",
+    })),
   ];
 
-  const sortByOffers = [
-    { value: "Free", label: "Free" },
-    { value: "Paid", label: "Paid" },
-    { value: "Premium", label: "Premium" },
-  ];
+  const filteredAttempts = (userData?.quiz_attempts || []).filter((attempt) => {
+    if (!selectedCourse?.value) return true;
+    return (
+      String(attempt.course_id || attempt.course?.id || attempt.quiz?.course_id || attempt.quiz?.course?.id || "") ===
+      String(selectedCourse.value)
+    );
+  });
+
+  const getAttemptResult = (attempt) => {
+    if (!attempt) return "N/A";
+    if (attempt.result) return String(attempt.result);
+    if (attempt.status) return String(attempt.status);
+    if (attempt.score_percentage !== undefined && attempt.score_percentage !== null) {
+      return attempt.score_percentage >= 50 ? "Pass" : "Fail";
+    }
+    return "N/A";
+  };
+
+  const getResultBadgeClass = (result) => {
+    const normalized = String(result || "").toLowerCase();
+    if (normalized.includes("pass") || normalized.includes("success") || normalized.includes("completed")) {
+      return "rbt-badge-5 bg-color-success-opacity color-success";
+    }
+    return "rbt-badge-5 bg-color-danger-opacity color-danger";
+  };
 
   return (
     <>
@@ -73,41 +60,14 @@ const QuizAttempts = () => {
                 <div className="filter-select rbt-modern-select">
                   <span className="select-label d-block">Courses</span>
                   <Select
-                    instanceId="sortByAuthor"
+                    instanceId="courseSelect"
                     className="react-select"
                     classNamePrefix="react-select"
-                    defaultValue={course}
-                    onChange={setCourses}
+                    value={selectedCourse}
+                    onChange={setSelectedCourse}
                     options={courses}
                     closeMenuOnSelect={true}
-                    isMulti
-                    components={customComponents}
-                  />
-                </div>
-              </div>
-              <div className="col-lg-3">
-                <div className="filter-select rbt-modern-select">
-                  <span className="select-label d-block">Short By</span>
-                  <Select
-                    instanceId="sortBySelect"
-                    className="react-select"
-                    classNamePrefix="react-select"
-                    defaultValue={sortBy}
-                    onChange={setSortBy}
-                    options={sortByOptions}
-                  />
-                </div>
-              </div>
-              <div className="col-lg-3">
-                <div className="filter-select rbt-modern-select">
-                  <span className="select-label d-block">Short By Offer</span>
-                  <Select
-                    instanceId="sortBySelect"
-                    className="react-select"
-                    classNamePrefix="react-select"
-                    defaultValue={sortByOffer}
-                    onChange={setSortByOffer}
-                    options={sortByOffers}
+                    isMulti={false}
                   />
                 </div>
               </div>
@@ -122,77 +82,49 @@ const QuizAttempts = () => {
                 <tr>
                   <th>Quiz Name</th>
                   <th>Score %</th>
+                  <th>Result</th>
                   <th>Attempt</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {(userData?.quiz_attempts || []).length > 0 ? (
-                  userData.quiz_attempts.map((attempt, index) => (
-                    <tr key={index}>
-                      <th>
-                        <span className="h6 mb--5">{attempt.quiz?.title || "Quiz Name"}</span>
-                        <p className="b3">Date: {attempt.created_at || "N/A"}</p>
-                      </th>
-                      <td>
-                        <p className="b3">{attempt.score_percentage || 0}%</p>
-                      </td>
-                      <td>
-                        <p className="b3">{attempt.attempt_number || 1}</p>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group justify-content-end">
-                          <Link
-                            className="rbt-btn btn-sm bg-primary-opacity radius-round"
-                            href={`/course-quiz/${attempt.quiz?.id || "#"}`}
-                          >
-                            Reattempt
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                {filteredAttempts.length > 0 ? (
+                  filteredAttempts.map((attempt, index) => {
+                    const resultText = getAttemptResult(attempt);
+                    return (
+                      <tr key={index}>
+                        <th>
+                          <span className="h6 mb--5">{attempt.quiz?.title || "Quiz Name"}</span>
+                          <p className="b3">Date: {attempt.created_at || "N/A"}</p>
+                        </th>
+                        <td>
+                          <p className="b3">{attempt.score_percentage ?? 0}%</p>
+                        </td>
+                        <td>
+                          <span className={getResultBadgeClass(resultText)}>{resultText}</span>
+                        </td>
+                        <td>
+                          <p className="b3">{attempt.attempt_number || 1}</p>
+                        </td>
+                        <td>
+                          <div className="rbt-button-group justify-content-end">
+                            <Link
+                              className="rbt-btn btn-sm bg-primary-opacity radius-round"
+                              href={`/course-quiz/${attempt.quiz?.id || "#"}`}
+                            >
+                              Attempt
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
-                  <>
-                    <tr>
-                      <th>
-                        <span className="h6 mb--5">User Interface Mock Quiz</span>
-                        <p className="b3">Date: December 26, 2024</p>
-                      </th>
-                      <td>
-                        <p className="b3">85%</p>
-                      </td>
-                      <td>
-                        <p className="b3">1</p>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group justify-content-end">
-                          <Link className="rbt-btn btn-sm bg-primary-opacity radius-round" href="#">
-                            Reattempt
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>
-                        <span className="h6 mb--5">Advanced React Quiz</span>
-                        <p className="b3">Date: January 10, 2025</p>
-                      </th>
-                      <td>
-                        <p className="b3">40%</p>
-                      </td>
-                      <td>
-                        <p className="b3">2</p>
-                      </td>
-                      <td>
-                        <div className="rbt-button-group justify-content-end">
-                          <Link className="rbt-btn btn-sm bg-primary-opacity radius-round" href="#">
-                            Reattempt
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  </>
+                  <tr>
+                    <td colSpan={5} className="text-center py-5">
+                      <p className="b3">No quiz attempts found for the selected course.</p>
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>

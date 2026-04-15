@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SidebarData from "../../data/dashboard/student/siderbar.json";
 
@@ -19,15 +20,14 @@ const StudentDashboardSidebar = () => {
                   {SidebarData &&
                     SidebarData.siderbar.slice(0, 7).map((data, index) => (
                       <li className="nav-item" key={index} role="presentation">
-                        <a
-                          className={`${
-                            pathname === data.link ? "active" : ""
-                          }`}
+                        <Link
+                          className={`${pathname === data.link ? "active" : ""}`}
                           href={data.link}
+                          scroll={false}
                         >
                           <i className={data.icon} />
                           <span>{data.text}</span>
-                        </a>
+                        </Link>
                       </li>
                     ))}
                 </ul>
@@ -42,15 +42,14 @@ const StudentDashboardSidebar = () => {
                   {SidebarData &&
                     SidebarData.siderbar.slice(7, 10).map((data, index) => (
                       <li key={index}>
-                        <a
+                        <Link
                           href={data.link}
-                          className={`${
-                            pathname === data.link ? "active" : ""
-                          }`}
+                          className={`${pathname === data.link ? "active" : ""}`}
+                          scroll={false}
                         >
                           <i className={data.icon} />
                           <span>{data.text}</span>
-                        </a>
+                        </Link>
                       </li>
                     ))}
                 </ul>
