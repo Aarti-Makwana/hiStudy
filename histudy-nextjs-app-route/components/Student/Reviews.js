@@ -199,7 +199,7 @@ const Reviews = () => {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show"></div>
+          <div className="modal-backdrop fade show" onClick={closeEditModal}></div>
         </div>
       )}
     </>

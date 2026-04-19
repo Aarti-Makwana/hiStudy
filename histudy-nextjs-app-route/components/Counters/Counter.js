@@ -8,15 +8,20 @@ import CounterData from "../../data/elements/counter.json";
 import CounterWrap from "./CounterWrap";
 
 const Counter = ({ isDesc, head, settings }) => {
-  const dataToRender = settings?.items
+  const dataToRender = Array.isArray(settings?.items)
     ? [{
-      body: settings.items.map(item => ({
-        num: parseFloat(item.value.replace(/[^0-9.]/g, '')) || 0,
-        text: item.label,
-        img: item.icon,
-        value: item.value,
-        top: false
-      }))
+      body: settings.items
+        .filter((item) => item != null)
+        .map((item) => {
+          const valueString = item?.value != null ? String(item.value) : "";
+          return {
+            num: parseFloat(valueString.replace(/[^0-9.]/g, "")) || 0,
+            text: item?.label ?? "",
+            img: item?.icon,
+            value: valueString,
+            top: false,
+          };
+        })
     }]
     : CounterData.counterOne;
 

@@ -25,9 +25,13 @@ const CourseBreadcrumb = ({ getMatchCourse }) => {
           <div className="d-flex align-items-center mb--20 flex-wrap rbt-course-details-feature">
             <div className="feature-sin best-seller-badge">
               {getMatchCourse.isBestseller ? (
-                <span className="rbt-badge-2 bestseller">
-                  <i className="feather-zap" style={{ marginRight: '5px' }}></i>
-                  Bestseller
+                // <span className="rbt-badge-2 bestseller">
+                //   <i className="feather-zap" style={{ marginRight: '5px' }}></i>
+                //   Bestseller
+                // </span>
+
+                <span class="rbt-badge-2">
+                  <span class="image"><img src="/images/icons/card-icon-1.png" alt="Best Seller Icon" /></span> Bestseller
                 </span>
               ) : (
                 <span className="rbt-badge-2">

@@ -63,6 +63,18 @@ export const removeLocalStorageToken = (navigate) => {
   }
 };
 
+export const clearAuthAndRedirect = (redirectUrl = "/login") => {
+  try {
+    removeLocalStorageToken();
+  } catch (error) {
+    // ignore cleanup issues
+  }
+
+  if (typeof window !== "undefined") {
+    window.location.href = redirectUrl;
+  }
+};
+
 /**
  * Retrieves the token from the session storage and decrypts it.
  * @returns {string|boolean} - The decrypted token or false if not found.

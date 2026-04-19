@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import { showError, showSuccess } from "../../../../utils";
+import { UserReviewServices } from "../../../../services/User";
 
 const CourseWidget = ({
   data,
@@ -14,9 +17,12 @@ const CourseWidget = ({
   isEdit,
 }) => {
   const [userRating, setUserRating] = useState(data.rating.average || 0);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState("");
+  const [mounted, setMounted] = useState(false);
   const [totalReviews, setTotalReviews] = useState("");
   const [rating, setRating] = useState("");
 
@@ -45,6 +51,157 @@ const CourseWidget = ({
     getTotalReviews();
     getTotalRating();
   }, [data]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    document.body.style.overflow = showReviewModal ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showReviewModal, mounted]);
+
+  const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    setReviewText("");
+  };
+
+  const handleReviewModalBackdropClick = (event) => {
+    if (event.target.id === "course-review-modal-overlay") {
+      handleCloseReviewModal();
+    }
+  };
+
+  const handleSubmitReview = async (event) => {
+    event.preventDefault();
+    if (submittingReview) return;
+
+    if (!reviewText.trim()) {
+      showError("Please write your review before submitting.");
+      return;
+    }
+
+    if (!userRating || userRating < 1) {
+      showError("Please select a rating.");
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const res = await UserReviewServices.giveReviewToCourse({
+        course_id: data.id,
+        review: reviewText,
+        rating: userRating,
+      });
+
+      if (res?.success) {
+        showSuccess("Review submitted successfully.");
+        handleCloseReviewModal();
+      } else {
+        showError(res?.message || "Unable to submit review.");
+      }
+    } catch (error) {
+      console.error("Review submit error", error);
+      toast.error("Unable to submit your review at this time.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const renderReviewModal = () => (
+    <div
+      id="course-review-modal-overlay"
+      className="modal fade show d-block"
+      style={{
+        backgroundColor: "rgba(0,0,0,0.5)",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={handleReviewModalBackdropClick}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered"
+        style={{ maxWidth: "500px" }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-content rbt-shadow-box">
+          <div className="modal-header">
+            <h5 className="modal-title">
+              {userRating > 0 ? "Edit Review" : "Write a Review"}
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={handleCloseReviewModal}
+            ></button>
+          </div>
+          <form onSubmit={handleSubmitReview}>
+            <div className="modal-body">
+              <div className="text-center mb-4">
+                <div className="rating" style={{ fontSize: "24px" }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <i
+                      key={star}
+                      className={`${star <= userRating ? "fas" : "far"} fa-star`}
+                      onClick={() => setUserRating(star)}
+                      style={{
+                        color: "#E5BA12",
+                        cursor: "pointer",
+                        margin: "0 5px",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="rbt-form-group">
+                <label>Your Review</label>
+                <textarea
+                  className="w-100"
+                  rows="4"
+                  placeholder="Share your experience..."
+                  style={{ border: "1px solid #ddd", padding: "8px", borderRadius: "4px" }}
+                  value={reviewText}
+                  onChange={(event) => setReviewText(event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="rbt-btn btn-sm radius-round-10 btn-border"
+                onClick={handleCloseReviewModal}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rbt-btn btn-sm radius-round-10 btn-gradient"
+                disabled={submittingReview}
+              >
+                {submittingReview ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPortal = () => {
+    if (!mounted) return null;
+    return createPortal(renderReviewModal(), document.body);
+  };
 
   const getCertificateStatus = () => {
     if (data.certificateStatus === "Granted" || data.certificateStatus === "Downloaded") return "Download Certificate";
@@ -103,6 +260,7 @@ const CourseWidget = ({
                         <button
                           onClick={(e) => {
                             e.preventDefault();
+                            setReviewText("");
                             setShowReviewModal(true);
                           }}
                           className="ms-2 text-primary"
@@ -115,6 +273,7 @@ const CourseWidget = ({
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          setReviewText("");
                           setShowReviewModal(true);
                         }}
                         className="text-primary"
@@ -187,45 +346,12 @@ const CourseWidget = ({
           )}
 
           {/* Review Modal */}
-          {showReviewModal && (
-            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }}>
-                <div className="modal-content rbt-shadow-box">
-                  <div className="modal-header">
-                    <h5 className="modal-title">{userRating > 0 ? "Edit Review" : "Write a Review"}</h5>
-                    <button type="button" className="btn-close" onClick={() => setShowReviewModal(false)}></button>
-                  </div>
-                  <div className="modal-body">
-                    <div className="text-center mb-4">
-                      <div className="rating" style={{ fontSize: "24px" }}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <i
-                            key={star}
-                            className={`${star <= userRating ? "fas" : "far"} fa-star`}
-                            onClick={() => setUserRating(star)}
-                            style={{ color: "#E5BA12", cursor: "pointer", margin: "0 5px" }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rbt-form-group">
-                      <label>Your Review</label>
-                      <textarea className="w-100" rows="4" placeholder="Share your experience..." style={{ border: "1px solid #ddd", padding: "8px", borderRadius: "4px" }}></textarea>
-                    </div>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="rbt-btn btn-sm radius-round-10 btn-border" onClick={() => setShowReviewModal(false)}>Cancel</button>
-                    <button className="rbt-btn btn-sm radius-round-10 btn-gradient" onClick={() => setShowReviewModal(false)}>Submit</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {showReviewModal && renderPortal()}
 
           {/* QR Modal */}
           {showQRModal && (
-            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }}>
+            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowQRModal(false)}>
+              <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }} onClick={(e) => e.stopPropagation()}>
                 <div className="modal-content rbt-shadow-box pt--30 pb--30">
                   <div className="modal-body text-center">
                     <i className="feather-help-circle text-primary mb--20" style={{ fontSize: "50px" }}></i>

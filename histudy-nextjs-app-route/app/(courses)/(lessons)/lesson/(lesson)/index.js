@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import LessonSidebar from "@/components/Lesson/LessonSidebar";
 import LessonPagination from "@/components/Lesson/LessonPagination";
@@ -11,6 +11,8 @@ import Loader from "@/components/Common/Loader";
 import QuizHead from "@/components/Lesson/Quiz/QuizHead";
 import QuizPlayer from "@/components/Lesson/QuizPlayer";
 import toast from "react-hot-toast";
+import { getToken } from "@/utils/storage";
+import { getLocalStorageToken } from "@/utils/common.util";
 
 /** Check if a URL is a playable video (YouTube / Vimeo / raw file) */
 const isVideoUrl = (url) =>
@@ -50,12 +52,16 @@ const loadYouTubeApi = () => {
 
 const LessonPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const course_slug = searchParams.get("course_slug");
   const topic_id = searchParams.get("topic_id");
   const content_id = searchParams.get("content_id");
 
+  const token = getLocalStorageToken() || getToken();
   const [lessonContent, setLessonContent] = useState(null);
   const [courseData, setCourseData] = useState(null);
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [canAccessLesson, setCanAccessLesson] = useState(false);
   const [loading, setLoading] = useState(false);
   const [prevLesson, setPrevLesson] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
@@ -256,10 +262,46 @@ const LessonPage = () => {
         }
       } catch (err) {
         console.error("[LessonPage] Error fetching enrollment_id:", err);
+      } finally {
+        setProfileChecked(true);
       }
     };
     fetchEnrollmentId();
   }, [courseData?.id]);
+
+  useEffect(() => {
+    if (!content_id) return;
+
+    const loginRedirect = `/login?redirect=${encodeURIComponent(
+      `/lesson?course_slug=${course_slug}&topic_id=${topic_id || ""}&content_id=${content_id}`
+    )}`;
+
+    const lockedFromCourseData = courseData?.topics?.some((topic) =>
+      topic.course_contents?.some(
+        (content) => String(content.id) === String(content_id) && content?.is_lock === true
+      )
+    );
+
+    const isLessonLocked = lessonContent
+      ? lessonContent.is_lock === true || lessonContent.locked === true || lessonContent.status === false
+      : lockedFromCourseData;
+
+    if (!token) {
+      toast.error("Please login first to access course lessons.");
+      router.push(loginRedirect);
+      return;
+    }
+
+    if (isLessonLocked && !enrollmentId && profileChecked) {
+      toast.error("You need to enroll in this course to access locked lessons.");
+      router.push(`/course-details/${course_slug}`);
+      return;
+    }
+
+    if (lessonContent && isLessonLocked !== true) {
+      setCanAccessLesson(true);
+    }
+  }, [content_id, courseData, course_slug, enrollmentId, lessonContent, profileChecked, router, token, topic_id]);
 
   /* ─── Sync current video progress into lessonProgressMap (real-time) ── */
   useEffect(() => {
@@ -1106,6 +1148,10 @@ const LessonPage = () => {
   };
 
   const coursePct = calculateOverallProgress();
+
+  if (!courseData || (!canAccessLesson && profileChecked)) {
+    return <Loader />;
+  }
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (

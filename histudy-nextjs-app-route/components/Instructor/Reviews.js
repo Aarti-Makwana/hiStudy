@@ -207,8 +207,8 @@ const Reviews = () => {
 
       {/* Edit Review Modal */}
       {showEditModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
-          <div className="modal-dialog modal-dialog-centered">
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999 }} onClick={() => setShowEditModal(false)}>
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
             <div className="modal-content rbt-shadow-box">
               <div className="modal-header border-0 mt--20">
                 <h5 className="modal-title">Edit Review</h5>

@@ -1,9 +1,57 @@
 import axios from "axios";
 import momentTimezone from "moment-timezone";
 import config from "../config";
-import { getLocalStorageToken, logger } from "../utils";
+import { getLocalStorageToken, logger, clearAuthAndRedirect } from "../utils";
 import { getToken } from "../utils/storage";
-import { toast } from "react-toastify";
+import { showError } from "../utils";
+
+const buildToastOptions = (message) => {
+  return {
+    id: `api-error-${message}`,
+    duration: 4000,
+    position: "top-right",
+  };
+};
+
+const getErrorMessage = (errorRes, error) => {
+  if (!errorRes) {
+    return "Network error. Please check your connection.";
+  }
+
+  const statusCode = errorRes?.data?.statusCode || errorRes?.status;
+  const backendMessage = errorRes?.data?.message;
+
+  if (statusCode === 400) {
+    return backendMessage || "Invalid request. Please try again.";
+  }
+  if (statusCode === 401) {
+    return "Session expired. Please login again.";
+  }
+  if (statusCode === 403) {
+    return backendMessage || "You do not have permission to access this.";
+  }
+  if (statusCode === 404) {
+    return "Requested resource not found.";
+  }
+  if (statusCode === 409) {
+    return "This action has already been completed.";
+  }
+  if (statusCode === 422) {
+    if (backendMessage) return backendMessage;
+    if (errorRes?.data?.errors) {
+      const errors = errorRes.data.errors;
+      if (typeof errors === "string") return errors;
+      if (Array.isArray(errors) && errors.length) return errors[0];
+      if (typeof errors === "object") return Object.values(errors)[0]?.[0] || JSON.stringify(errors);
+    }
+    return backendMessage || "Validation failed. Please check your input.";
+  }
+  if (statusCode >= 500) {
+    return "Something went wrong on server. Please try again later.";
+  }
+
+  return backendMessage || error?.message || "An error occurred. Please try again.";
+};
 
 const APIrequest = async ({
   method = "GET",
@@ -13,53 +61,47 @@ const APIrequest = async ({
   bodyData,
   headers: extraHeaders,
 }) => {
-  // Prefer encrypted token stored by utils.common (NAME_KEY:token). Fall back to plain
-  // `token` used by `utils/storage` (setToken/getToken) so existing OTP/login
-  // flow works without breaking other parts of the app.
   const apiToken = getLocalStorageToken() || getToken();
 
-  // Log resolved config values to help debug why requests target localhost
   logger("Resolved config.API_BASE_URL", config.API_BASE_URL);
-  logger("process.env.NEXT_PUBLIC_API_BASE_URL", typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_API_BASE_URL : undefined);
+  logger(
+    "process.env.NEXT_PUBLIC_API_BASE_URL",
+    typeof process !== "undefined" ? process.env?.NEXT_PUBLIC_API_BASE_URL : undefined
+  );
+
   try {
     const axiosConfig = {
       method: method || "GET",
-      // Prefer explicit call `baseURL`, then configured API_BASE_URL, then runtime NEXT_PUBLIC env.
-      baseURL: baseURL || config.API_BASE_URL || (typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_API_BASE_URL : undefined),
+      baseURL:
+        baseURL || config.API_BASE_URL || (typeof process !== "undefined" ? process.env?.NEXT_PUBLIC_API_BASE_URL : undefined),
       headers: {
         "content-type": "application/json",
         "X-Frame-Options": "sameorigin",
-        "timezone": momentTimezone.tz.guess(true),
-        // language,
+        timezone: momentTimezone.tz.guess(true),
       },
     };
+
     if (url) {
-      // Keep endpoints relative (e.g. "/api/user/register"); axios will combine with baseURL.
       axiosConfig.url = url;
     }
 
-    // Set authorization header with API token if available.
     if (apiToken) {
       axiosConfig.headers = {
         ...axiosConfig.headers,
-        "Authorization": `Bearer ${apiToken}`,
+        Authorization: `Bearer ${apiToken}`,
       };
     }
 
-    // Merge any extra headers passed by the caller (e.g., X-Id, X-Action)
-    if (extraHeaders && typeof extraHeaders === 'object') {
+    if (extraHeaders && typeof extraHeaders === "object") {
       axiosConfig.headers = {
         ...axiosConfig.headers,
         ...extraHeaders,
       };
     }
 
-    // Set request body data if provided.
     if (bodyData) {
-      // If caller passed a FormData instance (for multipart/form-data), send it directly
       if (typeof FormData !== "undefined" && bodyData instanceof FormData) {
         axiosConfig.data = bodyData;
-        // Remove explicit content-type so the browser/axios can set the multipart boundary
         if (axiosConfig.headers) delete axiosConfig.headers["content-type"];
       } else {
         const bodyPayload = {};
@@ -95,67 +137,31 @@ const APIrequest = async ({
     }
 
     const res = await axios(axiosConfig);
-
     return res.data;
   } catch (error) {
-    // Handle different error scenarios.
-
-
     if (axios.isCancel(error)) {
       logger("API canceled", error);
       throw new Error(error);
     }
 
-    // Normalise the response object for easier handling
     const errorRes = error.response;
-    logger("Error in the api request", errorRes);
+    logger("Error in the api request", errorRes || error);
 
-    // If server returned an HTML page (Next.js error page), try to extract readable JSON
-    if (errorRes && typeof errorRes.data === "string") {
-      const html = errorRes.data.trim();
-      if (html.startsWith("<!DOCTYPE html") || html.startsWith("<html")) {
-        try {
-          const match = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-          if (match && match[1]) {
-            const nextData = JSON.parse(match[1]);
-            const nextErrMsg = nextData?.err?.message || nextData?.props?.pageProps?.message || nextData?.props?.pageProps?.err?.message;
-            if (nextErrMsg) {
-              toast.error(nextErrMsg);
-              logger("Next.js error extracted", nextErrMsg);
-            } else {
-              toast.error("Server returned an HTML error page (500).");
-            }
-          } else {
-            toast.error("Server returned an HTML error page (500).");
-          }
-        } catch (parseErr) {
-          logger("Failed to parse HTML error response", parseErr);
-          toast.error("Server error (500).");
-        }
-        return { status: 'error', message: "Server returned an HTML error page." };
-      }
-    }
+    const message = getErrorMessage(errorRes, error);
+    showError(message, buildToastOptions(message));
 
-    // Handle other HTTP status codes and provide appropriate notifications.
     const statusCode = errorRes?.data?.statusCode || errorRes?.status;
-    const message = errorRes?.data?.message;
-
-    // 401 Unauthorized handling
     if (statusCode === 401) {
-      // (optional) handle token refresh / logout here
+      clearAuthAndRedirect();
     }
 
-    // 403 Forbidden: treat as hard auth failure per request — clear token and redirect to module login
-    if (statusCode === 403) {
-      return { status: 'error', message: message || "Access denied (403)." };
-    }
-
-    // Other errors: show a message and return the error data payload so the caller can handle it
-    if (message) {
-      toast.error(message);
-    }
-
-    return errorRes?.data || { status: 'error', message: message || 'An error occurred' };
+    return {
+      success: false,
+      status: "error",
+      statusCode,
+      message,
+      ...(errorRes?.data || {}),
+    };
   }
 };
 

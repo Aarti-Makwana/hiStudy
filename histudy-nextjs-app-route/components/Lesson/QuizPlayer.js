@@ -322,8 +322,8 @@ const QuizPlayer = ({ quizzes = [], enrollmentId, contentId, latestAttempt, rema
         <>
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="qp-confirm-modal-backdrop">
-                    <div className="qp-confirm-modal">
+                <div className="qp-confirm-modal-backdrop" onClick={() => setShowConfirmModal(false)}>
+                    <div className="qp-confirm-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="qp-confirm-icon">
                             <i className="feather-alert-triangle"></i>
                         </div>

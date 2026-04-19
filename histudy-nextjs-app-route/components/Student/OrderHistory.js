@@ -136,8 +136,9 @@ const OrderHistory = () => {
             alignItems: "center",
             justifyContent: "center",
           }}
+          onClick={closeRefundModal}
         >
-          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "520px" }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "520px" }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-content rbt-shadow-box">
               <div className="modal-header border-0">
                 <h5 className="modal-title">Refund Request</h5>

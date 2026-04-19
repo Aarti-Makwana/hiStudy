@@ -22,4 +22,23 @@ export const UserReviewServices = {
       throw error;
     }
   },
+
+  /**
+   * Function for submitting a review for a course.
+   * @param {Object} bodyData - Review payload including course_id, review, and rating.
+   * @returns {Promise<Object>} - A promise that resolves to the response from the submit review API.
+   */
+  giveReviewToCourse: async (bodyData = {}) => {
+    try {
+      const payload = {
+        ...Review.giveReviewToCourse,
+        bodyData,
+      };
+      const res = await APIrequest(payload);
+      return res;
+    } catch (error) {
+      logger(error);
+      throw error;
+    }
+  },
 };

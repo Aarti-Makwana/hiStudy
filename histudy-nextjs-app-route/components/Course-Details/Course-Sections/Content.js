@@ -2,12 +2,31 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/utils/storage";
 import { getLocalStorageToken } from "@/utils/common.util";
+import { useAppContext } from "@/context/Context";
+import toast from "react-hot-toast";
 
 import "venobox/dist/venobox.min.css";
 
 const Content = ({ checkMatchCourses, courseSlug }) => {
   const router = useRouter();
+  const { userData, fetchUserProfile } = useAppContext();
   const [expandedLessons, setExpandedLessons] = React.useState([]);
+
+  const token = getLocalStorageToken() || getToken();
+  const isLoggedIn = Boolean(token);
+  const isEnrolled = Boolean(
+    userData?.active_enrollments?.some((enrollment) =>
+      String(enrollment.course_id || enrollment.course?.id || enrollment.course?.course_id || enrollment.course?.course_id || enrollment.course?.slug) ===
+        String(checkMatchCourses?.id) ||
+      String(enrollment.course?.slug || enrollment.course_slug) === String(courseSlug)
+    )
+  );
+
+  useEffect(() => {
+    if (isLoggedIn && userData === null) {
+      fetchUserProfile();
+    }
+  }, [isLoggedIn, userData, fetchUserProfile]);
 
   const toggleLessonSummary = (e, lessonId) => {
     e.preventDefault();
@@ -24,20 +43,21 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
     e.stopPropagation();
 
     const token = getLocalStorageToken() || getToken();
-    if (!token) {
+    const hasAccess = list.status || (isLoggedIn && isEnrolled);
+
+    if (!token && !list.status) {
+      toast.error("Please login first to access course lessons.");
       router.push("/login");
       return;
     }
 
-    // If lesson is unlocked, allow lesson player navigation.
-    if (list.status) {
+    if (hasAccess) {
       router.push(
         `/lesson?course_slug=${courseSlug}&topic_id=${list.topicId}&content_id=${list.contentId}`
       );
       return;
     }
 
-    // If lesson is locked, open summary if available.
     if (list.summary) {
       if (!expandedLessons.includes(lessonId)) {
         setExpandedLessons((prev) => [...prev, lessonId]);
@@ -45,7 +65,6 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
       return;
     }
 
-    // Otherwise send user to checkout so they can enroll.
     router.push(`/checkout?id=${courseSlug}`);
   };
 
@@ -113,7 +132,9 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                       >
                         <a
                           href="#"
-                          className="course-content-link"
+                          className={`course-content-link ${!list.status && !isEnrolled ? "disabled-lesson" : ""}`}
+                          title={!isLoggedIn && !list.status ? "Login required" : !list.status && !isEnrolled ? "Enroll to unlock lessons" : ""}
+                          aria-disabled={!list.status && !isEnrolled}
                           onClick={(e) => handleLessonClick(e, list, lessonId)}
                           style={{ display: "block" }}
                         >
