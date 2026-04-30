@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { InstructorServices } from "../../services/User";
-import Loader from "../Common/Loader";
+import MirrorLoader from "../Common/MirrorLoader";
 import InstructorCardCore from "../Instructors/InstructorCardCore";
 
 const TeamTwo = () => {
   const [instructors, setInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchInstructors = async () => {
@@ -24,6 +25,7 @@ const TeamTwo = () => {
         }
       } catch (error) {
         console.error("Error fetching instructors:", error);
+        setError("Unable to load mentors. Please refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -31,11 +33,31 @@ const TeamTwo = () => {
     fetchInstructors();
   }, []);
 
+  if (error) {
+    return (
+      <div className="row g-5">
+        <div className="col-12">
+          <div className="alert alert-danger text-center">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="row g-5">
-        <div className="col-12 text-center">
-          <Loader />
+        <div className="col-lg-7">
+          <MirrorLoader widthClass="w-100" heightClass="h-450" radiusClass="radius-15" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-450" radiusClass="radius-15" />
+        </div>
+        <div className="col-lg-5">
+          {[...Array(4)].map((_, index) => (
+            <div className="row g-4 mb--30" key={`mentor-skel-${index}`}>
+              <div className="col-12">
+                <MirrorLoader widthClass="w-100" heightClass="h-220" radiusClass="radius-15" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );

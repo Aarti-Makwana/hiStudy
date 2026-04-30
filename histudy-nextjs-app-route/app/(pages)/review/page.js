@@ -3,13 +3,14 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { UserReviewServices } from "../../../services/User";
-import Loader from "../../../components/Common/Loader";
+import MirrorLoader from "../../../components/Common/MirrorLoader";
 
 const ReviewPage = () => {
   const [reviews, setReviews] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchReviews = useCallback(async (pageNum) => {
     setLoading(true);
@@ -28,6 +29,7 @@ const ReviewPage = () => {
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
+      setError("Unable to load reviews. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -141,9 +143,46 @@ const ReviewPage = () => {
             </div>
           </div>
           <div className="row g-5">
+            {error && (
+              <div className="col-12">
+                <div className="alert alert-danger text-center">
+                  {error}
+                </div>
+              </div>
+            )}
             {reviews.map(renderReviewCard)}
-            {loading && <Loader />}
-            {!hasMore && <div className="col-12 text-center">No more reviews</div>}
+            {loading && reviews.length === 0 && (
+              [...Array(6)].map((_, index) => (
+                <div className="col-lg-4 col-md-6 col-sm-6 col-12 mt--30" key={`skeleton-${index}`}>
+                  <div className="rbt-testimonial-box testimonial-card-style">
+                    <div className="inner">
+                      <div className="header">
+                        <div className="clint-info-wrapper">
+                          <div className="thumb">
+                            <MirrorLoader widthClass="w-100" heightClass="h-100" radiusClass="radius-15" />
+                          </div>
+                          <div className="client-info">
+                            <MirrorLoader widthClass="w-75" heightClass="h-20" className="mb--10" />
+                            <MirrorLoader widthClass="w-50" heightClass="h-16" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="description">
+                        <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+                        <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+                        <MirrorLoader widthClass="w-50" heightClass="h-20" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+            {loading && reviews.length > 0 && (
+              <div className="col-12 text-center mt--30">
+                <MirrorLoader widthClass="w-100" heightClass="h-20" />
+              </div>
+            )}
+            {!hasMore && !error && <div className="col-12 text-center">No more reviews</div>}
           </div>
         </div>
       </div>

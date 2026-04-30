@@ -16,7 +16,7 @@ import CourseHead from "@/components/Course-Details/Course-Sections/course-head"
 import CourseDetailsOne from "@/components/Course-Details/CourseDetails-One";
 import CourseActionBottom from "@/components/Course-Details/Course-Sections/Course-Action-Bottom";
 import SimilarCourses from "@/components/Course-Details/Course-Sections/SimilarCourses";
-import Loader from "@/components/Common/Loader";
+import MirrorLoader from "@/components/Common/MirrorLoader";
 
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 
@@ -49,28 +49,55 @@ const getItemIcon = (content) => {
   return "feather-circle";
 };
 
+const CourseDetailsSkeleton = () => (
+  <div className="rbt-course-details-area ptb--60">
+    <div className="container">
+      <div className="row mb--50">
+        <div className="col-xl-8 col-lg-7">
+          <MirrorLoader widthClass="w-100" heightClass="h-60" className="mb--20" />
+          <MirrorLoader widthClass="w-75" heightClass="h-40" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+          <MirrorLoader widthClass="w-50" heightClass="h-20" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-400" radiusClass="radius-15" />
+        </div>
+        <div className="col-xl-4 col-lg-5">
+          <MirrorLoader widthClass="w-100" heightClass="h-500" radiusClass="radius-15" />
+        </div>
+      </div>
+      <div className="row g-5">
+        <div className="col-lg-12">
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--20" />
+          <MirrorLoader widthClass="w-100" heightClass="h-20" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const SingleCourse = ({ getParams }) => {
   const router = useRouter();
   const courseId = getParams.courseId;
   const [courseData, setCourseData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchCourseDetails = async () => {
       try {
         if (courseId) {
-          // Fetch single course details directly using slug from params
-          const singleCourseRes = await UserCoursesServices.UserGetCourse(
-            courseId
-          );
+          const singleCourseRes = await UserCoursesServices.UserGetCourse(courseId);
 
-          if (singleCourseRes && singleCourseRes.status === "success") {
+          if (singleCourseRes && singleCourseRes.status === "success" && isMounted) {
             const apiData = singleCourseRes.data;
 
-            // Adapt API data to the component's expected structure
             const adaptedData = {
               id: apiData.id,
               courseTitle: apiData.title,
-              courseImg: apiData.file?.url || "/images/course/course-01.jpg", // Extract URL from file object
+              courseImg: apiData.file?.url || "/images/course/course-01.jpg",
               courseVideo: apiData.introVideos?.[0]?.url || "",
               desc: apiData.short_description,
               longDesc: apiData.long_description,
@@ -99,7 +126,6 @@ const SingleCourse = ({ getParams }) => {
               quizCount: apiData.quizzes_count || 0,
               validity: apiData.validity_unit === 'unlimited' ? 'Lifetime' : (apiData.validity || 'Unlimited'),
 
-              // Rating Distribution
               ratingDistribution: [
                 { rating: 5, percentage: apiData.five_star_percentage || 0 },
                 { rating: 4, percentage: apiData.four_star_percentage || 0 },
@@ -108,16 +134,14 @@ const SingleCourse = ({ getParams }) => {
                 { rating: 1, percentage: apiData.one_star_percentage || 0 },
               ],
 
-              // Instructor
               userName: apiData.instructor?.display_name || apiData.instructor?.name || "Unknown Instructor",
-              userImg: apiData.instructor?.file?.url || "/images/client/avatar-02.png", // Handle instructor image object
+              userImg: apiData.instructor?.file?.url || "/images/client/avatar-02.png",
               userCategory: apiData.instructor?.short_description || "Instructor",
               instructorCompanies: apiData.instructor?.companies || [],
               hasMoneyBackGuarantee: apiData.has_money_back_guarantee || false,
               moneyBackDuration:
                 apiData.money_back_guarantee_period || apiData.money_back_duration || 30,
 
-              // Complex structures adapted
               courseOverview: [
                 {
                   title: "Course Description",
@@ -231,19 +255,44 @@ const SingleCourse = ({ getParams }) => {
         }
       } catch (error) {
         console.error("Error fetching course details:", error);
+        if (isMounted) {
+          setError("Unable to load course details. Please try again later.");
+        }
       }
     };
 
     fetchCourseDetails();
 
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId]);
+
+  useEffect(() => {
     sal({
       threshold: 0.01,
       once: true,
     });
-  }, [courseId, router]);
+  }, []);
+
+  if (error) {
+    return (
+      <div className="rbt-course-details-area ptb--60">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="alert alert-danger text-center">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!courseData) {
-    return <Loader />;
+    return <CourseDetailsSkeleton />;
   }
 
   return (

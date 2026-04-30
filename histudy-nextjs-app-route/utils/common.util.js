@@ -92,8 +92,12 @@ export const getSessionStorageToken = () => {
  * Sets the token in the local storage after encrypting it.
  * @param {string} token - Token to be stored in local storage.
  */
+const isLocalStorageAvailable = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
 export const setLocalStorageToken = (token) => {
-  localStorage.setItem(
+  if (!isLocalStorageAvailable()) return;
+  window.localStorage.setItem(
     `${config.NAME_KEY}:token`,
     CryptoJS.AES.encrypt(token, `${config.NAME_KEY}-token`).toString()
   );
@@ -104,7 +108,8 @@ export const setLocalStorageToken = (token) => {
  * @returns {string|boolean} - Decrypted token or false if not found.
  */
 export const getLocalStorageToken = () => {
-  const token = localStorage.getItem(`${config.NAME_KEY}:token`);
+  if (!isLocalStorageAvailable()) return false;
+  const token = window.localStorage.getItem(`${config.NAME_KEY}:token`);
   if (!token || token === "null") return false;
   const bytes = CryptoJS.AES.decrypt(token, `${config.NAME_KEY}-token`);
   const decrypted = bytes.toString(CryptoJS.enc.Utf8);
@@ -116,7 +121,10 @@ export const getLocalStorageToken = () => {
  * @returns {string} - Language preference or default language if not found.
  */
 export const getLocalStorageLanguage = () => {
-  const language = localStorage.getItem(`${config.NAME_KEY}:language`);
+  if (!isLocalStorageAvailable()) {
+    return config.DEFAULT_LANGUAGE;
+  }
+  const language = window.localStorage.getItem(`${config.NAME_KEY}:language`);
   if (language) {
     return ["en", "hi"].includes(language) ? language : config.DEFAULT_LANGUAGE;
   }

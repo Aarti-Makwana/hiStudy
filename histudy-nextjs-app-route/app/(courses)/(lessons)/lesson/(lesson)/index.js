@@ -7,7 +7,7 @@ import LessonSidebar from "@/components/Lesson/LessonSidebar";
 import LessonPagination from "@/components/Lesson/LessonPagination";
 import { UserCoursesServices } from "@/services/User/Courses/index.service";
 import { UserAuthServices } from "@/services/User/Auth/index.service";
-import Loader from "@/components/Common/Loader";
+import MirrorLoader from "@/components/Common/MirrorLoader";
 import QuizHead from "@/components/Lesson/Quiz/QuizHead";
 import QuizPlayer from "@/components/Lesson/QuizPlayer";
 import toast from "react-hot-toast";
@@ -66,6 +66,7 @@ const LessonPage = () => {
   const [prevLesson, setPrevLesson] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [sidebar, setSidebar] = useState(true);
+  const [error, setError] = useState(null);
 
   // ── Map of content_id → completion_percentage from API ──────
   const [lessonProgressMap, setLessonProgressMap] = useState({});
@@ -181,93 +182,95 @@ const LessonPage = () => {
   };
 
   /* ─── Fetch course structure ─────────────────────────────── */
-  useEffect(() => {
-    const fetchCourseDetails = async () => {
-      if (course_slug) {
-        try {
-          const res = await UserCoursesServices.UserGetCourse(course_slug);
-          if (res && res.status === "success") {
-            setCourseData(res.data);
+  const fetchCourseDetails = useCallback(async () => {
+    if (!course_slug) return;
+    try {
+      const res = await UserCoursesServices.UserGetCourse(course_slug);
+      if (res && res.status === "success") {
+        setCourseData(res.data);
 
-            // Fetch progress for all video items from API
-            const allVideoIds = [];
-            res.data.topics?.forEach((topic) => {
-              topic.course_contents?.forEach((content) => {
-                if (content.icon === "video") {
-                  allVideoIds.push(content.id);
-                }
-              });
-            });
-
-            if (allVideoIds.length > 0) {
-              const progressResults = await Promise.allSettled(
-                allVideoIds.map((id) => UserCoursesServices.GetLessonProgress(id))
-              );
-              const progressMap = {};
-              progressResults.forEach((result, idx) => {
-                if (result.status === "fulfilled" && result.value?.status === "success") {
-                  const pctStr = result.value.data?.completion_percentage || "0%";
-                  progressMap[allVideoIds[idx]] = parseFloat(pctStr) || 0;
-                }
-              });
-              console.log("[LessonPage] Fetched progress map from API:", progressMap);
-              setLessonProgressMap(progressMap);
+        // Fetch progress for all video items from API
+        const allVideoIds = [];
+        res.data.topics?.forEach((topic) => {
+          topic.course_contents?.forEach((content) => {
+            if (content.icon === "video") {
+              allVideoIds.push(content.id);
             }
+          });
+        });
 
-            // Fetch Quiz Attempts and Submission Contents
-            const courseId = res.data.id;
-            if (courseId) {
-              const quizAttemptsRes = await UserCoursesServices.GetQuizAttempts(courseId);
-              if (quizAttemptsRes?.status === "success") {
-                setCourseQuizAttempts(quizAttemptsRes.data?.quizzes || []);
-              }
-
-              const submissionRes = await UserCoursesServices.GetSubmissionContents(courseId);
-              if (submissionRes?.status === "success") {
-                setSubmissionContents(submissionRes.data?.contents || []);
-              }
+        if (allVideoIds.length > 0) {
+          const progressResults = await Promise.allSettled(
+            allVideoIds.map((id) => UserCoursesServices.GetLessonProgress(id))
+          );
+          const progressMap = {};
+          progressResults.forEach((result, idx) => {
+            if (result.status === "fulfilled" && result.value?.status === "success") {
+              const pctStr = result.value.data?.completion_percentage || "0%";
+              progressMap[allVideoIds[idx]] = parseFloat(pctStr) || 0;
             }
+          });
+          console.log("[LessonPage] Fetched progress map from API:", progressMap);
+          setLessonProgressMap(progressMap);
+        }
+
+        // Fetch Quiz Attempts and Submission Contents
+        const courseId = res.data.id;
+        if (courseId) {
+          const quizAttemptsRes = await UserCoursesServices.GetQuizAttempts(courseId);
+          if (quizAttemptsRes?.status === "success") {
+            setCourseQuizAttempts(quizAttemptsRes.data?.quizzes || []);
           }
-        } catch (error) {
-          console.error("Error fetching course details:", error);
+
+          const submissionRes = await UserCoursesServices.GetSubmissionContents(courseId);
+          if (submissionRes?.status === "success") {
+            setSubmissionContents(submissionRes.data?.contents || []);
+          }
         }
       }
-    };
-    fetchCourseDetails();
+    } catch (error) {
+      console.error("Error fetching course details:", error);
+      setError("Unable to load the lesson. Please refresh or try again later.");
+    }
   }, [course_slug]);
 
-  /* ─── Fetch enrollment_id and email from profile API ────────────────── */
   useEffect(() => {
-    const fetchEnrollmentId = async () => {
-      if (!courseData?.id) return;
-      try {
-        const res = await UserAuthServices.getUserDataService();
-        if (res?.status === "success") {
-          if (res.data?.email) {
-            setUserEmail(res.data.email);
-          }
-          if (res.data?.id || res.data?._id) {
-            setUserId(res.data?.id || res.data?._id);
-          }
-          if (res.data?.name) {
-            setUserName(res.data.name);
-          }
-          const enrollment = (res.data?.active_enrollments || []).find(
-            (en) => String(en.course_id) === String(courseData.id)
-          );
-          if (enrollment?.id) {
-            setEnrollmentId(enrollment.id);
-            console.log("[LessonPage] Found enrollment_id (UUID):", enrollment.id);
-          }
+    fetchCourseDetails();
+  }, [fetchCourseDetails]);
+
+  /* ─── Fetch enrollment_id and email from profile API ────────────────── */
+  const fetchEnrollmentId = useCallback(async () => {
+    if (!courseData?.id) return;
+    try {
+      const res = await UserAuthServices.getUserDataService();
+      if (res?.status === "success") {
+        if (res.data?.email) {
+          setUserEmail(res.data.email);
         }
-      } catch (err) {
-        console.error("[LessonPage] Error fetching enrollment_id:", err);
-      } finally {
-        setProfileChecked(true);
+        if (res.data?.id || res.data?._id) {
+          setUserId(res.data?.id || res.data?._id);
+        }
+        if (res.data?.name) {
+          setUserName(res.data.name);
+        }
+        const enrollment = (res.data?.active_enrollments || []).find(
+          (en) => String(en.course_id) === String(courseData.id)
+        );
+        if (enrollment?.id) {
+          setEnrollmentId(enrollment.id);
+          console.log("[LessonPage] Found enrollment_id (UUID):", enrollment.id);
+        }
       }
-    };
-    fetchEnrollmentId();
+    } catch (err) {
+      console.error("[LessonPage] Error fetching enrollment_id:", err);
+    } finally {
+      setProfileChecked(true);
+    }
   }, [courseData?.id]);
+
+  useEffect(() => {
+    fetchEnrollmentId();
+  }, [fetchEnrollmentId]);
 
   useEffect(() => {
     if (!content_id) return;
@@ -420,8 +423,62 @@ const LessonPage = () => {
   }, []);
 
   /* ─── Fetch lesson content + load saved progress ───────────── */
+  const fetchLessonContent = useCallback(async () => {
+    if (!topic_id || !content_id) return;
+    setLoading(true);
+    try {
+      const [contentRes, progressRes] = await Promise.allSettled([
+        UserCoursesServices.UserGetSingleCourseTopicContent(topic_id, content_id),
+        UserCoursesServices.GetLessonProgress(content_id),
+      ]);
+
+      let savedTime = 0;
+      let savedTotal = 0;
+      let savedPercent = 0;
+
+      if (progressRes.status === "fulfilled" && progressRes.value?.status === "success") {
+        const prog = progressRes.value.data;
+        savedTime = prog?.last_position_seconds || 0;
+        savedTotal = prog?.lesson?.duration_seconds || prog?.total_duration || 0;
+        const rawPercent = prog?.completion_percentage || "0";
+        savedPercent = parseFloat(rawPercent.replace("%", "")) || 0;
+
+        console.log(`[LessonPage] Loaded progress from API: ${savedTime}s / ${savedTotal}s (${savedPercent}%)`);
+
+        if (prog?.is_completed || savedPercent >= 98) {
+          console.log("[LessonPage] Lesson is completed. Resetting seek time to 0 for re-watch.");
+          savedTime = 0;
+        }
+
+        lastPostedTimeRef.current = savedTime;
+        setVideoProgress({
+          currentTimeSec: savedTime,
+          totalDurationSec: savedTotal,
+          percent: savedPercent,
+        });
+      }
+
+      if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
+        const data = contentRes.value.data;
+        setLessonContent(data);
+
+        if (savedTotal === 0) {
+          const contentSec = (data.hours || 0) * 3600 + (data.minutes || 0) * 60 + (data.seconds || 0);
+          setVideoProgress((prev) => ({ ...prev, totalDurationSec: contentSec }));
+        }
+      }
+
+      if (videoRef.current && savedTime > 0) {
+        videoRef.current.currentTime = savedTime;
+      }
+    } catch (error) {
+      console.error("Error fetching lesson content:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [content_id, topic_id]);
+
   useEffect(() => {
-    // ── ON CONTENT CHANGE: send progress of previous video first ──
     const prevTime = getCurrentPlayerTime();
     const prevContentId = lastPostedTimeRef._contentId;
     if (prevContentId && prevTime > 0) {
@@ -431,82 +488,20 @@ const LessonPage = () => {
 
     destroyPlayers();
     setVideoProgress({ currentTimeSec: 0, totalDurationSec: 0, percent: 0 });
-    setShowPagination(false); // Reset pagination on new content
-    setActiveContentTab("content"); // Reset content tab
+    setShowPagination(false);
+    setActiveContentTab("content");
     lastPostedTimeRef.current = 0;
-    lastPostedTimeRef._contentId = content_id; // track which content we're on
+    lastPostedTimeRef._contentId = content_id;
 
-    const fetchLessonContent = async () => {
-      if (topic_id && content_id) {
-        setLoading(true);
-        try {
-          const [contentRes, progressRes] = await Promise.allSettled([
-            UserCoursesServices.UserGetSingleCourseTopicContent(topic_id, content_id),
-            UserCoursesServices.GetLessonProgress(content_id),
-          ]);
-
-          let savedTime = 0;
-          let savedTotal = 0;
-          let savedPercent = 0;
-
-          if (progressRes.status === "fulfilled" && progressRes.value?.status === "success") {
-            const prog = progressRes.value.data;
-            // API fields: last_position_seconds, completion_percentage, lesson.duration_seconds
-            savedTime = prog?.last_position_seconds || 0;
-            savedTotal = prog?.lesson?.duration_seconds || prog?.total_duration || 0;
-            const rawPercent = prog?.completion_percentage || "0";
-            savedPercent = parseFloat(rawPercent.replace("%", "")) || 0;
-
-            console.log(`[LessonPage] Loaded progress from API: ${savedTime}s / ${savedTotal}s (${savedPercent}%)`);
-
-            // Logic: If video is already completed, start from 0 for re-watching
-            if (prog?.is_completed || savedPercent >= 98) {
-              console.log("[LessonPage] Lesson is completed. Resetting seek time to 0 for re-watch.");
-              savedTime = 0;
-            }
-
-            // Set ref BEFORE content state to ensure initial seek works
-            lastPostedTimeRef.current = savedTime;
-            setVideoProgress({
-              currentTimeSec: savedTime,
-              totalDurationSec: savedTotal,
-              percent: savedPercent,
-            });
-          }
-
-          if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
-            const data = contentRes.value.data;
-            setLessonContent(data);
-
-            // If API total duration is missing, fall back to content data
-            if (savedTotal === 0) {
-              const contentSec = (data.hours || 0) * 3600 + (data.minutes || 0) * 60 + (data.seconds || 0);
-              setVideoProgress((prev) => ({ ...prev, totalDurationSec: contentSec }));
-            }
-          }
-
-          // Force seek for native video if ready (though onLoadedMetadata handles this too)
-          if (videoRef.current && savedTime > 0) {
-            videoRef.current.currentTime = savedTime;
-          }
-        } catch (error) {
-          console.error("Error fetching lesson content:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
     fetchLessonContent();
 
     return () => {
-      // Send final progress on unmount / content switch
       if (videoRef.current && content_id) {
         postProgress(content_id, videoRef.current.currentTime);
       }
       destroyPlayers();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic_id, content_id]);
+  }, [content_id, destroyPlayers, fetchLessonContent, getCurrentPlayerTime, postProgress, topic_id]);
 
   /* ─── Chat / Comments Logic ────────────────────────────────── */
   const scrollChatToBottom = useCallback(() => {
@@ -1149,8 +1144,39 @@ const LessonPage = () => {
 
   const coursePct = calculateOverallProgress();
 
+  if (error) {
+    return (
+      <div className="rbt-course-details-area ptb--60">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="alert alert-danger text-center">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!courseData || (!canAccessLesson && profileChecked)) {
-    return <Loader />;
+    return (
+      <div className="rbt-lesson-area lesson-player-dark bg-color-darker">
+        <div className="container">
+          <div className="row g-5">
+            <div className="col-xl-8 col-lg-7">
+              <MirrorLoader widthClass="w-100" heightClass="h-400" radiusClass="radius-15" className="mb--20" />
+              <MirrorLoader widthClass="w-100" heightClass="h-400" radiusClass="radius-15" />
+            </div>
+            <div className="col-xl-4 col-lg-5">
+              <MirrorLoader widthClass="w-100" heightClass="h-200" radiusClass="radius-15" className="mb--20" />
+              <MirrorLoader widthClass="w-100" heightClass="h-200" radiusClass="radius-15" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   /* ─── Render ─────────────────────────────────────────────── */
@@ -1235,7 +1261,11 @@ const LessonPage = () => {
 
             {loading ? (
               <div className="lesson-right-scroll">
-                <Loader />
+                <div className="lesson-main-content">
+                  <MirrorLoader widthClass="w-100" heightClass="h-50" className="mb--20" />
+                  <MirrorLoader widthClass="w-100" heightClass="h-40" className="mb--20" />
+                  <MirrorLoader widthClass="w-100" heightClass="h-350" radiusClass="radius-15" />
+                </div>
               </div>
             ) : (
               <div className="lesson-right-scroll">

@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { UserReviewServices } from "../../services/User";
-import Loader from "../Common/Loader";
+import MirrorLoader from "../Common/MirrorLoader";
 
 const ReviewSection = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -19,6 +20,7 @@ const ReviewSection = () => {
         }
       } catch (error) {
         console.error("Error fetching reviews:", error);
+        setError("Unable to load featured reviews. Please refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -26,8 +28,43 @@ const ReviewSection = () => {
     fetchReviews();
   }, []);
 
+  if (error) {
+    return (
+      <div className="alert alert-danger text-center">
+        {error}
+      </div>
+    );
+  }
+
   if (loading) {
-    return <Loader />;
+    return (
+      <div className="row g-5">
+        {[...Array(4)].map((_, index) => (
+          <div className="col-lg-6" key={`review-skel-${index}`}>
+            <div className="rbt-testimonial-box testimonial-card-style">
+              <div className="inner">
+                <div className="header">
+                  <div className="clint-info-wrapper">
+                    <div className="thumb">
+                      <MirrorLoader widthClass="w-100" heightClass="h-100" radiusClass="radius-15" />
+                    </div>
+                    <div className="client-info">
+                      <MirrorLoader widthClass="w-75" heightClass="h-20" className="mb--10" />
+                      <MirrorLoader widthClass="w-50" heightClass="h-16" />
+                    </div>
+                  </div>
+                </div>
+                <div className="description">
+                  <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+                  <MirrorLoader widthClass="w-100" heightClass="h-20" className="mb--10" />
+                  <MirrorLoader widthClass="w-100" heightClass="h-20" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   const half = Math.ceil(reviews.length / 2);

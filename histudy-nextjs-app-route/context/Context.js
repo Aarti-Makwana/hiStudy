@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getToken } from "../utils/storage";
 import { getLocalStorageToken } from "../utils";
@@ -29,7 +29,7 @@ const Context = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(false);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     const token = getLocalStorageToken() || getToken();
     if (!token) {
       setUserData(null);
@@ -46,11 +46,11 @@ const Context = ({ children }) => {
     } finally {
       setLoadingUser(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [fetchUserProfile]);
 
   useEffect(() => {
     dispatch({ type: "COUNT_CART_TOTALS" });
