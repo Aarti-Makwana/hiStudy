@@ -13,7 +13,7 @@ const Requirements = ({ checkMatchCourses }) => {
         </div>
         <ul className="rbt-list-style-1">
           {checkMatchCourses.detailsList.map((item, innerIndex) => (
-            <li key={innerIndex} style={{ fontSize: "12px" }}>
+            <li key={innerIndex} style={{ fontWeight: "400" }}>
               <i className="feather-check"></i>
               {item.listItem}
             </li>

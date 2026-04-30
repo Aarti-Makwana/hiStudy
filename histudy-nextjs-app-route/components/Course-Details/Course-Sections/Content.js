@@ -146,7 +146,9 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                                   <span className="text">{list.text}</span>
                                   {list.summary && (
                                     <button
+                                      type="button"
                                       className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
+                                      aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();

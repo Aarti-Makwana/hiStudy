@@ -66,7 +66,12 @@ const CourseCarousel = ({ courses, title, subTitle, isComingSoon, sectionId }) =
                         />
                         {/* Hide badge if free or if no discount, although user said "discount nahi hoto yaa free hoto wo image ke upar ka off % bhi remove ho jaye" */}
                         {data.price > 0 && data.offPricePercentage > 0 ? (
-                          <div className="rbt-badge-3 bg-white">
+                          <div className="rbt-badge-3 bg-white" style={{
+                            position: 'absolute',
+                            top: '15px',
+                            left: '15px',
+                            right: 'auto'
+                          }}>
                             <span>-{data.offPricePercentage}%</span>
                             <span>Off</span>
                           </div>
@@ -103,12 +108,12 @@ const CourseCarousel = ({ courses, title, subTitle, isComingSoon, sectionId }) =
                         <>
                           <ul className="rbt-meta">
                             <li>
-                              <i className="feather-video"></i>
-                              {data.duration || "0 Hours"}
+                              <i className="feather-book"></i>
+                              {data.number_of_lectures || data.lesson} Lectures
                             </li>
                             <li>
-                              <i className="feather-users"></i>
-                              {data.student} Students
+                              <i className="feather-clock"></i>
+                              {data.validity || "Lifetime"}
                             </li>
                             <li>
                               <i className="feather-globe"></i>

@@ -40,7 +40,12 @@ const HomeCourses = ({ start, end, courses }) => {
                         alt="Card image"
                       />
                       {(data.offPricePercentage || data.discount) > 0 && (
-                        <div className="rbt-badge-3 bg-white">
+                        <div className="rbt-badge-3 bg-white" style={{
+                          position: 'absolute',
+                          top: '15px',
+                          left: '15px',
+                          right: 'auto'
+                        }}>
                           <span>-{data.offPricePercentage || data.discount}%</span>
                           <span>Off</span>
                         </div>
@@ -54,15 +59,23 @@ const HomeCourses = ({ start, end, courses }) => {
                       {!isLoading && (
                         <>
                           <i className="feather-book"></i>
-                          {data.lesson} Lessons
+                          {data.number_of_lectures || data.lesson} Lectures
                         </>
                       )}
                     </li>
                     <li className={isLoading ? "rbt-skeleton-loading" : ""} style={isLoading ? { width: '80px', height: '14px' } : {}}>
                       {!isLoading && (
                         <>
-                          <i className="feather-users"></i>
-                          {data.student} Students
+                          <i className="feather-clock"></i>
+                          {data.validity || "Lifetime"}
+                        </>
+                      )}
+                    </li>
+                    <li className={isLoading ? "rbt-skeleton-loading" : ""} style={isLoading ? { width: '80px', height: '14px' } : {}}>
+                      {!isLoading && (
+                        <>
+                          <i className="feather-globe"></i>
+                          {data.language || "English"}
                         </>
                       )}
                     </li>

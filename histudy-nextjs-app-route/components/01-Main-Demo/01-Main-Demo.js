@@ -36,6 +36,21 @@ const MainDemo = ({ blogs }) => {
 
         if (res && res.success) {
           const adaptedCourses = res.data.map((item) => {
+            // Format language to capitalize first letter
+            const formatLanguage = (lang) => {
+              if (!lang) return "English";
+              return lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase();
+            };
+
+            // Format validity
+            const formatValidity = (unit, duration) => {
+              if (unit === "unlimited") return "Lifetime";
+              if (unit === "days") return `${duration} Days`;
+              if (unit === "months") return `${duration} Months`;
+              if (unit === "years") return `${duration} Years`;
+              return "Lifetime";
+            };
+
             return {
               id: item.id,
               slug: item.slug,
@@ -53,16 +68,20 @@ const MainDemo = ({ blogs }) => {
                 : 0,
               is_live: item.is_live,
               status: item.status,
+              is_bestseller: item.is_bestseller || false,
+              number_of_lectures: item.number_of_lectures,
+              language: formatLanguage(item.language),
+              validity: formatValidity(item.validity_unit, item.validity_duration),
+              validity_unit: item.validity_unit,
               // New Maps
               category: item.categories?.[0]?.name || "Category",
               instructor: item.instructor?.display_name || item.instructor?.name || "Instructor",
               userImg: item.instructor?.file?.url || "/images/client/avatar-02.png",
-              language: item.language || "English",
               duration: item.duration || "",
             };
           });
 
-          setTopCourses(adaptedCourses.filter(c => c.status).slice(0, 4));
+          setTopCourses(adaptedCourses.filter(c => c.status && c.is_bestseller).slice(0, 4));
           setUpcomingCourses(adaptedCourses.filter(c => !c.status).slice(0, 4));
 
         } else {

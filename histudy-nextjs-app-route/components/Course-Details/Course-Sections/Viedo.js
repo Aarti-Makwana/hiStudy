@@ -140,44 +140,58 @@ const Viedo = ({ checkMatchCourses }) => {
         </div>
 
         <div className="add-to-card-button mt--15">
-          <Link
-            className="rbt-btn btn-gradient icon-hover w-100 d-block text-center"
-            href="#"
-            onClick={() =>
-              addToCartFun(checkMatchCourses.id, amount, checkMatchCourses)
-            }
-          >
-            <span className="btn-text">Add to Cart</span>
-            <span className="btn-icon">
-              <i className="feather-arrow-right"></i>
-            </span>
-          </Link>
+          {checkMatchCourses.isPurchased ? (
+            <Link
+              className="rbt-btn btn-gradient icon-hover w-100 d-block text-center"
+              href={`/lesson/${checkMatchCourses.id}`}
+            >
+              <span className="btn-text">Continue Learning</span>
+              <span className="btn-icon">
+                <i className="feather-arrow-right"></i>
+              </span>
+            </Link>
+          ) : (
+            <Link
+              className="rbt-btn btn-gradient icon-hover w-100 d-block text-center"
+              href="#"
+              onClick={() =>
+                addToCartFun(checkMatchCourses.id, amount, checkMatchCourses)
+              }
+            >
+              <span className="btn-text">Add to Cart</span>
+              <span className="btn-icon">
+                <i className="feather-arrow-right"></i>
+              </span>
+            </Link>
+          )}
         </div>
 
         <div className="buy-now-btn mt--15">
-          <Link
-            className="rbt-btn btn-border icon-hover w-100 d-block text-center"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              const t = getLocalStorageToken() || getToken();
-              const u = getUser();
-              if (!!t && !!u) {
-                const itemInCart = cart.find((i) => i.id === checkMatchCourses.id);
-                if (!itemInCart) {
-                  addToCartFun(checkMatchCourses.id, amount, checkMatchCourses);
+          {!checkMatchCourses.isPurchased && (
+            <Link
+              className="rbt-btn btn-border icon-hover w-100 d-block text-center"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                const t = getLocalStorageToken() || getToken();
+                const u = getUser();
+                if (!!t && !!u) {
+                  const itemInCart = cart.find((i) => i.id === checkMatchCourses.id);
+                  if (!itemInCart) {
+                    addToCartFun(checkMatchCourses.id, amount, checkMatchCourses);
+                  }
+                  window.location.href = `/checkout?id=${checkMatchCourses.id}`;
+                } else {
+                  window.location.href = "/login";
                 }
-                window.location.href = `/checkout?id=${checkMatchCourses.id}`;
-              } else {
-                window.location.href = "/login";
-              }
-            }}
-          >
-            <span className="btn-text">Enroll Now</span>
-            <span className="btn-icon">
-              <i className="feather-arrow-right"></i>
-            </span>
-          </Link>
+              }}
+            >
+              <span className="btn-text">Enroll Now</span>
+              <span className="btn-icon">
+                <i className="feather-arrow-right"></i>
+              </span>
+            </Link>
+          )}
         </div>
         <span className="subtitle">
           <i className="feather-rotate-ccw"></i> {checkMatchCourses.hasMoneyBackGuarantee ? `${checkMatchCourses.moneyBackDuration || 30}-Day Money-Back Guarantee` : 'Secure Payment Gateway'}

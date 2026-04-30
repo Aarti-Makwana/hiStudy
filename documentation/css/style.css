@@ -3516,12 +3516,11 @@ button:focus {
 }
 
 .slider_nav .arrow {
-  width: 25px;
-  height: 2px;
-  background: #989dad;
+  width: 18px;
+  height: 3px;
+  background: #fff;
   transition: all 0.3s ease-in-out;
   display: block;
-  margin-top: 12px;
 }
 
 .slider_nav .arrow:before,
@@ -3529,21 +3528,27 @@ button:focus {
   content: "";
   position: absolute;
   width: 15px;
-  height: 2px;
+  height: 3px;
   left: -2px;
-  background-color: #bdb4b4;
+  background-color: #fff;
   transition: all 0.3s ease-in-out;
 }
 
 .slider_nav .prev,
 .slider_nav .next {
-  height: 25px;
-  width: 27px;
+  height: 45px;
+  width: 45px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   transition: all 0.3s ease-in-out;
   cursor: pointer;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .slider_nav .prev:hover,
@@ -3569,12 +3574,12 @@ button:focus {
 }
 
 .slider_nav .prev .arrow:before {
-  top: 17px;
+  top: 12px;
   transform: rotate(45deg);
 }
 
 .slider_nav .prev .arrow:after {
-  top: 7px;
+  top: 24px;
   transform: rotate(-45deg);
 }
 
@@ -3590,14 +3595,14 @@ button:focus {
   transform: rotate(-45deg);
   right: -1px;
   left: auto;
-  bottom: 6px;
+  bottom: 12px;
 }
 
 .slider_nav .next .arrow:after {
   transform: rotate(45deg);
   right: -1px;
   left: auto;
-  top: 6px;
+  top: 12px;
 }
 
 .slider_nav .next:hover {

@@ -76,6 +76,7 @@ const SingleCourse = ({ getParams }) => {
               longDesc: apiData.long_description,
               category: apiData.categories?.[0]?.name || "Uncategorized",
               sellsType: apiData.course_type === "paid" ? "Paid" : "Free",
+              isPurchased: apiData.is_purchased || false,
               price: apiData.discounted_price,
               offPrice: apiData.actual_price,
               discount: apiData.actual_price ? Math.round(
@@ -134,7 +135,7 @@ const SingleCourse = ({ getParams }) => {
                       text: content.title,
                       playIcon: content.icon === "play" || content.category?.slug === "lesson",
                       time: formatTime(content.hours, content.minutes, content.seconds),
-                      status: !content.is_lock,
+                      status: apiData.is_purchased ? true : !content.is_lock,
                       topicId: topic.id,
                       contentId: content.id,
                       icon: getItemIcon(content),
