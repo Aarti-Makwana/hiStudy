@@ -63,10 +63,15 @@ const LessonPage = () => {
   const [profileChecked, setProfileChecked] = useState(false);
   const [canAccessLesson, setCanAccessLesson] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isCourseLoading, setIsCourseLoading] = useState(false);
+  const [lessonFetchStarted, setLessonFetchStarted] = useState(false);
+  const [paramsReady, setParamsReady] = useState(false);
   const [prevLesson, setPrevLesson] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [sidebar, setSidebar] = useState(true);
   const [error, setError] = useState(null);
+
+  const hasValidParams = Boolean(course_slug && topic_id && content_id);
 
   // ── Map of content_id → completion_percentage from API ──────
   const [lessonProgressMap, setLessonProgressMap] = useState({});
@@ -184,9 +189,13 @@ const LessonPage = () => {
   /* ─── Fetch course structure ─────────────────────────────── */
   const fetchCourseDetails = useCallback(async () => {
     if (!course_slug) return;
+    setIsCourseLoading(true);
+    setError(null);
+    setCourseData(null);
+
     try {
       const res = await UserCoursesServices.UserGetCourse(course_slug);
-      if (res && res.status === "success") {
+      if (res && res.status === "success" && res.data) {
         setCourseData(res.data);
 
         // Fetch progress for all video items from API
@@ -227,16 +236,40 @@ const LessonPage = () => {
             setSubmissionContents(submissionRes.data?.contents || []);
           }
         }
+      } else {
+        setCourseData(null);
+        setError("Unable to load the course. Please verify the course link or try again later.");
       }
     } catch (error) {
       console.error("Error fetching course details:", error);
+      setCourseData(null);
       setError("Unable to load the lesson. Please refresh or try again later.");
+    } finally {
+      setIsCourseLoading(false);
     }
   }, [course_slug]);
 
   useEffect(() => {
     fetchCourseDetails();
   }, [fetchCourseDetails]);
+
+  useEffect(() => {
+    if (!course_slug && !topic_id && !content_id) return;
+
+    if (!hasValidParams) {
+      setError("Invalid lesson link. Please use a valid lesson URL to access the content.");
+      setParamsReady(false);
+      return;
+    }
+
+    setParamsReady(true);
+    setError(null);
+    setLessonContent(null);
+    setCanAccessLesson(false);
+    setLessonFetchStarted(false);
+    setPrevLesson(null);
+    setNextLesson(null);
+  }, [course_slug, topic_id, content_id, hasValidParams]);
 
   /* ─── Fetch enrollment_id and email from profile API ────────────────── */
   const fetchEnrollmentId = useCallback(async () => {
@@ -301,8 +334,11 @@ const LessonPage = () => {
       return;
     }
 
-    if (lessonContent && isLessonLocked !== true) {
-      setCanAccessLesson(true);
+    if (lessonContent) {
+      const hasLessonAccess = !isLessonLocked || Boolean(enrollmentId);
+      if (hasLessonAccess) {
+        setCanAccessLesson(true);
+      }
     }
   }, [content_id, courseData, course_slug, enrollmentId, lessonContent, profileChecked, router, token, topic_id]);
 
@@ -425,7 +461,12 @@ const LessonPage = () => {
   /* ─── Fetch lesson content + load saved progress ───────────── */
   const fetchLessonContent = useCallback(async () => {
     if (!topic_id || !content_id) return;
+    setLessonFetchStarted(true);
     setLoading(true);
+    setError(null);
+    setLessonContent(null);
+    setCanAccessLesson(false);
+
     try {
       const [contentRes, progressRes] = await Promise.allSettled([
         UserCoursesServices.UserGetSingleCourseTopicContent(topic_id, content_id),
@@ -458,7 +499,7 @@ const LessonPage = () => {
         });
       }
 
-      if (contentRes.status === "fulfilled" && contentRes.value?.status === "success") {
+      if (contentRes.status === "fulfilled" && contentRes.value?.status === "success" && contentRes.value.data) {
         const data = contentRes.value.data;
         setLessonContent(data);
 
@@ -466,6 +507,12 @@ const LessonPage = () => {
           const contentSec = (data.hours || 0) * 3600 + (data.minutes || 0) * 60 + (data.seconds || 0);
           setVideoProgress((prev) => ({ ...prev, totalDurationSec: contentSec }));
         }
+      } else {
+        const message = contentRes.status === "fulfilled"
+          ? (contentRes.value?.message || "Unable to load the lesson content.")
+          : "Unable to load the lesson content.";
+        setError(message);
+        console.error("Lesson content fetch failed:", contentRes);
       }
 
       if (videoRef.current && savedTime > 0) {
@@ -473,6 +520,7 @@ const LessonPage = () => {
       }
     } catch (error) {
       console.error("Error fetching lesson content:", error);
+      setError("Unable to load the lesson content. Please refresh or try again later.");
     } finally {
       setLoading(false);
     }
@@ -1143,6 +1191,8 @@ const LessonPage = () => {
   };
 
   const coursePct = calculateOverallProgress();
+  const isBusy = isCourseLoading || loading || !paramsReady || !profileChecked;
+  const noLessonData = paramsReady && lessonFetchStarted && !isCourseLoading && !loading && courseData && !lessonContent;
 
   if (error) {
     return (
@@ -1160,7 +1210,23 @@ const LessonPage = () => {
     );
   }
 
-  if (!courseData || (!canAccessLesson && profileChecked)) {
+  if (noLessonData) {
+    return (
+      <div className="rbt-course-details-area ptb--60">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="alert alert-warning text-center">
+                Lesson content could not be loaded. Please verify the lesson URL or try again later.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!courseData || (!canAccessLesson && profileChecked) || isBusy) {
     return (
       <div className="rbt-lesson-area lesson-player-dark bg-color-darker">
         <div className="container">
