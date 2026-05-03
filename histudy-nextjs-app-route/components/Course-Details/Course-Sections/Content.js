@@ -17,7 +17,7 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
   const isEnrolled = Boolean(
     userData?.active_enrollments?.some((enrollment) =>
       String(enrollment.course_id || enrollment.course?.id || enrollment.course?.course_id || enrollment.course?.course_id || enrollment.course?.slug) ===
-        String(checkMatchCourses?.id) ||
+      String(checkMatchCourses?.id) ||
       String(enrollment.course?.slug || enrollment.course_slug) === String(courseSlug)
     )
   );
@@ -126,72 +126,72 @@ const Content = ({ checkMatchCourses, courseSlug }) => {
                         const isExpanded = expandedLessons.includes(lessonId);
                         const hasPreview = list.status && typeof list.videoUrl === "string" && list.videoUrl.trim().length > 0;
                         return (
-                        <li
-                        key={subIndex}
-                        className={isExpanded ? "item-expanded" : ""}
-                      >
-                        <a
-                          href="#"
-                          className={`course-content-link ${!list.status && !isEnrolled ? "disabled-lesson" : ""}`}
-                          title={!isLoggedIn && !list.status ? "Login required" : !list.status && !isEnrolled ? "Enroll to unlock lessons" : ""}
-                          aria-disabled={!list.status && !isEnrolled}
-                          onClick={(e) => handleLessonClick(e, list, lessonId)}
-                          style={{ display: "block" }}
-                        >
-                          <div className="course-content-left-outer w-100">
-                            <div className="course-content-left">
-                              <i className={list.icon || "feather-play-circle"}></i>
-                              <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
-                                <div className="text-toggle-wrap">
-                                  <span className="text">{list.text}</span>
-                                  {list.summary && (
-                                    <button
-                                      type="button"
-                                      className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
-                                      aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
+                          <li
+                            key={subIndex}
+                            className={isExpanded ? "item-expanded" : ""}
+                          >
+                            <a
+                              href="#"
+                              className={`course-content-link ${!list.status && !isEnrolled ? "disabled-lesson" : ""}`}
+                              title={!isLoggedIn && !list.status ? "Login required" : !list.status && !isEnrolled ? "Enroll to unlock lessons" : ""}
+                              aria-disabled={!list.status && !isEnrolled}
+                              onClick={(e) => handleLessonClick(e, list, lessonId)}
+                              style={{ display: "block" }}
+                            >
+                              <div className="course-content-left-outer w-100">
+                                <div className="course-content-left">
+                                  <i className={list.icon || "feather-play-circle"}></i>
+                                  <div className="course-content-text-wrap d-flex flex-column align-items-start text-start">
+                                    <div className="text-toggle-wrap">
+                                      <span className="text">{list.text}</span>
+                                      {list.summary && (
+                                        <button
+                                          type="button"
+                                          className={`summary-toggle-btn ${isExpanded ? "active" : ""}`}
+                                          aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleLessonSummary(e, lessonId);
+                                          }}
+                                        >
+                                          <i className="feather-chevron-down"></i>
+                                        </button>
+                                      )}
+                                    </div>
+                                    {list.summary && isExpanded && (
+                                      <div className="lesson-summary-content mt--5">
+                                        <p style={{ fontSize: "12px" }}>{list.summary}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="course-content-right">
+                                  {hasPreview && (
+                                    <span
+                                      className="preview-text popup-video"
+                                      data-vbtype="video"
+                                      href={list.videoUrl}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        toggleLessonSummary(e, lessonId);
                                       }}
                                     >
-                                      <i className="feather-chevron-down"></i>
-                                    </button>
+                                      Preview
+                                    </span>
+                                  )}
+                                  {(!hasPreview && list.time) && (
+                                    <span className="min-lable">{list.time}</span>
+                                  )}
+                                  {!list.status && (
+                                    <span className="course-lock">
+                                      <i className="feather-lock"></i>
+                                    </span>
                                   )}
                                 </div>
-                                {list.summary && isExpanded && (
-                                  <div className="lesson-summary-content mt--5">
-                                    <p style={{ fontSize: "12px" }}>{list.summary}</p>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                            <div className="course-content-right">
-                              {hasPreview && (
-                                <span
-                                  className="preview-text popup-video"
-                                  data-vbtype="video"
-                                  href={list.videoUrl}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  Preview
-                                </span>
-                              )}
-                              {(!hasPreview && list.time) && (
-                                <span className="min-lable">{list.time}</span>
-                              )}
-                              {!list.status && (
-                                <span className="course-lock">
-                                  <i className="feather-lock"></i>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </a>
-                      </li>
+                            </a>
+                          </li>
                         );
                       })}
                     </ul>

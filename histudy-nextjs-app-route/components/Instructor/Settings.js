@@ -47,6 +47,10 @@ const Setting = () => {
   const [loading, setLoading] = useState(false);
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
   const [isEmailEditable, setIsEmailEditable] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [coverPhotoLoading, setCoverPhotoLoading] = useState(false);
 
   useEffect(() => {
     if (userData) {
@@ -91,6 +95,16 @@ const Setting = () => {
     setPasswordForm((s) => ({ ...s, [id]: value }));
   };
 
+  const openInfoModal = (title, message) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setShowInfoModal(true);
+  };
+
+  const closeInfoModal = () => {
+    setShowInfoModal(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -126,7 +140,7 @@ const Setting = () => {
         toast.error(res?.message || "Failed to update profile");
       }
     } catch (err) {
-      toast.error(err.message || "Update error");
+      openInfoModal("Update error", err.message || "Update error");
     } finally {
       setLoading(false);
     }
@@ -147,9 +161,31 @@ const Setting = () => {
           toast.error(res?.message || "Failed to update avatar");
         }
       } catch (err) {
-        toast.error(err.message || "Avatar update error");
+        openInfoModal("Avatar update error", err.message || "Avatar update error");
       } finally {
         setLoading(false);
+      }
+    }
+  };
+
+  const handleCoverPhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("cover_photo", file);
+      setCoverPhotoLoading(true);
+      try {
+        const res = await UserAuthServices.profileCoverPhotoService(formData);
+        if (res && res.status === "success") {
+          await fetchUserProfile();
+          toast.success("Cover photo updated successfully");
+        } else {
+          toast.error(res?.message || "Failed to update cover photo");
+        }
+      } catch (err) {
+        openInfoModal("Cover photo update error", err.message || "Cover photo update error");
+      } finally {
+        setCoverPhotoLoading(false);
       }
     }
   };
@@ -157,7 +193,7 @@ const Setting = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.password !== passwordForm.password_confirmation) {
-      toast.error("Passwords do not match");
+      openInfoModal("Validation failed", "Passwords do not match");
       return;
     }
     setLoading(true);
@@ -174,7 +210,7 @@ const Setting = () => {
         toast.error(res?.message || "Failed to update password");
       }
     } catch (err) {
-      toast.error(err.message || "Password update error");
+      openInfoModal("Password update error", err.message || "Password update error");
     } finally {
       setLoading(false);
     }
@@ -190,7 +226,7 @@ const Setting = () => {
 
   const handleContactVerify = async () => {
     if (!form.otp) {
-      toast.error("Please enter OTP");
+      openInfoModal("OTP required", "Please enter OTP");
       return;
     }
     setLoading(true);
@@ -210,10 +246,10 @@ const Setting = () => {
         setOtpSent(false);
         setForm((s) => ({ ...s, otp: "" }));
       } else {
-        toast.error(res?.message || "Failed to update contact");
+        openInfoModal("Contact update failed", res?.message || "Failed to update contact");
       }
     } catch (err) {
-      toast.error(err.message || "Contact update error");
+      openInfoModal("Contact update error", err.message || "Contact update error");
     } finally {
       setLoading(false);
     }
@@ -221,7 +257,7 @@ const Setting = () => {
 
   const handleSendOtp = async () => {
     if (!editingContact) {
-      toast.error("Please select Email or Number to edit first.");
+      openInfoModal("Select field", "Please select Email or Number to edit first.");
       return;
     }
     setLoading(true);
@@ -234,10 +270,10 @@ const Setting = () => {
         setOtpSent(true);
         toast.success("OTP sent successfully. Enter it below to verify.");
       } else {
-        toast.error(res?.message || "Failed to send OTP");
+        openInfoModal("OTP send failed", res?.message || "Failed to send OTP");
       }
     } catch (err) {
-      toast.error(err.message || "Error sending OTP");
+      openInfoModal("Error sending OTP", err.message || "Error sending OTP");
     } finally {
       setLoading(false);
     }
@@ -322,9 +358,16 @@ const Setting = () => {
                         style={{ objectFit: 'cover' }}
                       />
                       <div className="rbt-edit-photo-inner">
-                        <label htmlFor="avatarUpload" className="rbt-edit-photo" title="Upload Photo" style={{ cursor: 'pointer' }}>
+                        <button
+                          type="button"
+                          className="rbt-edit-photo"
+                          title="Upload Photo"
+                          onClick={() => document.getElementById('avatarUpload').click()}
+                          disabled={loading}
+                       
+                        >
                           <i className="feather-camera" />
-                        </label>
+                        </button>
                         <input
                           id="avatarUpload"
                           type="file"
@@ -337,12 +380,21 @@ const Setting = () => {
                   </div>
                   <div className="rbt-tutor-information-right">
                     <div className="tutor-btn">
-                      <Link
+                      <button
+                        type="button"
                         className="rbt-btn btn-sm btn-border color-white radius-round-10"
-                        href="#"
+                        onClick={() => document.getElementById('coverPhotoUpload').click()}
+                        disabled={coverPhotoLoading}
                       >
-                        Edit Cover Photo
-                      </Link>
+                        {coverPhotoLoading ? 'Uploading...' : 'Edit Cover Photo'}
+                      </button>
+                      <input
+                        id="coverPhotoUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverPhotoChange}
+                        style={{ display: 'none' }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -644,6 +696,53 @@ const Setting = () => {
           </div>
         </div>
       </div>
+      {showInfoModal && (
+        <div
+          className="modal fade show d-block"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={closeInfoModal}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            style={{ maxWidth: "500px", width: "100%" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content rbt-shadow-box">
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title">{modalTitle || "Information"}</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeInfoModal}
+                ></button>
+              </div>
+              <div className="modal-body text-center pt--20 pb--20">
+                <p className="mb--0">{modalMessage}</p>
+              </div>
+              <div className="modal-footer border-0 justify-content-end">
+                <button
+                  type="button"
+                  className="rbt-btn btn-sm btn-gradient radius-round-10"
+                  onClick={closeInfoModal}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

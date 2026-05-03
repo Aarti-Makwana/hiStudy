@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { GeneralInfoService } from "@/services/User/GeneralInfo/index.service";
 
 const SettingsContext = createContext();
@@ -8,6 +8,7 @@ const SettingsContext = createContext();
 export const SettingsProvider = ({ children }) => {
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
+    const hasFetched = useRef(false);
 
     const fetchSettings = useCallback(async () => {
         const keys = [
@@ -50,6 +51,8 @@ export const SettingsProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
+        if (hasFetched.current) return;
+        hasFetched.current = true;
         fetchSettings();
     }, [fetchSettings]);
 

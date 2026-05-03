@@ -1,8 +1,40 @@
 import Link from "next/link";
-import Courses from "../../data/dashboard/instructor/instructor.json";
 import CourseWidgets from "../Instructor/Dashboard-Section/widgets/CourseWidget";
+import { useAppContext } from "../../context/Context";
 
 const EnrolledCourses = () => {
+  const { userData, loadingUser } = useAppContext();
+
+  if (loadingUser) return <div className="skeleton" style={{ height: "400px" }}></div>;
+
+  const u = userData || {};
+
+  const mapEnrollmentToCourse = (enrollment) => {
+    const c = enrollment.course || {};
+    return {
+      enrollment_id: enrollment.id,
+      id: c.id,
+      title: c.title,
+      lectures: c.number_of_lectures,
+      courseDuration: c.duration || "N/A",
+      enrolledStudent: c.enrolled_users_count || "N/A",
+      courseThumbnail: c.file?.url || "/images/course/course-01.jpg",
+      coursePrice: c.actual_price,
+      offerPrice: c.discounted_price,
+      progressValue: enrollment.completion_percentage,
+      certificateStatus: enrollment.certificate_status,
+      certificateMessage: enrollment.certificate_message,
+      userReviewText: enrollment.review?.review || "",
+      userRating: enrollment.review?.rating || 0,
+      rating: {
+        average: c.reviews_avg_rating || 0,
+      },
+      reviews: {
+        oneStar: 0, twoStar: 0, threeStar: 0, fourStar: 0, fiveStar: 0 
+      }
+    };
+  };
+
   return (
     <>
       <div className="rbt-dashboard-content bg-color-white rbt-shadow-box">
@@ -83,14 +115,14 @@ const EnrolledCourses = () => {
               aria-labelledby="home-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 3)?.length > 0 ? (
-                  Courses.slice(0, 3)?.map((slide, index) => (
+                {(u.active_enrollments || []).length > 0 ? (
+                  (u.active_enrollments || []).map((enrollment, index) => (
                     <div
                       className="col-lg-4 col-md-6 col-12"
                       key={`course-enrolled-${index}`}
                     >
                       <CourseWidgets
-                        data={slide}
+                        data={mapEnrollmentToCourse(enrollment)}
                         courseStyle="two"
                         isProgress={true}
                         isCompleted={false}
@@ -102,8 +134,8 @@ const EnrolledCourses = () => {
                   ))
                 ) : (
                   <div className="col-12">
-                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
-                      <p>There are no courses to display</p>
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
                     </div>
                   </div>
                 )}
@@ -117,17 +149,17 @@ const EnrolledCourses = () => {
               aria-labelledby="profile-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(3, 6)?.length > 0 ? (
-                  Courses.slice(3, 6)?.map((slide, index) => (
+                {(u.active_enrollments || []).length > 0 ? (
+                  (u.active_enrollments || []).map((enrollment, index) => (
                     <div
                       className="col-lg-4 col-md-6 col-12"
                       key={`course-active-${index}`}
                     >
                       <CourseWidgets
-                        data={slide}
+                        data={mapEnrollmentToCourse(enrollment)}
                         courseStyle="two"
                         isCompleted={false}
-                        isProgress={false}
+                        isProgress={true}
                         isEdit={false}
                         showDescription={false}
                         showAuthor={false}
@@ -136,8 +168,8 @@ const EnrolledCourses = () => {
                   ))
                 ) : (
                   <div className="col-12">
-                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
-                      <p>There are no courses to display</p>
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
                     </div>
                   </div>
                 )}
@@ -151,14 +183,14 @@ const EnrolledCourses = () => {
               aria-labelledby="contact-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(1, 4)?.length > 0 ? (
-                  Courses.slice(1, 4)?.map((slide, index) => (
+                {(u.completed_enrollments || []).length > 0 ? (
+                  (u.completed_enrollments || []).map((enrollment, index) => (
                     <div
                       className="col-lg-4 col-md-6 col-12"
                       key={`course-completed-${index}`}
                     >
                       <CourseWidgets
-                        data={slide}
+                        data={mapEnrollmentToCourse(enrollment)}
                         courseStyle="two"
                         isCompleted={true}
                         isProgress={true}
@@ -170,8 +202,8 @@ const EnrolledCourses = () => {
                   ))
                 ) : (
                   <div className="col-12">
-                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
-                      <p>There are no courses to display</p>
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
                     </div>
                   </div>
                 )}
@@ -185,27 +217,28 @@ const EnrolledCourses = () => {
               aria-labelledby="refunded-tab-4"
             >
               <div className="row g-5">
-                {Courses.slice(0, 0)?.length > 0 ? (
-                  Courses.slice(0, 0)?.map((slide, index) => (
+                {(u.refunded_enrollments || []).length > 0 ? (
+                  (u.refunded_enrollments || []).map((enrollment, index) => (
                     <div
                       className="col-lg-4 col-md-6 col-12"
                       key={`course-refunded-${index}`}
                     >
                       <CourseWidgets
-                        data={slide}
+                        data={mapEnrollmentToCourse(enrollment)}
                         courseStyle="two"
                         isCompleted={false}
                         isProgress={false}
                         isEdit={false}
                         showDescription={false}
                         showAuthor={false}
+                        isRefunded={true}
                       />
                     </div>
                   ))
                 ) : (
                   <div className="col-12">
-                    <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
-                      <p>There are no courses to display</p>
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
                     </div>
                   </div>
                 )}

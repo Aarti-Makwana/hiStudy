@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 
@@ -14,8 +14,12 @@ const EventCarouse = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [playingVideo, setPlayingVideo] = useState(null);
   const [swiperInstance, setSwiperInstance] = useState(null);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     const fetchTestimonials = async () => {
       try {
         const res = await UserCoursesServices.UserAllTestimonials();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { InstructorServices } from "../../services/User";
@@ -10,8 +10,12 @@ const TeamTwo = () => {
   const [selectedInstructor, setSelectedInstructor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     const fetchInstructors = async () => {
       try {
         const res = await InstructorServices.getAllInstructors({ limit: 100 });

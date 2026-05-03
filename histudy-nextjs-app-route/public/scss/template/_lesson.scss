@@ -160,6 +160,9 @@
 
     .lesson-main-content {
         flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     // Pagination area â€” dark theme refinement
@@ -199,16 +202,19 @@
     .lesson-pagination-sentinel {
         height: 1px;
         width: 100%;
-        margin-top: 20px;
+        margin-top: 10px;
     }
 
     .lesson-pagination-reveal {
+        max-height: 0;
         opacity: 0;
         transform: translateY(20px);
-        transition: opacity 0.6s ease, transform 0.6s ease;
+        transition: opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease;
         pointer-events: none;
+        overflow: hidden;
 
         &.visible {
+            max-height: 200px;
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
@@ -628,6 +634,7 @@
     aspect-ratio: 16 / 9;
     background: #000;
     overflow: hidden;
+    flex-shrink: 0;
 
     iframe,
     video {
@@ -762,8 +769,9 @@
 
 .lesson-pdf-viewer {
     width: 100%;
-    height: 80vh;
-    background: #f5f5f5;
+    flex: 1 1 auto;
+    min-height: 60vh;
+    background: #1a1a2e;
 
     .lesson-pdf-iframe {
         width: 100%;
@@ -960,6 +968,7 @@
         .chat-time {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.4);
+            padding-left: 10px;
         }
 
         .chat-msg-text {
@@ -2853,6 +2862,129 @@ body:has(.rbt-lesson-area) {
 
         &:hover {
             background: rgba(107, 115, 133, 0.6);
+        }
+    }
+}
+
+
+/*--------------------------
+    Delete Confirmation Modal
+-----------------------------*/
+.delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: deleteOverlayIn 0.25s ease;
+}
+
+@keyframes deleteOverlayIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes deleteModalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.delete-modal {
+    background: #1e1e30;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 32px 28px 24px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: deleteModalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .delete-modal-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+
+        i {
+            font-size: 24px;
+            color: #ef4444;
+        }
+    }
+
+    .delete-modal-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-family: 'Be Vietnam Pro', sans-serif;
+    }
+
+    .delete-modal-text {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        font-family: 'Be Vietnam Pro', sans-serif;
+    }
+
+    .delete-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .delete-modal-btn {
+        padding: 10px 28px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+        font-family: 'Be Vietnam Pro', sans-serif;
+
+        &.cancel {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.14);
+                color: #fff;
+            }
+        }
+
+        &.confirm {
+            background: #ef4444;
+            color: #fff;
+
+            &:hover {
+                background: #dc2626;
+                box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+                transform: translateY(-1px);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
         }
     }
 }

@@ -7,3 +7,5 @@ export { InstructorServices } from "./Instructor/index.service";
 export { UserOrderServices } from "./Order/index.service";
 export { GeneralInfoService } from "./GeneralInfo/index.service";
 export { UserHomeServices } from "./Home/index.service";
+export { CertificateServices } from "./Certificate/index.service";
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import sal from "sal.js";
@@ -16,8 +16,8 @@ import CourseCarousel from "../Course/CourseCarousel";
 import MoneyBackGuarantee from "../MoneyBack/MoneyBackGuarantee";
 import ServiceSplash from "../Services/ServiceSplash";
 
-import { UserCoursesServices } from "../../services/User/Courses/index.service";
 import { UserHomeServices } from "../../services/User/index";
+import { useSettings } from "@/context/SettingsContext";
 import ComparisonTable from "../Addon/ComparisonTable";
 import MainDemoData from "../../data/course-details/courseData.json";
 
@@ -25,11 +25,16 @@ const MainDemo = ({ blogs }) => {
   const [topCourses, setTopCourses] = useState([]);
   const [upcomingCourses, setUpcomingCourses] = useState([]);
   const [bundleCourses, setBundleCourses] = useState([]);
-  const [homeSettings, setHomeSettings] = useState({});
-  const [loading, setLoading] = useState(true);
 
+  // Use centralized settings from SettingsContext — avoids duplicate API call
+  const { settings: homeSettings, loading } = useSettings();
+  const hasFetchedCourses = useRef(false);
 
   useEffect(() => {
+    // Guard against React Strict Mode double-mount
+    if (hasFetchedCourses.current) return;
+    hasFetchedCourses.current = true;
+
     const fetchCourses = async () => {
       try {
         const res = await UserHomeServices.getAllCourses();
@@ -124,25 +129,7 @@ const MainDemo = ({ blogs }) => {
       }
     };
 
-    const fetchHomeSettings = async () => {
-      try {
-        const res = await UserHomeServices.UserHome();
-        if (res && res.status === 'success') {
-          const settingsMap = {};
-          res.data.forEach(item => {
-            settingsMap[item.key] = item.value;
-          });
-          setHomeSettings(settingsMap);
-        }
-      } catch (error) {
-        console.error("Error fetching home settings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourses();
-    fetchHomeSettings();
   }, []);
 
   useEffect(() => {

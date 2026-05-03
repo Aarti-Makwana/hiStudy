@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { UserAuthServices } from "../../services/User";
+import { UserAuthServices, UserReviewServices } from "../../services/User";
+import { showError, showSuccess } from "../../utils";
 
 import { useAppContext } from "../../context/Context";
 
@@ -28,18 +29,39 @@ const Reviews = () => {
   };
 
   const handleSaveEdit = async () => {
-    // Mock API call to save review
-    console.log("Saving Review:", { id: currentReview.id, rating: editRating, review: editReviewText });
-    alert("Review updated successfully (Mock)");
-    setShowEditModal(false);
-    // await fetchUserProfile(); // Refresh data if API was real
+    if (!editReviewText.trim()) {
+      showError("Please write your review.");
+      return;
+    }
+    if (editRating < 1) {
+      showError("Please select a rating.");
+      return;
+    }
+
+    try {
+      const res = await UserReviewServices.giveReviewToCourse({
+        course_id: currentReview.item?.id || currentReview.course?.id || currentReview.item_id,
+        review: editReviewText,
+        rating: editRating,
+      });
+
+      if (res?.success || res?.status === "success") {
+        showSuccess("Review updated successfully.");
+        setShowEditModal(false);
+        await fetchUserProfile();
+      } else {
+        showError(res?.message || "Failed to update review.");
+      }
+    } catch (error) {
+      console.error("Save review error", error);
+      showError("Error updating review.");
+    }
   };
 
   const handleDelete = (review) => {
-    if (window.confirm("Are you sure you want to delete this review?")) {
-      console.log("Deleting Review:", review.id);
-      alert("Review deleted successfully (Mock)");
-    }
+    // Note: No delete review API found in endpoints. 
+    // If one is added, it should be implemented here.
+    showError("Delete review functionality is not implemented on the server.");
   };
 
   return (

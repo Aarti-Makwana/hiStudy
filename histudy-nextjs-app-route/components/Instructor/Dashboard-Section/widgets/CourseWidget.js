@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { showError, showSuccess } from "../../../../utils";
-import { UserReviewServices } from "../../../../services/User";
+import { UserReviewServices, CertificateServices } from "../../../../services/User";
 
 const CourseWidget = ({
   data,
@@ -204,18 +204,61 @@ const CourseWidget = ({
   };
 
   const getCertificateStatus = () => {
-    if (data.certificateStatus === "Granted" || data.certificateStatus === "Downloaded") return "Download Certificate";
-    if (data.certificateStatus === "Pending") return "Request Pending";
-    if (data.certificateStatus === "Rejected") return "Request Rejected";
+    const status = data.certificateStatus?.toLowerCase();
+    if (status === "granted" || status === "download now" || status === "downloaded") return "Download Certificate";
+    if (status === "pending" || status === "requested") return "Request Pending";
+    if (status === "rejected") return "Request Rejected";
     return "Request Certificate";
+  };
+
+  const handleCertificateRequest = async () => {
+    try {
+      const res = await CertificateServices.requestCertificate({
+        enrollment_id: data.enrollment_id,
+      });
+      if (res?.success || res?.status === "success") {
+        showSuccess(res?.message || "Certificate request sent successfully!");
+        // We might want to trigger a profile refresh here, but for now just showing success
+      } else {
+        showError(res?.message || "Unable to send certificate request.");
+      }
+    } catch (error) {
+      console.error("Certificate request error", error);
+      showError("Error sending certificate request.");
+    }
+  };
+
+  const handleDownloadCertificate = async (isAllowed) => {
+    setShowQRModal(false);
+    try {
+      const res = await CertificateServices.downloadCertificate({
+        enrollment_id: data.enrollment_id,
+        is_allowed: isAllowed,
+      });
+      if (res?.success || res?.status === "success") {
+        const downloadUrl = res.data?.download_url || res.data?.url;
+        if (downloadUrl) {
+          window.open(downloadUrl, "_blank");
+          showSuccess("Downloading started...");
+        } else {
+          showError("Download URL not found in response.");
+        }
+      } else {
+        showError(res?.message || "Unable to download certificate.");
+      }
+    } catch (error) {
+      console.error("Certificate download error", error);
+      showError("Error downloading certificate.");
+    }
   };
 
   const handleCertificateClick = (e) => {
     e.preventDefault();
-    if (getCertificateStatus() === "Download Certificate") {
+    const statusText = getCertificateStatus();
+    if (statusText === "Download Certificate") {
       setShowQRModal(true);
-    } else if (getCertificateStatus() === "Request Certificate") {
-      alert("Certificate Request Sent!");
+    } else if (statusText === "Request Certificate") {
+      handleCertificateRequest();
     }
   };
 
@@ -260,7 +303,8 @@ const CourseWidget = ({
                         <button
                           onClick={(e) => {
                             e.preventDefault();
-                            setReviewText("");
+                            setReviewText(data.userReviewText || "");
+                            setUserRating(data.userRating || data.rating.average || 0);
                             setShowReviewModal(true);
                           }}
                           className="ms-2 text-primary"
@@ -274,6 +318,7 @@ const CourseWidget = ({
                         onClick={(e) => {
                           e.preventDefault();
                           setReviewText("");
+                          setUserRating(0);
                           setShowReviewModal(true);
                         }}
                         className="text-primary"
@@ -353,14 +398,18 @@ const CourseWidget = ({
             <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: "0", left: "0", width: "100%", height: "100%", zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowQRModal(false)}>
               <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "500px" }} onClick={(e) => e.stopPropagation()}>
                 <div className="modal-content rbt-shadow-box pt--30 pb--30">
-                  <div className="modal-body text-center">
+                  <div className="modal-header border-0 pb-0 justify-content-end">
+                    <button type="button" className="btn-close" onClick={() => setShowQRModal(false)}></button>
+                  </div>
+                  <div className="modal-body text-center pt-0">
                     <i className="feather-help-circle text-primary mb--20" style={{ fontSize: "50px" }}></i>
                     <h5 className="mb--20">QR Confirmation</h5>
-                    <p>Do you want to print QR on the certificate to access your report card?</p>
+                    <p>Do you want to print QR on the certificate to publicly access your report card?</p>
                   </div>
-                  <div className="modal-footer justify-content-center border-0">
-                    <button className="rbt-btn btn-border btn-md radius-round-10" onClick={() => { setShowQRModal(false); alert("Downloading started (without QR)..."); }}>No</button>
-                    <button className="rbt-btn btn-gradient btn-md radius-round-10" onClick={() => { setShowQRModal(false); alert("Downloading started (with QR)..."); }}>Yes</button>
+                  <div className="modal-footer justify-content-center border-0 gap-3">
+                    <button className="rbt-btn btn-gradient btn-sm radius-round-10" style={{ height: "40px", lineHeight: "40px", padding: "0 25px" }} onClick={() => handleDownloadCertificate(true)}>Yes</button>
+                    <button className="rbt-btn btn-border btn-sm radius-round-10" style={{ height: "40px", lineHeight: "40px", padding: "0 25px" }} onClick={() => handleDownloadCertificate(false)}>No</button>
+                    <button className="rbt-btn btn-sm radius-round-10 bg-color-danger-opacity color-danger" style={{ height: "40px", lineHeight: "40px", padding: "0 25px", border: "none" }} onClick={() => setShowQRModal(false)}>Cancel</button>
                   </div>
                 </div>
               </div>

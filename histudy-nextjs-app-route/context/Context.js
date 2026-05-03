@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getToken } from "../utils/storage";
 import { getLocalStorageToken } from "../utils";
@@ -28,6 +28,7 @@ const Context = ({ children }) => {
   // User Profile State
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(false);
+  const hasFetchedProfile = useRef(false);
 
   const fetchUserProfile = useCallback(async () => {
     const token = getLocalStorageToken() || getToken();
@@ -49,6 +50,8 @@ const Context = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (hasFetchedProfile.current) return;
+    hasFetchedProfile.current = true;
     fetchUserProfile();
   }, [fetchUserProfile]);
 

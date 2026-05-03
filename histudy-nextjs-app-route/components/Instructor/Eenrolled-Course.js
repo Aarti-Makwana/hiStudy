@@ -14,15 +14,20 @@ const EnrolledCourses = () => {
   const mapEnrollmentToCourse = (enrollment) => {
     const c = enrollment.course || {};
     return {
+      enrollment_id: enrollment.id,
       id: c.id,
       title: c.title,
       lectures: c.number_of_lectures,
-      courseDuration: "N/A", // Not available in this specific API response
-      enrolledStudent: "N/A",
-      courseThumbnail: "/images/course/course-01.jpg", // Placeholder
+      courseDuration: c.duration || "N/A",
+      enrolledStudent: c.enrolled_users_count || "N/A",
+      courseThumbnail: c.file?.url || "/images/course/course-01.jpg",
       coursePrice: c.actual_price,
       offerPrice: c.discounted_price,
       progressValue: enrollment.completion_percentage,
+      certificateStatus: enrollment.certificate_status,
+      certificateMessage: enrollment.certificate_message,
+      userReviewText: enrollment.review?.review || "",
+      userRating: enrollment.review?.rating || 0,
       rating: {
         average: c.reviews_avg_rating || 0,
       },
@@ -112,22 +117,30 @@ const EnrolledCourses = () => {
               aria-labelledby="home-tab-4"
             >
               <div className="row g-5">
-                {(u.active_enrollments || []).map((enrollment, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-enrolled-${index}`}
-                  >
-                    <CourseWidgets
-                      data={mapEnrollmentToCourse(enrollment)}
-                      courseStyle="two"
-                      isProgress={true}
-                      isCompleted={false}
-                      isEdit={false}
-                      showDescription={false}
-                      showAuthor={false}
-                    />
+                {(u.active_enrollments || []).length > 0 ? (
+                  (u.active_enrollments || []).map((enrollment, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-enrolled-${index}`}
+                    >
+                      <CourseWidgets
+                        data={mapEnrollmentToCourse(enrollment)}
+                        courseStyle="two"
+                        isProgress={true}
+                        isCompleted={false}
+                        isEdit={false}
+                        showDescription={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -138,22 +151,30 @@ const EnrolledCourses = () => {
               aria-labelledby="profile-tab-4"
             >
               <div className="row g-5">
-                {(u.active_enrollments || []).map((enrollment, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-active-${index}`}
-                  >
-                    <CourseWidgets
-                      data={mapEnrollmentToCourse(enrollment)}
-                      courseStyle="two"
-                      isCompleted={false}
-                      isProgress={true}
-                      isEdit={false}
-                      showDescription={false}
-                      showAuthor={false}
-                    />
+                {(u.active_enrollments || []).length > 0 ? (
+                  (u.active_enrollments || []).map((enrollment, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-active-${index}`}
+                    >
+                      <CourseWidgets
+                        data={mapEnrollmentToCourse(enrollment)}
+                        courseStyle="two"
+                        isCompleted={false}
+                        isProgress={true}
+                        isEdit={false}
+                        showDescription={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -164,22 +185,30 @@ const EnrolledCourses = () => {
               aria-labelledby="contact-tab-4"
             >
               <div className="row g-5">
-                {(u.completed_enrollments || []).map((enrollment, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-completed-${index}`}
-                  >
-                    <CourseWidgets
-                      data={mapEnrollmentToCourse(enrollment)}
-                      courseStyle="two"
-                      isCompleted={true}
-                      isProgress={true}
-                      showDescription={false}
-                      isEdit={false}
-                      showAuthor={false}
-                    />
+                {(u.completed_enrollments || []).length > 0 ? (
+                  (u.completed_enrollments || []).map((enrollment, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-completed-${index}`}
+                    >
+                      <CourseWidgets
+                        data={mapEnrollmentToCourse(enrollment)}
+                        courseStyle="two"
+                        isCompleted={true}
+                        isProgress={true}
+                        showDescription={false}
+                        isEdit={false}
+                        showAuthor={false}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -190,23 +219,31 @@ const EnrolledCourses = () => {
               aria-labelledby="refund-tab-4"
             >
               <div className="row g-5">
-                {(u.refunded_enrollments || []).map((enrollment, index) => (
-                  <div
-                    className="col-lg-4 col-md-6 col-12"
-                    key={`course-refunded-${index}`}
-                  >
-                    <CourseWidgets
-                      data={mapEnrollmentToCourse(enrollment)}
-                      courseStyle="two"
-                      isCompleted={false}
-                      isProgress={false}
-                      showDescription={false}
-                      isEdit={false}
-                      showAuthor={false}
-                      isRefunded={true}
-                    />
+                {(u.refunded_enrollments || []).length > 0 ? (
+                  (u.refunded_enrollments || []).map((enrollment, index) => (
+                    <div
+                      className="col-lg-4 col-md-6 col-12"
+                      key={`course-refunded-${index}`}
+                    >
+                      <CourseWidgets
+                        data={mapEnrollmentToCourse(enrollment)}
+                        courseStyle="two"
+                        isCompleted={false}
+                        isProgress={false}
+                        showDescription={false}
+                        isEdit={false}
+                        showAuthor={false}
+                        isRefunded={true}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-12">
+                    <div className="text-center p--40 bg-primary-opacity radius-round-10">
+                      <p className="mb--0">There are no courses to display</p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
