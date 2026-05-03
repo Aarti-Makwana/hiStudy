@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/Context";
 import User from "../Offcanvas/User";
@@ -8,6 +9,7 @@ import { getToken, getUser } from "../../../utils/storage";
 import { getLocalStorageToken } from "../../../utils/common.util";
 
 const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
+  const pathname = usePathname();
   const { mobile, setMobile, search, setSearch } = useAppContext();
   const [logged, setLogged] = useState(false);
   const [user, setUser] = useState(null);
@@ -61,7 +63,7 @@ const HeaderRightTwo = ({ btnClass, btnText, userType }) => {
       <div className="rbt-btn-wrapper d-none d-xl-block">
         {logged ? (
           <div className="account-access rbt-user-wrapper" style={{ position: 'relative' }}>
-            <Link className={`rbt-btn ${btnClass}`} href="/instructor-dashboard">
+            <Link className={`rbt-btn ${btnClass}`} href={pathname?.startsWith("/student") ? "/student-dashboard" : "/instructor-dashboard"}>
               <span data-text={`Dashboard`}>Dashboard</span>
             </Link>
             <User />

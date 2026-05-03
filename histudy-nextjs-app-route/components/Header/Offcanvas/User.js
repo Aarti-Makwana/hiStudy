@@ -6,9 +6,15 @@ import UserData from "../../../data/user.json";
 import { getUser, clearAuth } from "../../../utils/storage";
 import { UserAuthServices } from "../../../services/User";
 import { showSuccess, showInfo, showError } from "../../../utils/swal";
+import { useAppContext } from "../../../context/Context";
+import { usePathname } from "next/navigation";
+import InstructorSidebarData from "../../../data/dashboard/instructor/siderbar.json";
+import StudentSidebarData from "../../../data/dashboard/student/siderbar.json";
 
 const User = () => {
   const router = useRouter();
+  const pathname = usePathname();
+  const { userData } = useAppContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -40,12 +46,30 @@ const User = () => {
     }
   };
 
-  const fallbackProfile = UserData?.user?.[0] || { name: "User", img: "/images/avatar.png", userList: [] };
-  const display = user
-    ? { name: user.name || `${user.first_name || ""} ${user.last_name || ""}`, img: user.profile?.file?.url || fallbackProfile.img }
-    : fallbackProfile;
+  const fallbackProfile = UserData?.user?.[0] || { name: "User", img: "/images/avatar.png" };
+  const display = userData
+    ? { 
+        name: userData.name || `${userData.first_name || ""} ${userData.last_name || ""}`, 
+        img: userData.profile?.file?.url || userData.profile?.avatar || fallbackProfile.img,
+        role: pathname?.startsWith("/student") ? "student" : "instructor"
+      }
+    : { ...fallbackProfile, role: "instructor" };
 
-  const menuItems = user?.userList || fallbackProfile.userList || [];
+  const sidebarData = display.role === "student" ? StudentSidebarData : InstructorSidebarData;
+  const menuItems = sidebarData?.siderbar || [];
+  
+  // Filter out Settings and Logout to show them at the bottom specifically if we want to follow the existing UI structure
+  // but the user said "same to same", and sidebar.json includes them at the end.
+  // I'll filter them out for the main list and show them in the bottom section for better UI consistency with the theme.
+  const mainMenuItems = menuItems.filter(item => 
+    !item.text.toLowerCase().includes("settings") && 
+    !item.text.toLowerCase().includes("logout")
+  );
+  
+  const settingsItem = menuItems.find(item => item.text.toLowerCase().includes("settings"));
+  const logoutItem = menuItems.find(item => item.text.toLowerCase().includes("logout"));
+
+  const profileLink = display.role === "student" ? "/student-profile" : "/instructor-profile";
 
   return (
     <div className="rbt-user-wrapper">
@@ -61,15 +85,15 @@ const User = () => {
                   alt="User Images"
                 />
               </div>
-              <div className="admin-info">
+               <div className="admin-info">
                 <span className="name">{display.name}</span>
-                <Link className="rbt-btn-link color-primary" href="/instructor-profile">
+                <Link className="rbt-btn-link color-primary" href={profileLink}>
                   View Profile
                 </Link>
               </div>
             </div>
-            <ul className="user-list-wrapper">
-              {menuItems.map((item, index) => (
+             <ul className="user-list-wrapper">
+              {mainMenuItems.map((item, index) => (
                 <li key={`user-menu-item-${index}`}>
                   <Link href={item.link || "#"} className="d-flex align-items-center">
                     <i className={item.icon || "feather-chevron-right"}></i>
@@ -81,15 +105,15 @@ const User = () => {
             <hr className="mt--10 mb--10" />
             <ul className="user-list-wrapper">
               <li>
-                <Link href="/instructor-settings">
-                  <i className="feather-settings"></i>
-                  <span>Settings</span>
+                <Link href={settingsItem?.link || (display.role === "student" ? "/student-settings" : "/instructor-settings")}>
+                  <i className={settingsItem?.icon || "feather-settings"}></i>
+                  <span>{settingsItem?.text || "Settings"}</span>
                 </Link>
               </li>
               <li>
                 <a href="#" onClick={handleLogout}>
-                  <i className="feather-log-out"></i>
-                  <span>{loading ? "Logging out..." : "Logout"}</span>
+                  <i className={logoutItem?.icon || "feather-log-out"}></i>
+                  <span>{loading ? "Logging out..." : (logoutItem?.text || "Logout")}</span>
                 </a>
               </li>
             </ul>
